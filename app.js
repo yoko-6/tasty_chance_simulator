@@ -1194,6 +1194,219 @@ function getFieldEffectForType(pokemonType, fieldConfig) {
   };
 }
 
+function buildResultHtml(result) {
+  const { timestampStr, summary, pokemons, settings } = result;
+  const dayLabels = [
+    "月曜日", "火曜日", "水曜日", "木曜日", "金曜日", "土曜日", "日曜日"
+  ];
+
+  const dayRows = summary.perDayValues
+    .map((v, idx) => {
+      return `
+        <tr>
+          <td>${dayLabels[idx]}</td>
+          <td>${v.toFixed(3)}</td>
+        </tr>
+      `;
+    })
+    .join("");
+
+  const pokemonCards = pokemons
+    .map(p => {
+      const fieldTags = [];
+      if (p.matchesFieldType) fieldTags.push('<span class="tag tag-field-match">フィールド対象</span>');
+      if (p.isMainType) fieldTags.push('<span class="tag tag-main-type">メインタイプ</span>');
+      if (p.exEffectLabel && p.exEffectLabel !== "補正なし") {
+        fieldTags.push(`<span class="tag">${p.exEffectLabel}</span>`);
+      }
+
+      return `
+        <div class="pokemon-card">
+          <div class="pokemon-card-header">
+            <div>
+              <div class="pokemon-title">ポケモン${p.index}: ${p.name}</div>
+              <div class="pokemon-sub">
+                タイプ: ${p.type || "-"} ／ Lv${p.level} ／ 性格: ${p.natureName}
+              </div>
+              <div class="pokemon-sub">
+                きのみ: ${p.berryName}
+              </div>
+            </div>
+          </div>
+          <div class="pokemon-tags">
+            ${fieldTags.join("")}
+          </div>
+          <div class="pokemon-body-grid">
+            <div>
+              <div class="pokemon-body-block-title">おてつだい</div>
+              <div class="pokemon-body-block-row">
+                基礎時間: ${p.helpBase} 秒
+              </div>
+              <div class="pokemon-body-block-row">
+                スピード倍率合計: ${p.helpTotalMult.toFixed(2)} 倍
+              </div>
+              <div class="pokemon-body-block-row">
+                げんき81%以上の目安: ${p.helpEffectiveFastTime.toFixed(1)} 秒
+              </div>
+              <div class="pokemon-body-block-row">
+                所持数: ${p.inventoryLimit}
+              </div>
+            </div>
+            <div>
+              <div class="pokemon-body-block-title">きのみ・食材</div>
+              <div class="pokemon-body-block-row">
+                食材確率（補正後）: ${(p.ingredientProb * 100).toFixed(2)} %
+              </div>
+              <div class="pokemon-body-block-row">
+                食材ボーナス合計: +${p.ingredientBonusTotal} 個
+              </div>
+              <div class="pokemon-body-block-row">
+                きのみの数: ${p.berryNum}
+              </div>
+              <div class="pokemon-body-block-row">
+                きのみエナジー倍率: ${p.berryEnergyMultiplier.toFixed(2)} 倍
+              </div>
+            </div>
+            <div>
+              <div class="pokemon-body-block-title">スキル</div>
+              <div class="pokemon-body-block-row">
+                スキル確率（基礎）: ${(p.skillBaseProb * 100).toFixed(2)} %
+              </div>
+              <div class="pokemon-body-block-row">
+                確率倍率合計: ${p.skillMultTotal.toFixed(2)} 倍
+              </div>
+              <div class="pokemon-body-block-row">
+                確率（補正後）: ${(p.skillFinalProb * 100).toFixed(2)} %
+              </div>
+              <div class="pokemon-body-block-row">
+                メインスキル効果: ${p.skillEffectPercent.toFixed(1)} %
+              </div>
+            </div>
+            <div>
+              <div class="pokemon-body-block-title">1日あたりの寄与</div>
+              <div class="pokemon-body-block-row">
+                きのみエナジー: ${p.perDayBerryEnergy.toFixed(3)}
+              </div>
+              <div class="pokemon-body-block-row">
+                スキル発動回数: ${p.perDaySkillCount.toFixed(3)} 回
+              </div>
+              <div class="pokemon-body-block-row">
+                スキルエナジー: ${p.perDaySkillEnergy.toFixed(3)}
+              </div>
+            </div>
+          </div>
+          <div class="pokemon-body-block-row" style="margin-top:0.4rem;">
+            サブスキル: ${p.subSkillsLabel}
+          </div>
+          <div class="pokemon-body-block-row">
+            個別補正: おてつだい×${p.personal.helpMult.toFixed(2)} ／ 食材+${p.personal.ingBonus} ／ スキル×${p.personal.skillMult.toFixed(2)}
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+
+  const field = settings.field;
+  const ev = settings.events;
+  const sched = settings.schedule;
+
+  const fieldExText = field.key === "wakakusa_ex"
+    ? (field.exEffectLabel || "補正なし")
+    : "なし";
+
+  return `
+    <div class="result-container">
+      <section class="result-section">
+        <div class="result-section-header">
+          <div class="result-section-title">料理・エナジー結果（1日あたりの平均）</div>
+          <div class="result-section-sub">実行日時: ${timestampStr}</div>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-label">料理大成功回数</div>
+            <div class="stat-value">
+              ${summary.avgSuccess.toFixed(2)}<span class="stat-unit">回/日</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">スキル発動（全体）</div>
+            <div class="stat-value">
+              ${summary.avgSkill.toFixed(2)}<span class="stat-unit">回/日</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">追加エナジー合計</div>
+            <div class="stat-value">
+              ${summary.avgExtraPerDay.toFixed(0)}<span class="stat-unit">/日</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">1匹あたり追加エナジー</div>
+            <div class="stat-value">
+              ${summary.perPokemonExtraPerDay.toFixed(0)}<span class="stat-unit">/日</span>
+            </div>
+          </div>
+        </div>
+        <table class="day-table">
+          <thead>
+            <tr>
+              <th>曜日</th>
+              <th>追加エナジー</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${dayRows}
+          </tbody>
+        </table>
+      </section>
+
+      <section class="result-section">
+        <div class="result-section-header">
+          <div class="result-section-title">ポケモン別の結果</div>
+        </div>
+        ${pokemonCards}
+      </section>
+
+      <section class="result-section">
+        <div class="result-section-header">
+          <div class="result-section-title">入力パラメータ</div>
+        </div>
+        <div class="input-grid">
+          <div class="input-block">
+            <div class="input-block-title">共通設定</div>
+            <div class="input-block-row">レシピエナジー: ${settings.recipeEnergy}</div>
+            <div class="input-block-row">試行回数: ${settings.trials}</div>
+            <div class="input-block-row">月曜朝の大成功確率: ${settings.day1ChancePercent.toFixed(1)} %</div>
+            <div class="input-block-row">キャンプチケット: ${settings.useCampTicket ? "使用する" : "使用しない"}</div>
+          </div>
+          <div class="input-block">
+            <div class="input-block-title">フィールド設定</div>
+            <div class="input-block-row">フィールド: ${field.label}</div>
+            <div class="input-block-row">メインタイプ: ${field.mainType || "-"}</div>
+            <div class="input-block-row">サブタイプ1: ${field.sub1Type || "-"}</div>
+            <div class="input-block-row">サブタイプ2: ${field.sub2Type || "-"}</div>
+            <div class="input-block-row">EX補正: ${fieldExText}</div>
+          </div>
+          <div class="input-block">
+            <div class="input-block-title">イベント補正</div>
+            <div class="input-block-row">おてつだいスピード倍率: ${ev.helpingSpeedMultiplier.toFixed(2)} 倍</div>
+            <div class="input-block-row">食材数ボーナス: +${ev.ingredientBonus} 個</div>
+            <div class="input-block-row">スキル確率倍率: ${ev.skillEventMultiplier.toFixed(2)} 倍</div>
+            <div class="input-block-row">料理エナジー倍率: ${ev.energyEventMultiplier.toFixed(2)} 倍</div>
+          </div>
+          <div class="input-block">
+            <div class="input-block-title">生活スケジュール</div>
+            <div class="input-block-row">起床: ${sched.wake}</div>
+            <div class="input-block-row">朝食: ${sched.breakfast}</div>
+            <div class="input-block-row">昼食: ${sched.lunch}</div>
+            <div class="input-block-row">夕食: ${sched.dinner}</div>
+            <div class="input-block-row">就寝: ${sched.sleep}</div>
+          </div>
+        </div>
+      </section>
+    </div>
+  `;
+}
 
 // ====== 時刻関連のユーティリティ ======
 
@@ -1316,32 +1529,37 @@ window.addEventListener("DOMContentLoaded", () => {
   const nextResultBtn = document.getElementById("nextResultBtn");
   const resultPageInfo = document.getElementById("resultPageInfo");
 
-  const resultHistory = [];   // 最新が index 0
-  let resultIndex = -1;       // -1 のときは結果なし
+    const resultHistory = [];   // 最新が index 0
+  let resultIndex = -1;
 
   function renderCurrentResult() {
     if (resultIndex < 0 || resultIndex >= resultHistory.length) {
-      outputEl.textContent = "";
-      resultPageInfo.textContent = "結果はまだありません";
+      outputEl.innerHTML = "";
+      if (resultPageInfo) {
+        resultPageInfo.textContent = "結果はまだありません";
+      }
       if (prevResultBtn) prevResultBtn.disabled = true;
       if (nextResultBtn) nextResultBtn.disabled = true;
       return;
     }
 
-    outputEl.textContent = resultHistory[resultIndex];
+    const current = resultHistory[resultIndex];
+    outputEl.innerHTML = buildResultHtml(current);
 
-    const currentPage = resultIndex + 1;        // 1 始まり
+    const currentPage = resultIndex + 1;
     const totalPages = resultHistory.length;
-    resultPageInfo.textContent = `結果 ${currentPage} / ${totalPages}（1 が最新）`;
+    if (resultPageInfo) {
+      resultPageInfo.textContent = `結果 ${currentPage} / ${totalPages}（1 が最新）`;
+    }
 
-    if (prevResultBtn) prevResultBtn.disabled = (resultIndex >= totalPages - 1); // これ以上「前」はない
-    if (nextResultBtn) nextResultBtn.disabled = (resultIndex <= 0);             // これ以上「次」はない
+    if (prevResultBtn) prevResultBtn.disabled = (resultIndex >= totalPages - 1);
+    if (nextResultBtn) nextResultBtn.disabled = (resultIndex <= 0);
   }
 
   if (prevResultBtn) {
     prevResultBtn.addEventListener("click", () => {
       if (resultIndex < resultHistory.length - 1) {
-        resultIndex += 1;  // 古い結果へ
+        resultIndex += 1;   // 古い結果へ
         renderCurrentResult();
       }
     });
@@ -1350,13 +1568,12 @@ window.addEventListener("DOMContentLoaded", () => {
   if (nextResultBtn) {
     nextResultBtn.addEventListener("click", () => {
       if (resultIndex > 0) {
-        resultIndex -= 1;  // 新しい結果へ
+        resultIndex -= 1;   // 新しい結果へ
         renderCurrentResult();
       }
     });
   }
 
-  // 初期状態（結果なし）を反映
   renderCurrentResult();
 
   runBtn.addEventListener("click", () => {
@@ -1520,17 +1737,17 @@ window.addEventListener("DOMContentLoaded", () => {
     runBtn.disabled = true;
     statusEl.textContent = `シミュレーション中…（試行回数: ${trials}）`;
 
-    setTimeout(() => {
+        setTimeout(() => {
       simulator.simulate(trials, pokemons, recipeEnergy);
 
-      const avgSkill = simulator.average_skill_count;     // 1日あたり スキル発動数（全体）
-      const avgSuccess = simulator.average_success_count; // 1日あたり 料理成功回数
-      const avgExtraPerDay = simulator.average_extra_energy; // 1日あたり 追加エナジー（全体）
+      const avgSkill = simulator.average_skill_count;
+      const avgSuccess = simulator.average_success_count;
+      const avgExtraPerDay = simulator.average_extra_energy;
       const perDay = simulator.average_extra_energies_per_day;
 
-      const avgBerryEnergies = simulator.average_berry_energies; // ポケモン別 きのみエナジー
-      const avgSkillEnergies = simulator.average_skill_energies; // ポケモン別 スキルエナジー
-      const avgSkillCounts = simulator.average_skill_counts;     // ポケモン別 スキル発動数
+      const avgBerryEnergies = simulator.average_berry_energies;
+      const avgSkillEnergies = simulator.average_skill_energies;
+      const avgSkillCounts = simulator.average_skill_counts;
 
       const perPokemonExtraPerDay =
         pokemons.length > 0 ? avgExtraPerDay / pokemons.length : 0;
@@ -1538,155 +1755,116 @@ window.addEventListener("DOMContentLoaded", () => {
       const now = new Date();
       const timestampStr = now.toLocaleString("ja-JP");
 
-      let text = "";
+      // 入力値の再取得（スケジュール表示用）
+      const sched = {
+        wake: document.getElementById("wakeTime").value,
+        breakfast: document.getElementById("breakfastTime").value,
+        lunch: document.getElementById("lunchTime").value,
+        dinner: document.getElementById("dinnerTime").value,
+        sleep: document.getElementById("sleepTime").value
+      };
 
-      // ------------------------------
-      // 0. 実行時刻
-      // ------------------------------
-      text += `実行日時: ${timestampStr}\n`;
-      text += "----------------------------------------\n\n";
-
-      // ------------------------------
-      // 1. 料理・エナジー結果（上のブロック）
-      // ------------------------------
-      text += "=== 料理・エナジー結果（1日あたりの平均） ===\n";
-      text += `  料理大成功回数: ${avgSuccess.toFixed(3)} 回\n`;
-      text += `  スキル発動回数（全ポケモン合計）: ${avgSkill.toFixed(3)} 回\n`;
-      text += `  追加エナジー合計: ${avgExtraPerDay.toFixed(3)}\n`;
-      text += `    1匹あたり: ${perPokemonExtraPerDay.toFixed(3)}\n\n`;
-
-      text += "[曜日別の平均追加エナジー]\n";
-      const labels = [
-        "月曜日",
-        "火曜日",
-        "水曜日",
-        "木曜日",
-        "金曜日",
-        "土曜日",
-        "日曜日"
-      ];
-      perDay.forEach((val, idx) => {
-        text += `  ${labels[idx]}: ${val.toFixed(3)}\n`;
-      });
-
-      // ------------------------------
-      // 2. ポケモン別の結果（中段ブロック）
-      // ------------------------------
-      text += "\n=== ポケモン別の結果 ===\n";
-      pokemons.forEach((pkm, idx) => {
-        const n = idx + 1;
-        text += `[ポケモン${n}] ${pkm.pokemon_data.name}\n`;
-        text += `  レベル: ${pkm.level} / メインスキルLv: ${pkm.skill_level}\n`;
-        text += `  性格: ${pkm.nature.name}\n`;
-
-        // おてつだい
-        const totalHelpMult =
-          pkm.personal_helping_speed_multiplier *
-          pkm.team_helping_speed_multiplier *
-          pkm.ex_helping_speed_multiplier *
-          pkm.camp_ticket_helping_speed_multiplier;
-        const effectiveFastTime = pkm.helping_speed * 0.45 / totalHelpMult; // げんき81%以上想定
-
-        text += `  おてつだい時間（基礎）: ${pkm.helping_speed} 秒\n`;
-        text += `    おてつだいスピード倍率: ${totalHelpMult.toFixed(2)} 倍\n`;
-        text += `    おてつだい時間（げんき81%以上・補正後の目安）: ${effectiveFastTime.toFixed(1)} 秒\n`;
-
-        // 食材まわり
-        const totalIngBonus =
-          pkm.personal_ingredient_bonus +
-          pkm.team_ingredient_bonus +
-          pkm.ex_ingredient_bonus;
-        text += `  食材確率（補正後）: ${(pkm.ingredient_probability * 100).toFixed(2)} %\n`;
-        text += `    食材ボーナス合計: +${totalIngBonus} 個\n`;
-
-        // スキルまわり
-        const baseSkillProb = pkm.pokemon_data.skill_probability * 100;
-        const skillMultTotal =
-          pkm.personal_skill_multiplier *
-          pkm.team_skill_multiplier *
-          pkm.ex_skill_multiplier;
-        const finalSkillProb = pkm.skill_probability * 100;
-
-        text += `  スキル確率（基礎）: ${baseSkillProb.toFixed(2)} %\n`;
-        text += `    スキル確率倍率: ${skillMultTotal.toFixed(2)} 倍\n`;
-        text += `    スキル確率（補正後）: ${finalSkillProb.toFixed(2)} %\n`;
-
-        // 所持数・きのみ
-        text += `  所持数: ${pkm.inventory_limit}`;
-        if (useCampTicket) {
-          text += "（いいキャンプチケット効果を含む）";
-        }
-        text += `\n`;
-        text += `  きのみの数: ${pkm.berry_num}\n`;
-        text += `    きのみエナジー倍率: ${pkm.berry_energy_multiplier.toFixed(2)} 倍\n`;
-
-        text += `  メインスキル効果: ${(pkm.skill_effect * 100).toFixed(1)} %\n`;
-        text += `  EXフィールド補正: ${pkm.ex_effect_label}\n`;
-
-        text += `\n  1日あたりの平均寄与:\n`;
-        text += `    きのみエナジー: ${avgBerryEnergies[idx].toFixed(3)}\n`;
-        text += `    スキル発動回数: ${avgSkillCounts[idx].toFixed(3)} 回\n`;
-        text += `    スキルエナジー: ${avgSkillEnergies[idx].toFixed(3)}\n\n`;
-      });
-
-      // ------------------------------
-      // 3. 入力パラメータ（下段ブロック）
-      // ------------------------------
-      text += "=== 入力パラメータ ===\n";
-
-      // 3-1. 共通設定
-      text += "[共通設定]\n";
-      text += `  レシピのエネルギー値: ${recipeEnergy}\n`;
-      text += `  シミュレーション試行回数: ${trials}\n`;
-      text += `  月曜日の朝の料理大成功確率: ${day1ChancePercent.toFixed(1)} %\n`;
-      text += `  キャンプチケット: ${useCampTicket ? "使用する" : "使用しない"}\n`;
-      if (useCampTicket) {
-        text += `    おてつだいスピード倍率: ${campTicketConfig.helpingMult.toFixed(2)} 倍\n`;
-        text += `    所持数倍率: ${campTicketConfig.inventoryBonus.toFixed(2)} 倍\n`;
-      }
-      text += `  起床: ${document.getElementById("wakeTime").value}\n`;
-      text += `  朝食: ${document.getElementById("breakfastTime").value}\n`;
-      text += `  昼食: ${document.getElementById("lunchTime").value}\n`;
-      text += `  夕食: ${document.getElementById("dinnerTime").value}\n`;
-      text += `  就寝: ${document.getElementById("sleepTime").value}\n\n`;
-
-      // 3-2. フィールド＆イベント補正
-      text += "[フィールド＆イベント補正]\n";
       const fieldLabel = Fields[fieldKey]?.label || fieldKey;
-      text += `  フィールド: ${fieldLabel}\n`;
-      text += `    メインタイプ: ${fieldConfig.mainType}\n`;
-      text += `    サブタイプ1: ${fieldConfig.sub1Type}\n`;
-      text += `    サブタイプ2: ${fieldConfig.sub2Type}\n`;
-      if (fieldKey === "wakakusa_ex") {
-        text += `    EXフィールド補正: ${ExEffectLabels[fieldConfig.exEffect] || "補正なし"}\n`;
-      }
-      text += `  イベント補正:\n`;
-      text += `    おてつだいスピード倍率: ${helpingSpeedMultiplier.toFixed(2)} 倍\n`;
-      text += `    食材数ボーナス: +${ingredientBonus} 個\n`;
-      text += `    スキル確率倍率: ${skillEventMultiplier.toFixed(2)} 倍\n`;
-      text += `    料理エナジー倍率: ${energyEventMultiplier.toFixed(2)} 倍\n\n`;
 
-      // 3-3. ポケモン設定
-      text += "[ポケモン設定]\n";
-      pokemons.forEach((pkm, idx) => {
-        const n = idx + 1;
-        const subNames =
-          pkm.sub_skills.length > 0
-            ? pkm.sub_skills.map(s => s.name).join(", ")
-            : "なし";
+      // ▼ 結果オブジェクトを作成
+      const result = {
+        timestampStr,
+        summary: {
+          avgSkill,
+          avgSuccess,
+          avgExtraPerDay,
+          perPokemonExtraPerDay,
+          perDayValues: perDay
+        },
+        pokemons: pokemons.map((pkm, idx) => {
+          const totalHelpMult =
+            pkm.personal_helping_speed_multiplier *
+            pkm.team_helping_speed_multiplier *
+            pkm.ex_helping_speed_multiplier *
+            pkm.camp_ticket_helping_speed_multiplier;
 
-        text += `  [ポケモン${n}] ${pkm.pokemon_data.name}\n`;
-        text += `    レベル: ${pkm.level}\n`;
-        text += `    メインスキルレベル: ${pkm.skill_level}\n`;
-        text += `    サブスキル: ${subNames}\n`;
-        text += `    性格: ${pkm.nature.name}\n`;
-        text += `    個別おてつだいスピード倍率: ${pkm.personal_helping_speed_multiplier.toFixed(2)} 倍\n`;
-        text += `    個別食材ボーナス: +${pkm.personal_ingredient_bonus} 個\n`;
-        text += `    個別スキル確率倍率: ${pkm.personal_skill_multiplier.toFixed(2)} 倍\n\n`;
-      });
+          const helpEffectiveFastTime =
+            pkm.helping_speed * 0.45 / totalHelpMult;
 
-      // ▼ ここから「履歴配列」に積んでページで管理
-      resultHistory.unshift(text); // 先頭に追加（index 0 が最新）
+          const totalIngBonus =
+            pkm.personal_ingredient_bonus +
+            pkm.team_ingredient_bonus +
+            pkm.ex_ingredient_bonus;
+
+          const baseSkillProb = pkm.pokemon_data.skill_probability;
+          const skillMultTotal =
+            pkm.personal_skill_multiplier *
+            pkm.team_skill_multiplier *
+            pkm.ex_skill_multiplier;
+          const finalSkillProb = pkm.skill_probability;
+
+          // フィールド一致情報（表示用）
+          const fInfo = getFieldEffectForType(pkm.pokemon_data.type, fieldConfig);
+
+          return {
+            index: idx + 1,
+            name: pkm.pokemon_data.name,
+            type: pkm.pokemon_data.type,
+            level: pkm.level,
+            skillLevel: pkm.skill_level,
+            natureName: pkm.nature.name,
+            berryName: pkm.pokemon_data.berry.name,
+            berryNum: pkm.berry_num,
+            berryEnergyMultiplier: pkm.berry_energy_multiplier,
+            helpBase: pkm.helping_speed,
+            helpTotalMult: totalHelpMult,
+            helpEffectiveFastTime,
+            ingredientProb: pkm.ingredient_probability,
+            ingredientBonusTotal: totalIngBonus,
+            skillBaseProb: baseSkillProb,
+            skillMultTotal,
+            skillFinalProb: finalSkillProb,
+            skillEffectPercent: pkm.skill_effect * 100,
+            inventoryLimit: pkm.inventory_limit,
+            exEffectLabel: pkm.ex_effect_label,
+            perDayBerryEnergy: avgBerryEnergies[idx],
+            perDaySkillCount: avgSkillCounts[idx],
+            perDaySkillEnergy: avgSkillEnergies[idx],
+            subSkillsLabel:
+              pkm.sub_skills.length > 0
+                ? pkm.sub_skills.map(s => s.name).join(", ")
+                : "なし",
+            personal: {
+              helpMult: pkm.personal_helping_speed_multiplier,
+              ingBonus: pkm.personal_ingredient_bonus,
+              skillMult: pkm.personal_skill_multiplier
+            },
+            matchesFieldType: fInfo.matchesFieldType,
+            isMainType: fInfo.isMainType
+          };
+        }),
+        settings: {
+          recipeEnergy,
+          trials,
+          day1ChancePercent,
+          useCampTicket,
+          campTicket: campTicketConfig,
+          schedule: sched,
+          field: {
+            key: fieldKey,
+            label: fieldLabel,
+            mainType: fieldConfig.mainType,
+            sub1Type: fieldConfig.sub1Type,
+            sub2Type: fieldConfig.sub2Type,
+            exEffect: fieldConfig.exEffect,
+            exEffectLabel: ExEffectLabels[fieldConfig.exEffect] || ""
+          },
+          events: {
+            helpingSpeedMultiplier,
+            ingredientBonus,
+            skillEventMultiplier,
+            energyEventMultiplier
+          }
+        }
+      };
+
+      // ▼ 履歴の先頭に追加して、表示を更新
+      resultHistory.unshift(result);
       resultIndex = 0;
       renderCurrentResult();
 
