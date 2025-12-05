@@ -1312,6 +1312,53 @@ window.addEventListener("DOMContentLoaded", () => {
   const statusEl = document.getElementById("status");
   const outputEl = document.getElementById("output");
 
+  const prevResultBtn = document.getElementById("prevResultBtn");
+  const nextResultBtn = document.getElementById("nextResultBtn");
+  const resultPageInfo = document.getElementById("resultPageInfo");
+
+  const resultHistory = [];   // 最新が index 0
+  let resultIndex = -1;       // -1 のときは結果なし
+
+  function renderCurrentResult() {
+    if (resultIndex < 0 || resultIndex >= resultHistory.length) {
+      outputEl.textContent = "";
+      resultPageInfo.textContent = "結果はまだありません";
+      if (prevResultBtn) prevResultBtn.disabled = true;
+      if (nextResultBtn) nextResultBtn.disabled = true;
+      return;
+    }
+
+    outputEl.textContent = resultHistory[resultIndex];
+
+    const currentPage = resultIndex + 1;        // 1 始まり
+    const totalPages = resultHistory.length;
+    resultPageInfo.textContent = `結果 ${currentPage} / ${totalPages}（1 が最新）`;
+
+    if (prevResultBtn) prevResultBtn.disabled = (resultIndex >= totalPages - 1); // これ以上「前」はない
+    if (nextResultBtn) nextResultBtn.disabled = (resultIndex <= 0);             // これ以上「次」はない
+  }
+
+  if (prevResultBtn) {
+    prevResultBtn.addEventListener("click", () => {
+      if (resultIndex < resultHistory.length - 1) {
+        resultIndex += 1;  // 古い結果へ
+        renderCurrentResult();
+      }
+    });
+  }
+
+  if (nextResultBtn) {
+    nextResultBtn.addEventListener("click", () => {
+      if (resultIndex > 0) {
+        resultIndex -= 1;  // 新しい結果へ
+        renderCurrentResult();
+      }
+    });
+  }
+
+  // 初期状態（結果なし）を反映
+  renderCurrentResult();
+
   runBtn.addEventListener("click", () => {
     statusEl.textContent = "";
     let hasError = false;
@@ -1488,104 +1535,160 @@ window.addEventListener("DOMContentLoaded", () => {
       const perPokemonExtraPerDay =
         pokemons.length > 0 ? avgExtraPerDay / pokemons.length : 0;
 
+      const now = new Date();
+      const timestampStr = now.toLocaleString("ja-JP");
+
       let text = "";
 
-      text += "=== 入力パラメータ ===\n";
-      pokemons.forEach((pkm, idx) => {
-        const n = idx + 1;
+      // ------------------------------
+      // 0. 実行時刻
+      // ------------------------------
+      text += `実行日時: ${timestampStr}\n`;
+      text += "----------------------------------------\n\n";
 
-        const subNames =
-          pkm.sub_skills.length > 0
-            ? pkm.sub_skills.map(s => s.name).join(", ")
-            : "なし";
-        text += `[ポケモン${n}] ${pkm.pokemon_data.name}\n`;
-        text += `  レベル: ${pkm.level}\n`;
-        text += `  メインスキルレベル: ${pkm.skill_level}\n`;
-        text += `  サブスキル: ${subNames}\n`;
-        text += `  性格: ${pkm.nature.name}\n`;
-        text += `  個別おてつだいスピード倍率: ${pkm.personal_helping_speed_multiplier.toFixed(2)} 倍\n`;
-        text += `  個別食材ボーナス: +${pkm.personal_ingredient_bonus} 個\n`;
-        text += `  個別スキル確率倍率: ${pkm.personal_skill_multiplier.toFixed(2)} 倍\n`;
-      });
-      text += `\nレシピのエネルギー値: ${recipeEnergy}\n`;
-      text += `試行回数: ${trials}\n\n`;
-      text += `月曜日の朝の料理大成功確率: ${day1ChancePercent.toFixed(1)} %\n`;
-      text += `キャンプチケット: ${useCampTicket ? "使用する" : "使用しない"}\n`;
-      if (useCampTicket) {
-        text += `  おてつだいスピード倍率: ${campTicketConfig.helpingMult} 倍\n`;
-        text += `  所持数倍率: ${campTicketConfig.inventoryBonus} 倍\n`;
-      }
-
-      const fieldLabel = Fields[fieldKey]?.label || fieldKey;
-      text += `\n=== フィールド＆イベント補正設定 ===\n`;
-      text += `フィールド ${fieldLabel}\n`;
-      text += `  メインタイプ: ${fieldConfig.mainType}\n`;
-      text += `  サブタイプ1: ${fieldConfig.sub1Type}\n`;
-      text += `  サブタイプ2: ${fieldConfig.sub2Type}\n`;
-      if (fieldKey === "wakakusa_ex") {
-        text += `  EXフィールド補正: ${ExEffectLabels[fieldConfig.exEffect] || "補正なし"}\n`;
-      }
-      text += `イベント補正:\n`;
-      text += `  おてつだいスピード倍率: ${helpingSpeedMultiplier.toFixed(2)} 倍\n`;
-      text += `  食材数ボーナス: +${ingredientBonus} 個\n`;
-      text += `  スキル確率倍率: ${skillEventMultiplier.toFixed(2)} 倍\n`;
-      text += `  料理エナジー倍率: ${energyEventMultiplier.toFixed(2)} 倍\n\n`;
-
-      text += "=== ポケモン最終ステータス ===\n";
-      pokemons.forEach((pkm, idx) => {
-        const n = idx + 1;
-        text += `[ポケモン${n}] ${pkm.pokemon_data.name}\n`;
-        text += `  おてつだい時間: ${pkm.helping_speed} 秒\n`;
-        text += `    おてつだいスピード倍率: ${(pkm.personal_helping_speed_multiplier * pkm.team_helping_speed_multiplier * pkm.ex_helping_speed_multiplier * pkm.camp_ticket_helping_speed_multiplier).toFixed(2)} 倍\n`;
-        text += `    補正後: ${pkm.helping_speed * 0.45 / (pkm.personal_helping_speed_multiplier * pkm.team_helping_speed_multiplier * pkm.ex_helping_speed_multiplier * pkm.camp_ticket_helping_speed_multiplier)} 秒 (げんき81%↑)\n`;
-        text += `  食材確率: ${(pkm.ingredient_probability * 100).toFixed(2)} %\n`;
-        text += `    食材ボーナス: +${pkm.personal_ingredient_bonus + pkm.team_ingredient_bonus + pkm.ex_ingredient_bonus} 個\n`;
-        text += `  スキル確率: ${(pkm.pokemon_data.skill_probability * 100).toFixed(2)} %\n`;
-        text += `    スキル確率倍率: ${(pkm.personal_skill_multiplier * pkm.team_skill_multiplier * pkm.ex_skill_multiplier).toFixed(2)} 倍\n`;
-        text += `    補正後: ${(pkm.skill_probability * 100).toFixed(2)} %\n`;
-        text += `  所持数: ${pkm.inventory_limit}`;
-        if (pkm.inventory_limit_bonus > 0) {
-          text += `(いいキャンプチケット効果を含む)`;
-        }
-        text += `\n`;
-        text += `  きのみの数: ${pkm.berry_num}\n`;
-        text += `    きのみエナジー倍率: ${pkm.berry_energy_multiplier.toFixed(2)} 倍\n`;
-        text += `  メインスキル効果: ${pkm.skill_effect * 100} %\n`;
-        text += `  EXフィールド補正: ${pkm.ex_effect_label}\n\n`;
-
-        text += `  1日あたり:\n`;
-        text += `  きのみエナジー: ${avgBerryEnergies[idx].toFixed(3)}\n`;
-        text += `  スキル発動回数: ${avgSkillCounts[idx].toFixed(3)} 回\n`;
-        text += `  スキルエナジー: ${avgSkillEnergies[idx].toFixed(3)}\n\n`;
-      });
-
-      text += "\n=== シミュレーション結果（1週間 × 試行回数の平均） ===\n";
-      text += "1日あたり\n"
-      text += `  平均スキル発動数: ${avgSkill.toFixed(3)} 回\n`;
-      text += `  平均料理大成功回数: ${avgSuccess.toFixed(3)} 回\n`;
-      text += `  平均追加エナジー: ${avgExtraPerDay.toFixed(3)}\n`;
+      // ------------------------------
+      // 1. 料理・エナジー結果（上のブロック）
+      // ------------------------------
+      text += "=== 料理・エナジー結果（1日あたりの平均） ===\n";
+      text += `  料理大成功回数: ${avgSuccess.toFixed(3)} 回\n`;
+      text += `  スキル発動回数（全ポケモン合計）: ${avgSkill.toFixed(3)} 回\n`;
+      text += `  追加エナジー合計: ${avgExtraPerDay.toFixed(3)}\n`;
       text += `    1匹あたり: ${perPokemonExtraPerDay.toFixed(3)}\n\n`;
 
-      text += "曜日別の平均追加エナジー:\n";
+      text += "[曜日別の平均追加エナジー]\n";
       const labels = [
-        "月曜目",
-        "火曜目",
-        "水曜目",
-        "木曜目",
-        "金曜目",
-        "土曜目",
-        "日曜目"
+        "月曜日",
+        "火曜日",
+        "水曜日",
+        "木曜日",
+        "金曜日",
+        "土曜日",
+        "日曜日"
       ];
       perDay.forEach((val, idx) => {
         text += `  ${labels[idx]}: ${val.toFixed(3)}\n`;
       });
 
-      // text が 1回分の出力ブロック
-      const sep = "\n\n-------------------------------------------------------------------------------------------------------------------\n\n";
+      // ------------------------------
+      // 2. ポケモン別の結果（中段ブロック）
+      // ------------------------------
+      text += "\n=== ポケモン別の結果 ===\n";
+      pokemons.forEach((pkm, idx) => {
+        const n = idx + 1;
+        text += `[ポケモン${n}] ${pkm.pokemon_data.name}\n`;
+        text += `  レベル: ${pkm.level} / メインスキルLv: ${pkm.skill_level}\n`;
+        text += `  性格: ${pkm.nature.name}\n`;
 
-      let old_text = outputEl.textContent;
+        // おてつだい
+        const totalHelpMult =
+          pkm.personal_helping_speed_multiplier *
+          pkm.team_helping_speed_multiplier *
+          pkm.ex_helping_speed_multiplier *
+          pkm.camp_ticket_helping_speed_multiplier;
+        const effectiveFastTime = pkm.helping_speed * 0.45 / totalHelpMult; // げんき81%以上想定
 
-      outputEl.textContent = text + sep + old_text;
+        text += `  おてつだい時間（基礎）: ${pkm.helping_speed} 秒\n`;
+        text += `    おてつだいスピード倍率: ${totalHelpMult.toFixed(2)} 倍\n`;
+        text += `    おてつだい時間（げんき81%以上・補正後の目安）: ${effectiveFastTime.toFixed(1)} 秒\n`;
+
+        // 食材まわり
+        const totalIngBonus =
+          pkm.personal_ingredient_bonus +
+          pkm.team_ingredient_bonus +
+          pkm.ex_ingredient_bonus;
+        text += `  食材確率（補正後）: ${(pkm.ingredient_probability * 100).toFixed(2)} %\n`;
+        text += `    食材ボーナス合計: +${totalIngBonus} 個\n`;
+
+        // スキルまわり
+        const baseSkillProb = pkm.pokemon_data.skill_probability * 100;
+        const skillMultTotal =
+          pkm.personal_skill_multiplier *
+          pkm.team_skill_multiplier *
+          pkm.ex_skill_multiplier;
+        const finalSkillProb = pkm.skill_probability * 100;
+
+        text += `  スキル確率（基礎）: ${baseSkillProb.toFixed(2)} %\n`;
+        text += `    スキル確率倍率: ${skillMultTotal.toFixed(2)} 倍\n`;
+        text += `    スキル確率（補正後）: ${finalSkillProb.toFixed(2)} %\n`;
+
+        // 所持数・きのみ
+        text += `  所持数: ${pkm.inventory_limit}`;
+        if (useCampTicket) {
+          text += "（いいキャンプチケット効果を含む）";
+        }
+        text += `\n`;
+        text += `  きのみの数: ${pkm.berry_num}\n`;
+        text += `    きのみエナジー倍率: ${pkm.berry_energy_multiplier.toFixed(2)} 倍\n`;
+
+        text += `  メインスキル効果: ${(pkm.skill_effect * 100).toFixed(1)} %\n`;
+        text += `  EXフィールド補正: ${pkm.ex_effect_label}\n`;
+
+        text += `\n  1日あたりの平均寄与:\n`;
+        text += `    きのみエナジー: ${avgBerryEnergies[idx].toFixed(3)}\n`;
+        text += `    スキル発動回数: ${avgSkillCounts[idx].toFixed(3)} 回\n`;
+        text += `    スキルエナジー: ${avgSkillEnergies[idx].toFixed(3)}\n\n`;
+      });
+
+      // ------------------------------
+      // 3. 入力パラメータ（下段ブロック）
+      // ------------------------------
+      text += "=== 入力パラメータ ===\n";
+
+      // 3-1. 共通設定
+      text += "[共通設定]\n";
+      text += `  レシピのエネルギー値: ${recipeEnergy}\n`;
+      text += `  シミュレーション試行回数: ${trials}\n`;
+      text += `  月曜日の朝の料理大成功確率: ${day1ChancePercent.toFixed(1)} %\n`;
+      text += `  キャンプチケット: ${useCampTicket ? "使用する" : "使用しない"}\n`;
+      if (useCampTicket) {
+        text += `    おてつだいスピード倍率: ${campTicketConfig.helpingMult.toFixed(2)} 倍\n`;
+        text += `    所持数倍率: ${campTicketConfig.inventoryBonus.toFixed(2)} 倍\n`;
+      }
+      text += `  起床: ${document.getElementById("wakeTime").value}\n`;
+      text += `  朝食: ${document.getElementById("breakfastTime").value}\n`;
+      text += `  昼食: ${document.getElementById("lunchTime").value}\n`;
+      text += `  夕食: ${document.getElementById("dinnerTime").value}\n`;
+      text += `  就寝: ${document.getElementById("sleepTime").value}\n\n`;
+
+      // 3-2. フィールド＆イベント補正
+      text += "[フィールド＆イベント補正]\n";
+      const fieldLabel = Fields[fieldKey]?.label || fieldKey;
+      text += `  フィールド: ${fieldLabel}\n`;
+      text += `    メインタイプ: ${fieldConfig.mainType}\n`;
+      text += `    サブタイプ1: ${fieldConfig.sub1Type}\n`;
+      text += `    サブタイプ2: ${fieldConfig.sub2Type}\n`;
+      if (fieldKey === "wakakusa_ex") {
+        text += `    EXフィールド補正: ${ExEffectLabels[fieldConfig.exEffect] || "補正なし"}\n`;
+      }
+      text += `  イベント補正:\n`;
+      text += `    おてつだいスピード倍率: ${helpingSpeedMultiplier.toFixed(2)} 倍\n`;
+      text += `    食材数ボーナス: +${ingredientBonus} 個\n`;
+      text += `    スキル確率倍率: ${skillEventMultiplier.toFixed(2)} 倍\n`;
+      text += `    料理エナジー倍率: ${energyEventMultiplier.toFixed(2)} 倍\n\n`;
+
+      // 3-3. ポケモン設定
+      text += "[ポケモン設定]\n";
+      pokemons.forEach((pkm, idx) => {
+        const n = idx + 1;
+        const subNames =
+          pkm.sub_skills.length > 0
+            ? pkm.sub_skills.map(s => s.name).join(", ")
+            : "なし";
+
+        text += `  [ポケモン${n}] ${pkm.pokemon_data.name}\n`;
+        text += `    レベル: ${pkm.level}\n`;
+        text += `    メインスキルレベル: ${pkm.skill_level}\n`;
+        text += `    サブスキル: ${subNames}\n`;
+        text += `    性格: ${pkm.nature.name}\n`;
+        text += `    個別おてつだいスピード倍率: ${pkm.personal_helping_speed_multiplier.toFixed(2)} 倍\n`;
+        text += `    個別食材ボーナス: +${pkm.personal_ingredient_bonus} 個\n`;
+        text += `    個別スキル確率倍率: ${pkm.personal_skill_multiplier.toFixed(2)} 倍\n\n`;
+      });
+
+      // ▼ ここから「履歴配列」に積んでページで管理
+      resultHistory.unshift(text); // 先頭に追加（index 0 が最新）
+      resultIndex = 0;
+      renderCurrentResult();
 
       statusEl.textContent = "シミュレーション完了";
       runBtn.disabled = false;
