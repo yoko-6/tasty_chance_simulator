@@ -712,7 +712,6 @@ function initPokemonSlots() {
         <div class="subskills-box" id="slot-${i}-subskills"></div>
         <div class="subskill-actions">
           <button type="button" id="slot-${i}-clear-subskills">サブスキルをクリア</button>
-          <button type="button" id="slot-${i}-clear-slot">このポケモンの設定をクリア</button>
         </div>
         <div id="slot-${i}-subskillError" class="error" style="display:none;"></div>
       </div>
@@ -773,6 +772,9 @@ function initPokemonSlots() {
             value="1.0"
           >
         </div>
+      </div>
+      <div class="subskill-actions">
+        <button type="button" id="slot-${i}-clear-slot">このポケモンの設定をクリア</button>
       </div>
     </div>
     `;
@@ -927,6 +929,14 @@ function clearPokemonSlotSettings(slotIndex) {
     errorEl.style.display = "none";
     errorEl.textContent = "";
   }
+
+  // 個別補正をデフォルト値に戻す
+  const helpMultInput = document.getElementById(`slot-${slotIndex}-help-mult`);
+  const ingBonusInput = document.getElementById(`slot-${slotIndex}-ing-bonus`);
+  const skillMultInput = document.getElementById(`slot-${slotIndex}-skill-mult`);
+  if (helpMultInput) helpMultInput.value = "1.0";
+  if (ingBonusInput) ingBonusInput.value = "0";
+  if (skillMultInput) skillMultInput.value = "1.0";
 }
 
 function getExEffectForType(pokemonType, exConfig) {
