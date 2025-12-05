@@ -192,7 +192,8 @@ class Pokemon {
     nature,
     skill_level,
     skill_event_multiplier,
-    ingredient_bonus
+    ingredient_bonus,
+    helping_speed_multiplier
   ) {
     this.pokemon_data = pokemon_data;
     this.name = name;
@@ -210,6 +211,10 @@ class Pokemon {
     this.ingredient_bonus = Number.isFinite(ingredient_bonus)
       ? ingredient_bonus
       : 0;
+
+    this.personal_helping_speed_multiplier = Number.isFinite(helping_speed_multiplier)
+      ? helping_speed_multiplier
+      : 1.0;
 
     this.initStats();
   }
@@ -292,11 +297,16 @@ class Pokemon {
   }
 
   get_next_helping_time(nowSeconds, helping_speed_bonus) {
-    const interval =
-      this.helping_speed /
-      (this.get_camp_ticket_speed_bonus() * this.get_health_speed_bonus() * helping_speed_bonus);
+    const effectiveBonus =
+      this.get_camp_ticket_speed_bonus() *
+      this.get_health_speed_bonus() *
+      helping_speed_bonus *
+      this.personal_helping_speed_multiplier;
+
+    const interval = this.helping_speed / effectiveBonus;
     return nowSeconds + Math.floor(interval);
   }
+
 
   help_in_daytime() {
     this.inventory = 0;
@@ -645,6 +655,41 @@ function initPokemonSlots() {
         </div>
         <div id="slot-${i}-subskillError" class="error" style="display:none;"></div>
       </div>
+      <div class="row">
+      <label>個別補正</label>
+      <div class="slot-modifiers">
+        <div class="modifier-field">
+          <span class="muted">おてつだいスピード倍率</span>
+          <input
+            id="slot-${i}-help-mult"
+            type="number"
+            min="0.1"
+            step="0.05"
+            value="1.0"
+          >
+        </div>
+        <div class="modifier-field">
+          <span class="muted">食材数ボーナス</span>
+          <input
+            id="slot-${i}-ing-bonus"
+            type="number"
+            min="0"
+            step="1"
+            value="0"
+          >
+        </div>
+        <div class="modifier-field">
+          <span class="muted">スキル確率倍率</span>
+          <input
+            id="slot-${i}-skill-mult"
+            type="number"
+            min="0"
+            step="0.05"
+            value="1.0"
+          >
+        </div>
+      </div>
+    </div>
     `;
 
     container.appendChild(card);
@@ -970,9 +1015,30 @@ window.addEventListener("DOMContentLoaded", () => {
         natureKey = "Hardy"; // フォールバックで無補正
       }
 
+      const slotHelpMultInput = Number(
+        document.getElementById(`slot-${i}-help-mult`).value || "1"
+      );
+      const slotSkillMultInput = Number(
+        document.getElementById(`slot-${i}-skill-mult`).value || "1"
+      );
+      const slotIngBonusInput = Number(
+        document.getElementById(`slot-${i}-ing-bonus`).value || "0"
+      );
+
+      const personalHelpMult = Math.max(0.1, slotHelpMultInput || 1.0);
+      const personalSkillMult = Math.max(0, slotSkillMultInput || 1.0);
+      const personalIngredientBonus = Math.max(
+        0,
+        Math.floor(slotIngBonusInput || 0)
+      );
+
       const pokemonData = PokemonList[selectedPokemonKey];
       const nature = Natures[natureKey];
       const pokemonName = `${pokemonData.name}${i}`;
+
+      const combinedSkillMultiplier = skillEventMultiplier * personalSkillMult;
+      const combinedIngredientBonus = ingredientBonus + personalIngredientBonus;
+      const combinedHelpingMultiplier = personalHelpMult;
 
       const pokemon = new Pokemon(
         pokemonData,
@@ -981,8 +1047,9 @@ window.addEventListener("DOMContentLoaded", () => {
         subSkills,
         nature,
         skillLevel,
-        skillEventMultiplier,
-        ingredientBonus
+        combinedSkillMultiplier,
+        combinedIngredientBonus,
+        combinedHelpingMultiplier
       );
       pokemons.push(pokemon);
     }
@@ -1043,6 +1110,24 @@ window.addEventListener("DOMContentLoaded", () => {
       text += "=== 入力パラメータ ===\n";
       pokemons.forEach((pkm, idx) => {
         const n = idx + 1;
+        // 有効なスキル倍率（グローバル × 個別）
+        const effectiveSkillMult = pkm.skill_event_multiplier ?? 1.0;
+        // 個別スキル倍率 = 有効倍率 / グローバル倍率（0 のときはそのまま）
+        const personalSkillMultOut =
+          skillEventMultiplier > 0
+            ? effectiveSkillMult / skillEventMultiplier
+            : effectiveSkillMult;
+
+        // 有効な食材ボーナス（グローバル + 個別）
+        const effectiveIngredientBonus = pkm.ingredient_bonus ?? 0;
+        // 個別食材ボーナス = 有効 - グローバル（マイナスにはしない）
+        const personalIngredientBonusOut = Math.max(
+          0,
+          effectiveIngredientBonus - ingredientBonus
+        );
+
+        // 個別おてつだいスピード倍率
+        const personalHelpMultOut = pkm.personal_helping_speed_multiplier ?? 1.0;
         const subNames =
           pkm.sub_skills.length > 0
             ? pkm.sub_skills.map(s => s.name).join(", ")
@@ -1052,17 +1137,20 @@ window.addEventListener("DOMContentLoaded", () => {
         text += `  メインスキルレベル: ${pkm.skill_level}\n`;
         text += `  サブスキル: ${subNames}\n`;
         text += `  性格: ${pkm.nature.name}\n`;
+        text += `  個別おてつだいスピード倍率: ${personalHelpMultOut.toFixed(2)} 倍\n`;
+        text += `  個別食材ボーナス: +${personalIngredientBonusOut} 個\n`;
+        text += `  個別スキル確率倍率: ${personalSkillMultOut.toFixed(2)} 倍\n`;
       });
       text += `\nレシピのエネルギー値: ${recipeEnergy}\n`;
       text += `キャンプチケット: ${useCampTicket ? "使用する" : "使用しない"}\n`;
       text += `試行回数: ${trials}\n\n`;
       text += `月曜日の朝の料理大成功確率: ${day1ChancePercent.toFixed(1)} %\n`;
-      text += `おてつだいスピードUP: ${helpingSpeedMultiplier.toFixed(2)} 倍\n`;
+      text += `おてつだいスピード倍率: ${helpingSpeedMultiplier.toFixed(2)} 倍\n`;
       text += `食材数ボーナス: +${ingredientBonus} 個\n`;
-      text += `スキル確率UP: ${skillEventMultiplier.toFixed(2)} 倍\n`;
-      text += `料理エナジーUP: ${energyEventMultiplier.toFixed(2)} 倍\n\n`;
+      text += `スキル確率倍率: ${skillEventMultiplier.toFixed(2)} 倍\n`;
+      text += `料理エナジー倍率: ${energyEventMultiplier.toFixed(2)} 倍\n\n`;
 
-      text += "=== ポケモン最終ステータス（確率） ===\n";
+      text += "=== ポケモン最終ステータス ===\n";
       pokemons.forEach((pkm, idx) => {
         const n = idx + 1;
         text += `[ポケモン${n}] ${pkm.pokemon_data.name}\n`;
@@ -1071,7 +1159,7 @@ window.addEventListener("DOMContentLoaded", () => {
         text += `  スキル確率: ${(pkm.skill_probability * 100).toFixed(2)} %\n`;
         text += `  所持数: ${pkm.inventory_limit}\n`;
         text += `  きのみの数: ${pkm.berry_num}\n`;
-        text += `  メインスキル効果: ${pkm.skill_effect}\n`;
+        text += `  メインスキル効果: ${pkm.skill_effect * 100} %\n`;
       });
 
       text += "\n=== シミュレーション結果（1週間 × 試行回数の平均） ===\n";
