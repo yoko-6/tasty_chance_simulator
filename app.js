@@ -706,6 +706,16 @@ function initPokemonSlots() {
           <input id="slot-${i}-skillLevel" type="number" min="1" max="6" value="6">
         </div>
       </div>
+
+      <div class="row">
+        <label>サブスキル</label>
+        <div class="subskills-box" id="slot-${i}-subskills"></div>
+        <div class="subskill-actions">
+          <button type="button" id="slot-${i}-clear-subskills">サブスキルをクリア</button>
+          <button type="button" id="slot-${i}-clear-slot">このポケモンの設定をクリア</button>
+        </div>
+        <div id="slot-${i}-subskillError" class="error" style="display:none;"></div>
+      </div>
       <div class="row">
         <label>性格</label>
           <div class="nature-box">
@@ -729,16 +739,6 @@ function initPokemonSlots() {
             </div>
           </div>
         </div>
-      </div>
-
-      <div class="row">
-        <label>サブスキル</label>
-        <div class="subskills-box" id="slot-${i}-subskills"></div>
-        <div class="subskill-actions">
-          <button type="button" id="slot-${i}-clear-subskills">サブスキルをクリア</button>
-          <button type="button" id="slot-${i}-clear-slot">このポケモンの設定をクリア</button>
-        </div>
-        <div id="slot-${i}-subskillError" class="error" style="display:none;"></div>
       </div>
       <div class="row">
       <label>個別補正</label>
