@@ -218,6 +218,37 @@
       margin-bottom: 0.15rem;
       font-size: 0.8rem;
     }
+
+    details.advanced-settings {
+      margin-top: 1rem;
+    }
+
+    details.advanced-settings>summary {
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #007aff;
+      list-style: none;
+    }
+
+    /* デフォルトの三角マーカーを消す（対応ブラウザ向け） */
+    details.advanced-settings>summary::-webkit-details-marker {
+      display: none;
+    }
+
+    /* 疑似アイコン（▼ / ▲） */
+    details.advanced-settings>summary::after {
+      content: " ▼";
+      font-size: 0.8rem;
+    }
+
+    details.advanced-settings[open]>summary::after {
+      content: " ▲";
+    }
+
+    details.advanced-settings .advanced-body {
+      margin-top: 0.75rem;
+    }
   </style>
 </head>
 
@@ -226,18 +257,6 @@
 
   <div class="card">
     <h2 style="font-size:1.1rem; margin-top:0;">ポケモン・レシピ設定</h2>
-
-    <!-- ポケモンスロット（最大 5 匹） -->
-    <div id="pokemonSlots"></div>
-    <div style="margin-top:0.5rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
-      <button id="addPokemonBtn" type="button" class="secondary-btn">ポケモンを追加</button>
-      <button id="removePokemonBtn" type="button" class="secondary-btn">最後のポケモンを削除</button>
-    </div>
-    <div class="muted" style="margin-top:0.25rem;">
-      ※ 最大 5 匹まで追加できます。最初は 1 匹だけ表示されます。
-    </div>
-
-    <hr />
 
     <!-- グローバル設定 -->
     <div class="grid">
@@ -260,32 +279,6 @@
       </div>
 
       <div class="row">
-        <label for="helpingSpeedMultiplier">おてつだいスピード倍率</label>
-        <input id="helpingSpeedMultiplier" type="number" min="0.1" step="0.05" value="1.0" />
-        <div class="muted">イベントやEXフィールドで倍率がかかっていたら入力してください（例: 1.5 で 1.5倍）</div>
-      </div>
-
-      <div class="row">
-        <label for="ingredientBonus">食材数ボーナス</label>
-        <input id="ingredientBonus" type="number" min="0" step="1" value="0" />
-        <div class="muted">
-          食材を獲得したときに増える追加個数（例: 1 で +1 個）。初期値 0。
-        </div>
-      </div>
-
-      <div class="row">
-        <label for="skillEventMultiplier">スキル確率倍率</label>
-        <input id="skillEventMultiplier" type="number" min="0" step="0.05" value="1.0" />
-        <div class="muted">イベントやEXフィールドで倍率がかかっていたら入力してください（例: 1.5 で 1.5倍）</div>
-      </div>
-
-      <div class="row">
-        <label for="energyEventMultiplier">料理エナジー倍率</label>
-        <input id="energyEventMultiplier" type="number" min="0" step="0.05" value="1.0" />
-        <div class="muted">イベントで倍率がかかっていたら入力してください（例: 1.5 で 1.5倍）</div>
-      </div>
-
-      <div class="row">
         <label>&nbsp;</label>
         <div class="inline">
           <input id="campTicket" type="checkbox" checked />
@@ -294,37 +287,83 @@
       </div>
     </div>
 
-    <!-- 生活スケジュール -->
+    <details class="advanced-settings">
+      <summary>詳細設定（倍率・ボーナス / 生活スケジュール）</summary>
+      <div class="advanced-body">
+        <hr />
+        <h3 style="font-size:1rem; margin-top:0;">倍率・ボーナス設定</h3>
+        <div class="grid">
+          <div class="row">
+            <label for="helpingSpeedMultiplier">おてつだいスピード倍率</label>
+            <input id="helpingSpeedMultiplier" type="number" min="0.1" step="0.05" value="1.0" />
+            <div class="muted">イベントやEXフィールドで倍率がかかっていたら入力してください（例: 1.5 で 1.5倍）</div>
+          </div>
+
+          <div class="row">
+            <label for="ingredientBonus">食材数ボーナス</label>
+            <input id="ingredientBonus" type="number" min="0" step="1" value="0" />
+            <div class="muted">
+              食材を獲得したときに増える追加個数（例: 1 で +1 個）。初期値 0。
+            </div>
+          </div>
+
+          <div class="row">
+            <label for="skillEventMultiplier">スキル確率倍率</label>
+            <input id="skillEventMultiplier" type="number" min="0" step="0.05" value="1.0" />
+            <div class="muted">イベントやEXフィールドで倍率がかかっていたら入力してください（例: 1.5 で 1.5倍）</div>
+          </div>
+
+          <div class="row">
+            <label for="energyEventMultiplier">料理エナジー倍率</label>
+            <input id="energyEventMultiplier" type="number" min="0" step="0.05" value="1.0" />
+            <div class="muted">イベントで倍率がかかっていたら入力してください（例: 1.5 で 1.5倍）</div>
+          </div>
+        </div>
+
+        <!-- 生活スケジュール -->
+        <hr />
+        <h3 style="font-size:1rem; margin-top:0;">生活スケジュール</h3>
+        <div class="grid">
+          <div class="row">
+            <label for="wakeTime">起床</label>
+            <input id="wakeTime" type="time" value="07:00" />
+            <div class="muted">4:00 ~ </div>
+          </div>
+          <div class="row">
+            <label for="breakfastTime">朝食</label>
+            <input id="breakfastTime" type="time" value="08:00" />
+            <div class="muted">起床 ~ 11:59</div>
+          </div>
+          <div class="row">
+            <label for="lunchTime">昼食</label>
+            <input id="lunchTime" type="time" value="12:00" />
+            <div class="muted">12:00 ~ 17:59</div>
+          </div>
+          <div class="row">
+            <label for="dinnerTime">夕食</label>
+            <input id="dinnerTime" type="time" value="18:00" />
+            <div class="muted">18:00 ~ 就寝</div>
+          </div>
+          <div class="row">
+            <label for="sleepTime">就寝</label>
+            <input id="sleepTime" type="time" value="22:30" />
+            <div class="muted"> ~ 3:59</div>
+          </div>
+        </div>
+        <div id="timeError" class="error" style="display:none;"></div>
+      </div>
+    </details>
+
     <hr />
-    <h3 style="font-size:1rem; margin-top:0;">生活スケジュール</h3>
-    <div class="grid">
-      <div class="row">
-        <label for="wakeTime">起床</label>
-        <input id="wakeTime" type="time" value="07:00" />
-        <div class="muted">4:00 ~ </div>
-      </div>
-      <div class="row">
-        <label for="breakfastTime">朝食</label>
-        <input id="breakfastTime" type="time" value="08:00" />
-        <div class="muted">起床 ~ 11:59</div>
-      </div>
-      <div class="row">
-        <label for="lunchTime">昼食</label>
-        <input id="lunchTime" type="time" value="12:00" />
-        <div class="muted">12:00 ~ 17:59</div>
-      </div>
-      <div class="row">
-        <label for="dinnerTime">夕食</label>
-        <input id="dinnerTime" type="time" value="18:00" />
-        <div class="muted">18:00 ~ 就寝</div>
-      </div>
-      <div class="row">
-        <label for="sleepTime">就寝</label>
-        <input id="sleepTime" type="time" value="22:30" />
-        <div class="muted"> ~ 3:59</div>
-      </div>
+    <!-- ポケモンスロット（最大 5 匹） -->
+    <div id="pokemonSlots"></div>
+    <div style="margin-top:0.5rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+      <button id="addPokemonBtn" type="button" class="secondary-btn">ポケモンを追加</button>
+      <button id="removePokemonBtn" type="button" class="secondary-btn">最後のポケモンを削除</button>
     </div>
-    <div id="timeError" class="error" style="display:none;"></div>
+    <div class="muted" style="margin-top:0.25rem;">
+      ※ 最大 5 匹まで追加できます。最初は 1 匹だけ表示されます。
+    </div>
 
     <div style="margin-top:1rem; display:flex; align-items:center; gap:0.75rem;">
       <button id="runBtn">シミュレーション実行</button>
