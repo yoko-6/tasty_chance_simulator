@@ -184,7 +184,16 @@ const PokemonList = {
 };
 
 class Pokemon {
-  constructor(pokemon_data, name, level, sub_skills, nature, skill_level, skill_event_multiplier) {
+  constructor(
+    pokemon_data,
+    name,
+    level,
+    sub_skills,
+    nature,
+    skill_level,
+    skill_event_multiplier,
+    ingredient_bonus
+  ) {
     this.pokemon_data = pokemon_data;
     this.name = name;
     this.level = level;
@@ -196,6 +205,11 @@ class Pokemon {
     this.skill_event_multiplier = Number.isFinite(skill_event_multiplier)
       ? skill_event_multiplier
       : 1.0;
+
+    // 食材数ボーナス（1 回の食材獲得ごとに +○ 個）
+    this.ingredient_bonus = Number.isFinite(ingredient_bonus)
+      ? ingredient_bonus
+      : 0;
 
     this.initStats();
   }
@@ -296,12 +310,18 @@ class Pokemon {
     }
     if (Math.random() < this.ingredient_probability) {
       const idx = Math.floor(Math.random() * this.ingredient_nums.length);
-      this.inventory += this.ingredient_nums[idx];
+      let gain = this.ingredient_nums[idx] + (this.ingredient_bonus || 0);
+      // if (this.specialty === Specialty.Ingredients && Math.random() < 0.5) {
+      //   gain += this.ingredient_bonus;
+      // }
+      if (gain < 0) gain = 0;
+      this.inventory += gain;
     } else {
       this.inventory += this.berry_num;
     }
     return Math.random() < this.skill_probability ? this.skill_effect : 0.0;
   }
+
 }
 
 const UserEventType = {
@@ -910,6 +930,16 @@ window.addEventListener("DOMContentLoaded", () => {
     );
     const energyEventMultiplier = Math.max(0, energyEventMultiplierInput || 0);
 
+    const helpingSpeedMultiplierInput = Number(
+      document.getElementById("helpingSpeedMultiplier").value || "1"
+    );
+    const helpingSpeedMultiplier = Math.max(0.1, helpingSpeedMultiplierInput || 1.0);
+
+    const ingredientBonusInput = Number(
+      document.getElementById("ingredientBonus").value || "0"
+    );
+    const ingredientBonus = Math.max(0, Math.floor(ingredientBonusInput || 0));
+
     const pokemons = [];
 
     for (let i = 1; i <= MAX_SLOTS; i++) {
@@ -951,7 +981,8 @@ window.addEventListener("DOMContentLoaded", () => {
         subSkills,
         nature,
         skillLevel,
-        skillEventMultiplier
+        skillEventMultiplier,
+        ingredientBonus
       );
       pokemons.push(pokemon);
     }
@@ -974,12 +1005,6 @@ window.addEventListener("DOMContentLoaded", () => {
       document.getElementById("day1SuccessChance").value || "0"
     );
     const day1ChancePercent = Math.max(0, Math.min(day1ChancePercentInput || 0, 70));
-
-    const helpingSpeedMultiplierInput = Number(
-      document.getElementById("helpingSpeedMultiplier").value || "1"
-    );
-    // 0.1 未満は危険なので 0.1 に丸める
-    const helpingSpeedMultiplier = Math.max(0.1, helpingSpeedMultiplierInput || 1.0);
 
     const simulator = new Simulator();
 
@@ -1032,8 +1057,9 @@ window.addEventListener("DOMContentLoaded", () => {
       text += `キャンプチケット: ${useCampTicket ? "使用する" : "使用しない"}\n`;
       text += `試行回数: ${trials}\n\n`;
       text += `月曜日の朝の料理大成功確率: ${day1ChancePercent.toFixed(1)} %\n`;
-      text += `おてつだいスピードUP: ${helpingSpeedMultiplier.toFixed(2)} 倍\n\n`;
-      text += `スキル確率UP: ${skillEventMultiplier.toFixed(2)} 倍\n\n`;
+      text += `おてつだいスピードUP: ${helpingSpeedMultiplier.toFixed(2)} 倍\n`;
+      text += `食材数ボーナス: +${ingredientBonus} 個\n`;
+      text += `スキル確率UP: ${skillEventMultiplier.toFixed(2)} 倍\n`;
       text += `料理エナジーUP: ${energyEventMultiplier.toFixed(2)} 倍\n\n`;
 
       text += "=== ポケモン最終ステータス（確率） ===\n";
