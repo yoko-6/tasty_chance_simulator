@@ -1194,6 +1194,40 @@ function getFieldEffectForType(pokemonType, fieldConfig) {
   };
 }
 
+function getNatureEffectDescription(natureName) {
+  if (!natureName) return "";
+
+  // 性格名からキーを逆引き
+  let natureKey = null;
+  for (const [key, nat] of Object.entries(Natures)) {
+    if (nat.name === natureName) {
+      natureKey = key;
+      break;
+    }
+  }
+  if (!natureKey) return "";
+
+  const meta = NatureMeta[natureKey];
+  if (!meta || (meta.up === "none" && meta.down === "none")) {
+    return "補正なし";
+  }
+
+  const findLabel = (id, groups) => {
+    const g = groups.find(g => g.id === id);
+    if (!g) return "";
+    // 「おてつだいスピード ▲▲」→「おてつだいスピード」
+    return g.label.replace(/[▲▼]+/g, "").trim();
+  };
+
+  const upLabel = meta.up !== "none" ? findLabel(meta.up, NatureUpGroups) : "";
+  const downLabel = meta.down !== "none" ? findLabel(meta.down, NatureDownGroups) : "";
+
+  const parts = [];
+  if (upLabel) parts.push(`${upLabel} ▲▲`);
+  if (downLabel) parts.push(`${downLabel} ▼▼`);
+
+  return parts.length ? parts.join(" / ") : "補正なし";
+}
 function buildResultHtml(result) {
   const { timestampStr, summary, pokemons, settings } = result;
   const dayLabels = [
@@ -1214,28 +1248,41 @@ function buildResultHtml(result) {
   const pokemonCards = pokemons
     .map(p => {
       const fieldTags = [];
-      if (p.matchesFieldType) fieldTags.push('<span class="tag tag-field-match">フィールド対象</span>');
-      if (p.isMainType) fieldTags.push('<span class="tag tag-main-type">メインタイプ</span>');
+      if (p.matchesFieldType) fieldTags.push('<span class="tag tag-field-match">好きなきのみ</span>');
+      if (p.exEffectLabel && p.isMainType) fieldTags.push('<span class="tag tag-main-type">メインタイプ</span>');
       if (p.exEffectLabel && p.exEffectLabel !== "補正なし") {
         fieldTags.push(`<span class="tag">${p.exEffectLabel}</span>`);
       }
 
-      return `
-        <div class="pokemon-card">
-          <div class="pokemon-card-header">
-            <div>
-              <div class="pokemon-title">ポケモン${p.index}: ${p.name}</div>
-              <div class="pokemon-sub">
-                タイプ: ${p.type || "-"} ／ Lv${p.level} ／ 性格: ${p.natureName}
-              </div>
-              <div class="pokemon-sub">
-                きのみ: ${p.berryName}
-              </div>
-            </div>
+      // 性格補正の説明（ヘッダーの表示用に使うだけ。詳細中身はそのまま）
+      const natureEffectText = getNatureEffectDescription(p.natureName);
+
+      // チップ用 1日あたり指標
+      const perDayBerry = (p.perDayBerryEnergy ?? 0);
+      const perDaySkillEnergy = (p.perDaySkillEnergy ?? 0);
+      const perDaySkillCount = (p.perDaySkillCount ?? 0);
+
+      const mainChipsHtml = `
+        <div class="pokemon-main-stats">
+          <div class="stat-chip">
+            <span class="chip-label">きのみエナジー/日</span>
+            <span class="chip-value">${perDayBerry.toFixed(0)}</span>
           </div>
-          <div class="pokemon-tags">
-            ${fieldTags.join("")}
+          <div class="stat-chip">
+            <span class="chip-label">料理エナジー/日</span>
+            <span class="chip-value">${perDaySkillEnergy.toFixed(0)}</span>
           </div>
+          <div class="stat-chip">
+            <span class="chip-label">スキル発動/日</span>
+            <span class="chip-value">${perDaySkillCount.toFixed(2)}</span>
+          </div>
+        </div>
+      `;
+
+      // ★ 詳細情報の中身は「以前のまま」のレイアウト
+      const detailsHtml = `
+        <details class="pokemon-details">
+          <summary>詳細ステータスを見る</summary>
           <div class="pokemon-body-grid">
             <div>
               <div class="pokemon-body-block-title">おてつだい</div>
@@ -1301,6 +1348,30 @@ function buildResultHtml(result) {
           <div class="pokemon-body-block-row">
             個別補正: おてつだい×${p.personal.helpMult.toFixed(2)} ／ 食材+${p.personal.ingBonus} ／ スキル×${p.personal.skillMult.toFixed(2)}
           </div>
+        </details>
+      `;
+
+      return `
+        <div class="pokemon-card">
+          <div class="pokemon-card-header">
+            <div>
+              <div class="pokemon-title">ポケモン${p.index}: ${p.name}</div>
+              <div class="pokemon-sub">
+                タイプ: ${p.type || "-"} ／ Lv${p.level} ／ 性格: ${p.natureName}
+                ${natureEffectText && natureEffectText !== "補正なし"
+          ? `（${natureEffectText}）`
+          : ""
+        }
+              </div>
+              <div class="pokemon-sub">サブスキル: ${p.subSkillsLabel || "なし"}
+              </div>
+            </div>
+            <div class="pokemon-tags">
+              ${fieldTags.join("")}
+            </div>
+          </div>
+          ${mainChipsHtml}
+          ${detailsHtml}
         </div>
       `;
     })
@@ -1529,7 +1600,7 @@ window.addEventListener("DOMContentLoaded", () => {
   const nextResultBtn = document.getElementById("nextResultBtn");
   const resultPageInfo = document.getElementById("resultPageInfo");
 
-    const resultHistory = [];   // 最新が index 0
+  const resultHistory = [];   // 最新が index 0
   let resultIndex = -1;
 
   function renderCurrentResult() {
@@ -1737,7 +1808,7 @@ window.addEventListener("DOMContentLoaded", () => {
     runBtn.disabled = true;
     statusEl.textContent = `シミュレーション中…（試行回数: ${trials}）`;
 
-        setTimeout(() => {
+    setTimeout(() => {
       simulator.simulate(trials, pokemons, recipeEnergy);
 
       const avgSkill = simulator.average_skill_count;
@@ -1835,7 +1906,7 @@ window.addEventListener("DOMContentLoaded", () => {
               skillMult: pkm.personal_skill_multiplier
             },
             matchesFieldType: fInfo.matchesFieldType,
-            isMainType: fInfo.isMainType
+            isMainType: (fInfo.isMainType && fieldKey === "wakakusa_ex")
           };
         }),
         settings: {

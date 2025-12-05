@@ -251,36 +251,40 @@
       text-align: left;
     }
 
+    /* ▼ ポケモン結果カードの見た目をスッキリさせる */
     .pokemon-card {
       background: #ffffff;
-      border-radius: 10px;
+      border-radius: 12px;
       border: 1px solid #e0e0e7;
-      padding: 0.75rem 0.9rem;
-      margin-bottom: 0.6rem;
+      padding: 0.8rem 0.9rem;
+      margin-bottom: 0.7rem;
     }
 
     .pokemon-card-header {
       display: flex;
       justify-content: space-between;
-      align-items: baseline;
+      align-items: flex-start;
       gap: 0.5rem;
-      margin-bottom: 0.35rem;
+      margin-bottom: 0.4rem;
     }
 
     .pokemon-title {
       font-weight: 600;
+      font-size: 0.95rem;
     }
 
     .pokemon-sub {
       font-size: 0.8rem;
       color: #777;
+      margin-top: 0.15rem;
     }
 
+    /* タグ類（タイプ一致・EX補正など） */
     .pokemon-tags {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.3rem;
-      margin-top: 0.25rem;
+      gap: 0.25rem;
+      margin-top: 0.15rem;
     }
 
     .tag {
@@ -289,6 +293,7 @@
       border-radius: 999px;
       background: #eef1ff;
       color: #3741a0;
+      white-space: nowrap;
     }
 
     .tag-main-type {
@@ -299,6 +304,114 @@
     .tag-field-match {
       background: #e6ffe9;
       color: #1b7a34;
+    }
+
+    .tag-ex {
+      background: #fff4e0;
+      color: #c76a00;
+    }
+
+    /* ひと目でわかる主要ステータス用チップ */
+    .pokemon-main-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-top: 0.35rem;
+    }
+
+    .stat-chip {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0.2rem;
+      padding: 0.25rem 0.55rem;
+      border-radius: 999px;
+      background: #eef1ff;
+      font-size: 0.78rem;
+    }
+
+    .stat-chip .chip-label {
+      color: #555;
+    }
+
+    .stat-chip .chip-value {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .stat-chip .chip-unit {
+      color: #888;
+      font-size: 0.75rem;
+    }
+
+    /* 詳細は折りたたみ */
+    .pokemon-details {
+      margin-top: 0.55rem;
+      font-size: 0.8rem;
+    }
+
+    .pokemon-details>summary {
+      cursor: pointer;
+      font-weight: 600;
+      color: #007aff;
+      list-style: none;
+    }
+
+    .pokemon-details>summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .pokemon-details>summary::after {
+      content: " ▼";
+      font-size: 0.75rem;
+    }
+
+    .pokemon-details[open]>summary::after {
+      content: " ▲";
+    }
+
+    .pokemon-detail-grid {
+      margin-top: 0.45rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 0.3rem 0.8rem;
+    }
+
+    .pokemon-detail-row {
+      line-height: 1.4;
+    }
+
+    .pokemon-detail-label {
+      color: #777;
+    }
+
+    .pokemon-detail-value {
+      font-weight: 500;
+    }
+
+    .pokemon-detail-group {
+      margin-top: 0.6rem;
+    }
+
+    .pokemon-detail-group-title {
+      font-weight: 600;
+      font-size: 0.85rem;
+      margin-bottom: 0.3rem;
+      color: #555;
+    }
+
+    .pokemon-detail-row {
+      margin-bottom: 0.35rem;
+      font-size: 0.85rem;
+    }
+
+    .pokemon-detail-label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 0.05rem;
+    }
+
+    .pokemon-detail-value {
+      display: block;
     }
 
     .pokemon-body-grid {
