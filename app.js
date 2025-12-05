@@ -624,8 +624,9 @@ function initPokemonSlots() {
           <input id="slot-${i}-skillLevel" type="number" min="1" max="6" value="6">
         </div>
       </div>
-      <div class="nature-box">
-          <label>性格</label>
+      <div class="row">
+        <label>性格</label>
+          <div class="nature-box">
             <div class="row">
               <div class="row" style="margin-bottom:0.3rem;">
                 <label for="slot-${i}-nature-up" style="font-weight:400;">上がる項目</label>
@@ -646,6 +647,8 @@ function initPokemonSlots() {
             </div>
           </div>
         </div>
+      </div>
+
       <div class="row">
         <label>サブスキル</label>
         <div class="subskills-box" id="slot-${i}-subskills"></div>
