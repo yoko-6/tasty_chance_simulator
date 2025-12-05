@@ -247,22 +247,28 @@
       </div>
 
       <div class="row">
+        <label for="helpingSpeedMultiplier">おてつだいスピードUP</label>
+        <input id="helpingSpeedMultiplier" type="number" min="0.1" step="0.05" value="1.0" />
+        <div class="muted">イベントやEXフィールドで倍率がかかっていたら入力してください（例: 1.5 で 1.5倍）</div>
+      </div>
+
+      <div class="row">
         <label for="skillEventMultiplier">スキル確率UP</label>
-        <input id="skillEventMultiplier" type="number" min="0" step="0.1" value="1.0" />
-        <div class="muted">イベントなどで倍率がかかっていたら入力してください（例: 1.5 で 1.5倍）</div>
+        <input id="skillEventMultiplier" type="number" min="0" step="0.05" value="1.0" />
+        <div class="muted">イベントやEXフィールドで倍率がかかっていたら入力してください（例: 1.5 で 1.5倍）</div>
       </div>
 
       <div class="row">
         <label for="energyEventMultiplier">料理エナジーUP</label>
-        <input id="energyEventMultiplier" type="number" min="0" step="0.1" value="1.0" />
-        <div class="muted">イベントなどで倍率がかかっていたら入力してください（例: 1.5 で 1.5倍）</div>
+        <input id="energyEventMultiplier" type="number" min="0" step="0.05" value="1.0" />
+        <div class="muted">イベントで倍率がかかっていたら入力してください（例: 1.5 で 1.5倍）</div>
       </div>
 
       <div class="row">
         <label>&nbsp;</label>
         <div class="inline">
           <input id="campTicket" type="checkbox" checked />
-          <span>キャンプチケットを使う（全ポケモン共通）</span>
+          <span>キャンプチケットを使う</span>
         </div>
       </div>
     </div>

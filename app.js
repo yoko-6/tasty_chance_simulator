@@ -354,6 +354,7 @@ class Simulator {
     this.sunday_chance_bonus = 0.2;
     this.sunday_success_energy_bonus = 1.5;
     this.cooking_energy_event_multiplier = 1.0;
+    this.helping_speed_multiplier = 1.0;
 
     // デフォルト値（UI から上書きされる）
     this.wake_up_time = 7 * 3600;
@@ -364,7 +365,7 @@ class Simulator {
   }
 
   get_helping_bonus() {
-    return 1.0;
+    return this.helping_speed_multiplier;
   }
 
   simulate_a_week(pokemons, recipe_energy, use_camp_ticket) {
@@ -974,6 +975,12 @@ window.addEventListener("DOMContentLoaded", () => {
     );
     const day1ChancePercent = Math.max(0, Math.min(day1ChancePercentInput || 0, 70));
 
+    const helpingSpeedMultiplierInput = Number(
+      document.getElementById("helpingSpeedMultiplier").value || "1"
+    );
+    // 0.1 未満は危険なので 0.1 に丸める
+    const helpingSpeedMultiplier = Math.max(0.1, helpingSpeedMultiplierInput || 1.0);
+
     const simulator = new Simulator();
 
     // 0〜1.0 に変換して Simulator に渡す
@@ -981,6 +988,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
     // ▼ 料理エナジーUP(イベント) 倍率を設定
     simulator.cooking_energy_event_multiplier = energyEventMultiplier;
+
+    // ▼ 追加：おてつだいスピード倍率を適用
+    simulator.helping_speed_multiplier = helpingSpeedMultiplier;
 
     // 時刻設定を検証して simulator に反映
     if (!applyScheduleFromUI(simulator)) {
@@ -1022,8 +1032,9 @@ window.addEventListener("DOMContentLoaded", () => {
       text += `キャンプチケット: ${useCampTicket ? "使用する" : "使用しない"}\n`;
       text += `試行回数: ${trials}\n\n`;
       text += `月曜日の朝の料理大成功確率: ${day1ChancePercent.toFixed(1)} %\n`;
+      text += `おてつだいスピードUP: ${helpingSpeedMultiplier.toFixed(2)} 倍\n\n`;
       text += `スキル確率UP: ${skillEventMultiplier.toFixed(2)} 倍\n\n`;
-      text += `料理エナジーUP（イベント）: ${energyEventMultiplier.toFixed(2)} 倍\n\n`;
+      text += `料理エナジーUP: ${energyEventMultiplier.toFixed(2)} 倍\n\n`;
 
       text += "=== ポケモン最終ステータス（確率） ===\n";
       pokemons.forEach((pkm, idx) => {
