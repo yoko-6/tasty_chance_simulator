@@ -606,7 +606,7 @@ class Simulator {
     }
 
     this.average_skill_count = this.total_skill_count / 7.0 / trial;
-    this.average_success_count = this.total_success_count / trial;
+    this.average_success_count = this.total_success_count / 7.0 / trial;
     this.average_extra_energy = this.total_extra_energy / 7.0 / trial;
     for (let d = 0; d < 7; d++) {
       this.average_extra_energies_per_day[d] =
@@ -1279,13 +1279,12 @@ window.addEventListener("DOMContentLoaded", () => {
       simulator.simulate(trials, pokemons, recipeEnergy);
 
       const avgSkill = simulator.average_skill_count;     // 1日あたり スキル発動数（全体）
-      const avgSuccess = simulator.average_success_count; // 1週間あたり 料理成功回数
+      const avgSuccess = simulator.average_success_count; // 1日あたり 料理成功回数
       const avgExtraPerDay = simulator.average_extra_energy; // 1日あたり 追加エナジー（全体）
       const perDay = simulator.average_extra_energies_per_day;
 
-      const totalExtraPerWeek = avgExtraPerDay * 7; // 合計（1週間あたり）
-      const perPokemonExtraPerWeek =
-        pokemons.length > 0 ? totalExtraPerWeek / pokemons.length : 0;
+      const perPokemonExtraPerDay =
+        pokemons.length > 0 ? avgExtraPerDay / pokemons.length : 0;
 
       let text = "";
 
@@ -1314,7 +1313,7 @@ window.addEventListener("DOMContentLoaded", () => {
         text += `  おてつだいスピード倍率: ${campTicketConfig.helpingMult} 倍\n`;
         text += `  所持数倍率: ${campTicketConfig.inventoryBonus} 倍\n`;
       }
-      text += `EXフィールド: ${exConfig.enabled ? "使用する" : "使用しない"}\n`;
+      text += `EXフィールド ${exConfig.enabled ? "補正あり" : "補正なし"}\n`;
       if (exConfig.enabled) {
         text += `  メインタイプ: ${exConfig.mainType}\n`;
         text += `  サブタイプ1: ${exConfig.sub1Type}\n`;
@@ -1337,7 +1336,7 @@ window.addEventListener("DOMContentLoaded", () => {
         text += `  食材確率: ${(pkm.ingredient_probability * 100).toFixed(2)} %\n`;
         text += `    食材ボーナス: +${pkm.personal_ingredient_bonus + pkm.team_ingredient_bonus + pkm.ex_ingredient_bonus} 個\n`;
         text += `  スキル確率: ${(pkm.pokemon_data.skill_probability * 100).toFixed(2)} %\n`;
-        text += `    スキル確率倍率: ${(pkm.personal_skill_multiplier * pkm.team_skill_multiplier * pkm.ex_skill_multiplier).toFixed(2)} 倍\n\n`;
+        text += `    スキル確率倍率: ${(pkm.personal_skill_multiplier * pkm.team_skill_multiplier * pkm.ex_skill_multiplier).toFixed(2)} 倍\n`;
         text += `    補正後: ${(pkm.skill_probability * 100).toFixed(2)} %\n`;
         text += `  所持数: ${pkm.inventory_limit}`;
         if (pkm.inventory_limit_bonus > 0) {
@@ -1346,17 +1345,17 @@ window.addEventListener("DOMContentLoaded", () => {
         text += `\n`;
         text += `  きのみの数: ${pkm.berry_num}\n`;
         text += `  メインスキル効果: ${pkm.skill_effect * 100} %\n`;
-        text += `  EXフィールド補正: ${pkm.ex_effect_label}\n`;
+        text += `  EXフィールド補正: ${pkm.ex_effect_label}\n\n`;
       });
 
       text += "\n=== シミュレーション結果（1週間 × 試行回数の平均） ===\n";
-      text += `1日あたりの平均スキル発動数（全ポケモン合計）: ${avgSkill.toFixed(3)} 回\n`;
-      text += `1週間あたりの平均料理成功回数: ${avgSuccess.toFixed(3)} 回\n`;
-      text += `1週間あたりの平均追加エナジー合計: ${totalExtraPerWeek.toFixed(3)}\n`;
-      text += `1週間あたりの平均追加エナジー（1匹あたり）: ${perPokemonExtraPerWeek.toFixed(3)}\n`;
-      text += `1日あたりの平均追加エナジー合計: ${avgExtraPerDay.toFixed(3)}\n\n`;
+      text += "1日あたり\n"
+      text += `  平均スキル発動数: ${avgSkill.toFixed(3)} 回\n`;
+      text += `  平均料理大成功回数: ${avgSuccess.toFixed(3)} 回\n`;
+      text += `  平均追加エナジー: ${avgExtraPerDay.toFixed(3)}\n`;
+      text += `    1匹あたり: ${perPokemonExtraPerDay.toFixed(3)}\n\n`;
 
-      text += "曜日別の平均追加エナジー（1週間ぶん）:\n";
+      text += "曜日別の平均追加エナジー:\n";
       const labels = [
         "月曜目",
         "火曜目",
