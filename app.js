@@ -1,6 +1,7 @@
 // ====== 基本データ定義 ======
 
 const Type = {
+  None: "",
   Normal: "ノーマル",
   Fire: "ほのお",
   Water: "みず",
@@ -18,8 +19,89 @@ const Type = {
   Dragon: "ドラゴン",
   Dark: "あく",
   Steel: "はがね",
-  Fairy: "フェアリー"
+  Fairy: "フェアリー",
 };
+
+class Berry {
+  constructor(name, energy) {
+    this.name = name;
+    this.energy = energy;
+  }
+}
+
+const Berries = {
+  Persim: new Berry("キーのみ", 28),
+  Leppa: new Berry("ヒメリのみ", 27),
+  Oran: new Berry("オレンのみ", 31),
+  Grepa: new Berry("ウブのみ", 25),
+  Durin: new Berry("ドリのみ", 30),
+  Rawst: new Berry("チーゴのみ", 32),
+  Cheri: new Berry("クラボのみ", 27),
+  Chesto: new Berry("カゴのみ", 32),
+  Figy: new Berry("フィラのみ", 29),
+  Pamtre: new Berry("シーヤのみ", 24),
+  Mago: new Berry("マゴのみ", 26),
+  Lum: new Berry("ラムのみ", 24),
+  Sitrus: new Berry("オボンのみ", 30),
+  Bluk: new Berry("ブリーのみ", 26),
+  Yache: new Berry("ヤチェのみ", 35),
+  Wiki: new Berry("ウイのみ", 31),
+  Belue: new Berry("ベリブのみ", 33),
+  Pecha: new Berry("モモンのみ", 26)
+};
+
+// フィールド定義
+const Fields = {
+  wakakusa: {
+    key: "wakakusa",
+    label: "ワカクサ本島",
+    types: null,      // ユーザーが3タイプを選ぶ
+    isEx: false
+  },
+  cyan: {
+    key: "cyan",
+    label: "シアンの砂浜",
+    types: [Type.Water, Type.Fairy, Type.Flying],
+    isEx: false
+  },
+  taupe: {
+    key: "taupe",
+    label: "トープ洞窟",
+    types: [Type.Ground, Type.Fire, Type.Rock],
+    isEx: false
+  },
+  unohana: {
+    key: "unohana",
+    label: "ウノハナ雪原",
+    types: [Type.Ice, Type.Normal, Type.Dark],
+    isEx: false
+  },
+  lapis: {
+    key: "lapis",
+    label: "ラピスラズリ湖畔",
+    types: [Type.Grass, Type.Psychic, Type.Fighting],
+    isEx: false
+  },
+  gold: {
+    key: "gold",
+    label: "ゴールド旧発電所",
+    types: [Type.Electric, Type.Ghost, Type.Steel],
+    isEx: false
+  },
+  amber: {
+    key: "amber",
+    label: "アンバー渓谷",
+    types: [Type.Poison, Type.Bug, Type.Dragon],
+    isEx: false
+  },
+  wakakusa_ex: {
+    key: "wakakusa_ex",
+    label: "ワカクサ本島EX",
+    types: null,    // ユーザーが3タイプを選ぶ
+    isEx: true
+  }
+};
+
 
 const Specialty = {
   Berries: "きのみとくい",
@@ -160,9 +242,10 @@ const MainSkills = {
 };
 
 class PokemonData {
-  constructor(name, type, specialty, helping_speed, ingredient_probability, skill_probability, inventory_limit, main_skill) {
+  constructor(name, type, berry, specialty, helping_speed, ingredient_probability, skill_probability, inventory_limit, main_skill) {
     this.name = name;
     this.type = type;
+    this.berry = berry;
     this.specialty = specialty;
     this.helping_speed = helping_speed;
     this.ingredient_probability = ingredient_probability;
@@ -177,10 +260,10 @@ class PokemonData {
 }
 
 const PokemonList = {
-  dedenne: new PokemonData("デデンネ", Type.Electric, Specialty.Skills, 2500, 0.177, 0.045, 19, MainSkills.TastyChanceS),
-  uu: new PokemonData("ウッウ", Type.Flying, Specialty.Ingredients, 2700, 0.165, 0.039, 19, MainSkills.TastyChanceS),
-  laglarge: new PokemonData("ラグラージ", Type.Water, Specialty.Berries, 2800, 0.146, 0.034, 30, MainSkills.TastyChanceS),
-  manyula: new PokemonData("マニューラ", Type.Dark, Specialty.Berries, 2700, 0.251, 0.018, 26, MainSkills.TastyChanceS)
+  dedenne: new PokemonData("デデンネ", Type.Electric, Berries.Grepa, Specialty.Skills, 2500, 0.177, 0.045, 19, MainSkills.TastyChanceS),
+  uu: new PokemonData("ウッウ", Type.Flying, Berries.Pamtre, Specialty.Ingredients, 2700, 0.165, 0.039, 19, MainSkills.TastyChanceS),
+  laglarge: new PokemonData("ラグラージ", Type.Ground, Berries.Figy, Specialty.Berries, 2800, 0.146, 0.034, 30, MainSkills.TastyChanceS),
+  manyula: new PokemonData("マニューラ", Type.Dark, Berries.Wiki, Specialty.Berries, 2700, 0.251, 0.018, 26, MainSkills.TastyChanceS)
 };
 
 class Pokemon {
@@ -191,6 +274,7 @@ class Pokemon {
     sub_skills,
     nature,
     skill_level,
+    berry_energy_multiplier,
     camp_ticket_helping_speed_multiplier,
     camp_ticket_inventory_limit_bonus,
     team_helping_speed_multiplier,
@@ -202,7 +286,6 @@ class Pokemon {
     ex_helping_multiplier,
     ex_ingredient_bonus,
     ex_skill_multiplier,
-    ex_berry_energy_multiplier,        // EX: きのみエナジー倍率（表示用）
     ex_effect_label,                  // EX: 表示用のラベル
 
   ) {
@@ -213,10 +296,14 @@ class Pokemon {
     this.nature = nature;
     this.skill_level = skill_level;
 
+    this.berry_energy_multiplier = Number.isFinite(berry_energy_multiplier)
+      ? berry_energy_multiplier
+      : 1.0;
+
     this.camp_ticket_helping_speed_multiplier = Number.isFinite(camp_ticket_helping_speed_multiplier)
       ? camp_ticket_helping_speed_multiplier
       : 1.0;
-    
+
     this.camp_ticket_inventory_limit_bonus = Number.isFinite(camp_ticket_inventory_limit_bonus)
       ? camp_ticket_inventory_limit_bonus
       : 1.0;
@@ -255,9 +342,6 @@ class Pokemon {
     // EX専用フラグ
     this.ex_extra_ingredient_if_specialty = (this.ex_ingredient_bonus > 0) && (this.pokemon_data.specialty === Specialty.Ingredients);
     this.ex_effect_label = ex_effect_label || "なし";
-    this.ex_berry_energy_multiplier = Number.isFinite(ex_berry_energy_multiplier)
-      ? ex_berry_energy_multiplier
-      : 1.0;
 
     this.initStats();
   }
@@ -309,9 +393,17 @@ class Pokemon {
       Math.max(1, Math.min(this.skill_level, this.pokemon_data.main_skill.effects.length)) - 1;
     this.skill_effect = this.pokemon_data.main_skill.effects[idx];
 
+    this.resetStats();
+  }
+
+  resetStats() {
     this.inventory = 0;
     this.skill_stock = 0;
     this.health = 100;
+
+    this.total_berry_energy = 0;
+    this.total_skill_energy = 0;
+    this.total_skill_count = 0;
   }
 
   get_health_speed_bonus() {
@@ -328,6 +420,10 @@ class Pokemon {
     }
   }
 
+  get_berry_energy() {
+    return Math.round(Math.max(this.pokemon_data.berry.energy + (this.level - 1), this.pokemon_data.berry.energy * Math.pow(1.025, this.level - 1)));
+  }
+
   get_next_helping_time(nowSeconds) {
     const effectiveBonus =
       this.get_health_speed_bonus() *
@@ -335,38 +431,71 @@ class Pokemon {
       this.team_helping_speed_multiplier *    // イベント倍率
       this.personal_helping_speed_multiplier * // 個別倍率
       this.ex_helping_speed_multiplier;        // EX倍率
-    
+
     const interval = this.helping_speed / effectiveBonus;
     return nowSeconds + Math.floor(interval);
   }
 
   help_in_daytime() {
+    let skill_effect = this.help_in_sleeping();
+
     this.inventory = 0;
     this.skill_stock = 0;
-    return Math.random() < this.skill_probability ? this.skill_effect : 0.0;
+    return skill_effect;
   }
 
   help_in_sleeping() {
+    let skill_effect = 0.0;
+
     if (this.inventory >= this.inventory_limit) {
-      return 0.0;
+      this.get_berries();
+      return skill_effect;
     }
+
     if (Math.random() < this.ingredient_probability) {
-      const idx = Math.floor(Math.random() * this.ingredient_nums.length);
-      let gain = this.ingredient_nums[idx] + this.team_ingredient_bonus + this.personal_ingredient_bonus + this.ex_ingredient_bonus;
-      if (
-        this.ex_extra_ingredient_if_specialty &&
-        Math.random() < 0.5
-      ) {
-        gain += 1;
-      }
-      if (gain < 0) gain = 0;
-      this.inventory += gain;
+      this.get_ingredients();
     } else {
-      this.inventory += this.berry_num;
+      this.get_berries();
     }
-    return Math.random() < this.skill_probability ? this.skill_effect : 0.0;
+
+    return this.trigger_skill();
   }
 
+  get_berries() {
+    this.total_berry_energy += this.get_berry_energy() * this.berry_num * this.berry_energy_multiplier;
+    if (this.inventory < this.inventory_limit) {
+      this.inventory += this.berry_num;
+    }
+  }
+
+  get_ingredients() {
+    const idx = Math.floor(Math.random() * this.ingredient_nums.length);
+    let gain = this.ingredient_nums[idx] + this.team_ingredient_bonus + this.personal_ingredient_bonus + this.ex_ingredient_bonus;
+    if (
+      this.ex_extra_ingredient_if_specialty &&
+      Math.random() < 0.5
+    ) {
+      gain += 1;
+    }
+    if (gain < 0) gain = 0;
+    if (this.inventory < this.inventory_limit) {
+      this.inventory += gain;
+    }
+  }
+
+  trigger_skill() {
+    if (this.skill_stock >= this.skill_stock_limit) {
+      return 0.0;
+    }
+
+    if (Math.random() < this.skill_probability) {
+      this.skill_stock += 1;
+      this.total_skill_count += 1;
+      return this.skill_effect;
+    }
+
+    return 0.0;
+  }
 }
 
 const UserEventType = {
@@ -390,14 +519,15 @@ class UserEvent {
 }
 
 class PokemonEvent {
-  constructor(pokemon, timestampSeconds) {
+  constructor(idx, pokemon, timestampSeconds) {
+    this.idx = idx;
     this.pokemon = pokemon;
     this.timestamp = timestampSeconds;
   }
 
   get_next_event() {
     const next = this.pokemon.get_next_helping_time(this.timestamp);
-    return new PokemonEvent(this.pokemon, next);
+    return new PokemonEvent(this.idx, this.pokemon, next);
   }
 }
 
@@ -409,52 +539,80 @@ const ExEffectLabels = {
   skill: "スキル確率1.25倍"
 };
 
-function populateTypeSelect(selectId) {
-  const sel = document.getElementById(selectId);
-  if (!sel) return;
-
-  // 初期値（未選択）
-  const placeholder = document.createElement("option");
-  placeholder.value = "";
-  placeholder.textContent = "選択なし";
-  sel.appendChild(placeholder);
-
-  // Type オブジェクトから日本語名を入れる
+function populateTypeSelectOptions(selectEl) {
+  selectEl.innerHTML = "";
   for (const key of Object.keys(Type)) {
     const opt = document.createElement("option");
     opt.value = Type[key];       // 例: "でんき"
-    opt.textContent = Type[key]; // 表示テキストも同じ
-    sel.appendChild(opt);
+    opt.textContent = Type[key]; // 表示も同じ
+    selectEl.appendChild(opt);
   }
 }
 
 function populateExEffectSelect(selectId) {
   const sel = document.getElementById(selectId);
   if (!sel) return;
-
+  sel.innerHTML = "";
   Object.entries(ExEffectLabels).forEach(([value, label]) => {
     const opt = document.createElement("option");
-    opt.value = value;    // "", "berry", "ingredient", "skill"
+    opt.value = value;
     opt.textContent = label;
     sel.appendChild(opt);
   });
 }
 
-function initExFieldSelectors() {
-  ["exMainType", "exSub1Type", "exSub2Type"].forEach(populateTypeSelect);
+function initFieldUI() {
+  const fieldSelect = document.getElementById("fieldSelect");
+  const mainSel = document.getElementById("fieldMainType");
+  const sub1Sel = document.getElementById("fieldSub1Type");
+  const sub2Sel = document.getElementById("fieldSub2Type");
+  const exOptionConfig = document.getElementById("exOptionConfig");
+
+  // タイプ選択肢を埋める
+  [mainSel, sub1Sel, sub2Sel].forEach(populateTypeSelectOptions);
+  // EX補正選択肢を埋める
   populateExEffectSelect("exEffect");
 
-  const exCheckbox = document.getElementById("exFieldEnabled");
-  const exConfig = document.getElementById("exFieldConfig");
+  const applyField = () => {
+    const key = fieldSelect.value || "wakakusa";
+    const field = Fields[key];
+    if (!field) return;
 
-  if (exCheckbox && exConfig) {
-    const updateVisibility = () => {
-      exConfig.style.display = exCheckbox.checked ? "block" : "none";
-    };
-    exCheckbox.addEventListener("change", updateVisibility);
-    updateVisibility();
-  }
+    const fixedTypes = field.types; // null ならユーザー自由
+
+    if (fixedTypes && fixedTypes.length === 3) {
+      mainSel.value = fixedTypes[0];
+      sub1Sel.value = fixedTypes[1];
+      sub2Sel.value = fixedTypes[2];
+
+      // mainSel.disabled = true;
+      // sub1Sel.disabled = true;
+      // sub2Sel.disabled = true;
+    } else {
+      // ワカクサ本島 / ワカクサ本島EX → ユーザーが編集可能
+      mainSel.disabled = false;
+      sub1Sel.disabled = false;
+      sub2Sel.disabled = false;
+      if (!mainSel.value) mainSel.value = Type.None;
+      if (!sub1Sel.value) sub1Sel.value = Type.None;
+      if (!sub2Sel.value) sub2Sel.value = Type.None;
+    }
+
+    // EX補正欄の表示・非表示（ワカクサ本島EXのみ）
+    if (field.isEx) {
+      exOptionConfig.style.display = "block";
+    } else {
+      exOptionConfig.style.display = "none";
+      const exEffectSel = document.getElementById("exEffect");
+      if (exEffectSel) exEffectSel.value = "";
+    }
+  };
+
+  fieldSelect.addEventListener("change", applyField);
+  applyField(); // 初期反映
 }
+
+const MAX_SLOTS = 5;
 
 class Simulator {
   constructor() {
@@ -462,11 +620,17 @@ class Simulator {
     this.total_success_count = 0;
     this.total_extra_energy = 0;
     this.total_extra_energies_per_day = new Array(7).fill(0);
+    this.total_berry_energies = new Array(MAX_SLOTS).fill(0);
+    this.total_skill_energies = new Array(MAX_SLOTS).fill(0);
+    this.total_skill_counts = new Array(MAX_SLOTS).fill(0);
 
     this.average_skill_count = 0.0;
     this.average_success_count = 0.0;
     this.average_extra_energy = 0.0;
     this.average_extra_energies_per_day = new Array(7).fill(0.0);
+    this.average_berry_energies = new Array(MAX_SLOTS).fill(0.0);
+    this.average_skill_energies = new Array(MAX_SLOTS).fill(0.0);
+    this.average_skill_counts = new Array(MAX_SLOTS).fill(0.0);
 
     this.chance_limit = 0.7;
     this.base_cooking_chance = 0.1;
@@ -489,6 +653,7 @@ class Simulator {
     let extra_energy = 0;
     const extra_energies_per_day = new Array(7).fill(0);
     let cooking_chance_probability = 0.0;
+    let cooking_chance_probabilities = new Array(pokemons.length).fill(0.0);
     let skill_count = 0;
     let success_count = 0;
 
@@ -498,7 +663,6 @@ class Simulator {
 
     const user_event_queue = [];
     user_event_queue.push(new UserEvent(UserEventType.wake_up, this.wake_up_time));
-    // ▼ 朝食イベントは breakfast_time を使う
     user_event_queue.push(new UserEvent(UserEventType.have_breakfast, this.breakfast_time));
     user_event_queue.push(new UserEvent(UserEventType.have_lunch, this.lunch_time));
     user_event_queue.push(new UserEvent(UserEventType.have_dinner, this.dinner_time));
@@ -506,9 +670,11 @@ class Simulator {
 
     const pokemon_event_queue = [];
 
-    for (const pokemon of pokemons) {
+    for (let i = 0; i < pokemons.length; i++) {
+      const pokemon = pokemons[i];
+      pokemon.resetStats();
       const next_help = pokemon.get_next_helping_time(this.wake_up_time);
-      pokemon_event_queue.push(new PokemonEvent(pokemon, next_help));
+      pokemon_event_queue.push(new PokemonEvent(i, pokemon, next_help));
     }
 
     while (user_event_queue.length > 0) {
@@ -535,18 +701,26 @@ class Simulator {
       }
       // ポケモンイベント（最小タイムスタンプ順に処理）
       while (true) {
-        let nextEvent = null;
-        let minIdx = -1;
+        let nextEvents = [];
+        let minIdxs = [];
         for (let i = 0; i < pokemon_event_queue.length; i++) {
           if (
-            pokemon_event_queue[i].timestamp < user_event.timestamp &&
-            (nextEvent === null || pokemon_event_queue[i].timestamp < nextEvent.timestamp)
-          ) {
-            nextEvent = pokemon_event_queue[i];
-            minIdx = i;
+            pokemon_event_queue[i].timestamp < user_event.timestamp) {
+            if (nextEvents.length === 0 || pokemon_event_queue[i].timestamp < nextEvents[0].timestamp) {
+              nextEvents = [pokemon_event_queue[i]];
+              minIdxs = [i];
+            }
+            else if (pokemon_event_queue[i].timestamp === nextEvents[0].timestamp) {
+              nextEvents.push(pokemon_event_queue[i]);
+              minIdxs.push(i);
+            }
           }
         }
-        if (nextEvent === null) break;
+        if (nextEvents.length === 0) break;
+
+        // 同タイムスタンプのものが複数あればランダムに1つ選ぶ
+        const minIdx = minIdxs[Math.floor(Math.random() * minIdxs.length)];
+        const nextEvent = pokemon_event_queue[minIdx];
         pokemon_event_queue.splice(minIdx, 1);
 
         let ret = 0.0;
@@ -559,7 +733,10 @@ class Simulator {
         if (ret > 0.0) {
           skill_count += 1;
         }
+
+        ret = Math.min(ret, this.chance_limit - cooking_chance_probability);
         cooking_chance_probability += ret;
+        cooking_chance_probabilities[nextEvent.idx] += ret;
 
         pokemon_event_queue.push(
           nextEvent.get_next_event()
@@ -577,18 +754,22 @@ class Simulator {
       }
 
       let p = Math.random();
-      cooking_chance_probability = Math.min(
-        cooking_chance_probability,
-        this.chance_limit
-      );
       if (p < base_cooking_chance + cooking_chance_probability) {
         success_count += 1;
         cooking_chance_probability = 0.0;
 
-        if (p > base_cooking_chance) {
-          extra_energy += base_cooking_energy;
-          extra_energies_per_day[day - 1] += base_cooking_energy;
+        let total_cooking_chance_probability = base_cooking_chance;
+        for (let i = 0; i < pokemons.length; i++) {
+          if (p > total_cooking_chance_probability && p < total_cooking_chance_probability + cooking_chance_probabilities[i]) {
+            extra_energy += base_cooking_energy;
+            extra_energies_per_day[day - 1] += base_cooking_energy;
+            pokemons[i].total_skill_energy += base_cooking_energy;
+            break;
+          }
+          total_cooking_chance_probability += cooking_chance_probabilities[i];
         }
+
+        cooking_chance_probabilities = new Array(pokemons.length).fill(0.0);
       }
     }
 
@@ -597,6 +778,11 @@ class Simulator {
     this.total_extra_energy += extra_energy;
     for (let d = 0; d < 7; d++) {
       this.total_extra_energies_per_day[d] += extra_energies_per_day[d];
+    }
+    for (let i = 0; i < pokemons.length; i++) {
+      this.total_berry_energies[i] += pokemons[i].total_berry_energy;
+      this.total_skill_energies[i] += pokemons[i].total_skill_energy;
+      this.total_skill_counts[i] += pokemons[i].total_skill_count;
     }
   }
 
@@ -612,12 +798,19 @@ class Simulator {
       this.average_extra_energies_per_day[d] =
         this.total_extra_energies_per_day[d] / trial;
     }
+    for (let i = 0; i < pokemons.length; i++) {
+      this.average_berry_energies[i] =
+        this.total_berry_energies[i] / 7.0 / trial;
+      this.average_skill_energies[i] =
+        this.total_skill_energies[i] / 7.0 / trial;
+      this.average_skill_counts[i] =
+        this.total_skill_counts[i] / 7.0 / trial;
+    }
   }
 }
 
 // ====== UI 関連 ======
 
-const MAX_SLOTS = 5;
 let visibleSlots = 1;
 
 // 上がる / 下がる組み合わせから性格リストを更新
@@ -939,57 +1132,54 @@ function clearPokemonSlotSettings(slotIndex) {
   if (skillMultInput) skillMultInput.value = "1.0";
 }
 
-function getExEffectForType(pokemonType, exConfig) {
-  if (!exConfig.enabled) {
-    return {
-      helpingMult: 1.0,
-      skillMult: 1.0,
-      ingredientBonus: 0,
-      extraIngredientIfSpecialty: false,
-      berryEnergyMult: 1.0,
-      effectLabel: "なし"
-    };
-  }
-
-  const isMain = pokemonType === exConfig.mainType;
-  const isSub1 = pokemonType === exConfig.sub1Type;
-  const isSub2 = pokemonType === exConfig.sub2Type;
+function getFieldEffectForType(pokemonType, fieldConfig) {
+  const isMain = pokemonType === fieldConfig.mainType;
+  const isSub1 = pokemonType === fieldConfig.sub1Type;
+  const isSub2 = pokemonType === fieldConfig.sub2Type;
   const isSelected = isMain || isSub1 || isSub2;
 
-  // おてつだいスピード倍率
-  let helpingMult;
-  if (isMain) {
-    helpingMult = 1.1;    // メインタイプ
-  } else if (!isSelected) {
-    helpingMult = 0.85;   // 選ばれていないすべてのタイプ
-  } else {
-    helpingMult = 1.0;    // サブタイプ1,2
-  }
-
-  // 3タイプ共通のEX補正
-  let effectKind = "";
-  if (isSelected) {
-    effectKind = exConfig.effect || "";
-  }
-
+  let helpingMult = 1.0;
   let skillMult = 1.0;
   let ingredientBonus = 0;
   let extraIngredientIfSpecialty = false;
-  let berryEnergyMult = 1.0;
+  let berryEnergyMult = (isSelected ? 2.0 : 1.0);
+  let effectLabel = "補正なし";
 
-  switch (effectKind) {
-    case "skill":
-      skillMult = 1.25;
-      break;
-    case "ingredient":
-      ingredientBonus = 1;
-      extraIngredientIfSpecialty = true; // 食材タイプならさらに50%で+1
-      break;
-    case "berry":
-      berryEnergyMult = 2.4;
-      break;
-    default:
-      break;
+  // ワカクサ本島EX 以外は EX 補正なし
+  if (fieldConfig.key === "wakakusa_ex") {
+    // おてつだいスピード
+    if (isMain) {
+      helpingMult = 1.1;      // メインタイプ
+    } else if (!isSelected) {
+      helpingMult = 0.85;     // 選ばれていない残りのタイプ
+    } else {
+      helpingMult = 1.0;      // サブ1 / サブ2
+    }
+
+    // 3タイプに共通のEX補正（きのみ / 食材 / スキル）
+    let effectKind = "";
+    if (isSelected) {
+      effectKind = fieldConfig.exEffect || "";
+    }
+
+    switch (effectKind) {
+      case "skill":
+        skillMult = 1.25;
+        effectLabel = ExEffectLabels.skill;
+        break;
+      case "ingredient":
+        ingredientBonus = 1;
+        extraIngredientIfSpecialty = true; // 食材とくいなら 50% でもう1個
+        effectLabel = ExEffectLabels.ingredient;
+        break;
+      case "berry":
+        berryEnergyMult = 2.4;
+        effectLabel = ExEffectLabels.berry;
+        break;
+      default:
+        effectLabel = "補正なし";
+        break;
+    }
   }
 
   return {
@@ -998,9 +1188,12 @@ function getExEffectForType(pokemonType, exConfig) {
     ingredientBonus,
     extraIngredientIfSpecialty,
     berryEnergyMult,
-    effectLabel: ExEffectLabels[effectKind] || "補正なし"
+    effectLabel,
+    matchesFieldType: isSelected,
+    isMainType: isMain
   };
 }
+
 
 // ====== 時刻関連のユーティリティ ======
 
@@ -1113,7 +1306,7 @@ function applyScheduleFromUI(simulator) {
 
 window.addEventListener("DOMContentLoaded", () => {
   initPokemonSlots();
-  initExFieldSelectors();
+  initFieldUI();
 
   const runBtn = document.getElementById("runBtn");
   const statusEl = document.getElementById("status");
@@ -1151,26 +1344,22 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     // ▼ EXフィールド設定を読み込み ▼
-    const exFieldEnabled = document.getElementById("exFieldEnabled").checked;
-    const exConfig = {
-      enabled: exFieldEnabled,
-      mainType: document.getElementById("exMainType").value || "",
-      sub1Type: document.getElementById("exSub1Type").value || "",
-      sub2Type: document.getElementById("exSub2Type").value || "",
-      effect: document.getElementById("exEffect").value || ""
-    };
+    const fieldKey = document.getElementById("fieldSelect").value || "wakakusa";
+    const fieldMainType = document.getElementById("fieldMainType").value || "";
+    const fieldSub1Type = document.getElementById("fieldSub1Type").value || "";
+    const fieldSub2Type = document.getElementById("fieldSub2Type").value || "";
+    const exEffectValue =
+      fieldKey === "wakakusa_ex"
+        ? (document.getElementById("exEffect").value || "")
+        : "";
 
-    // 簡易バリデーション：EXフィールドONならタイプは全部選んでほしい
-    if (exConfig.enabled) {
-      if (!exConfig.mainType || !exConfig.sub1Type || !exConfig.sub2Type) {
-        statusEl.textContent = "EXフィールドが有効ですが、メイン/サブタイプが未選択です。";
-        return;
-      }
-      if (!exConfig.effect) {
-        statusEl.textContent = "EXフィールドが有効ですが、EXフィールド補正が未選択です。";
-        return;
-      }
-    }
+    const fieldConfig = {
+      key: fieldKey,
+      mainType: fieldMainType,
+      sub1Type: fieldSub1Type,
+      sub2Type: fieldSub2Type,
+      exEffect: exEffectValue
+    };
 
     const pokemons = [];
 
@@ -1223,8 +1412,7 @@ window.addEventListener("DOMContentLoaded", () => {
       const nature = Natures[natureKey];
       const pokemonName = `${pokemonData.name}${i}`;
 
-      // ▼ このタイプに対する EX 補正を計算
-      const ex = getExEffectForType(pokemonData.type, exConfig);
+      const f = getFieldEffectForType(pokemonData.type, fieldConfig);
 
       const pokemon = new Pokemon(
         pokemonData,
@@ -1233,6 +1421,7 @@ window.addEventListener("DOMContentLoaded", () => {
         subSkills,
         nature,
         skillLevel,
+        f.berryEnergyMult,
         campTicketConfig.helpingMult,
         campTicketConfig.inventoryBonus,
         helpingSpeedMultiplier,
@@ -1241,11 +1430,10 @@ window.addEventListener("DOMContentLoaded", () => {
         personalHelpMult,
         personalIngredientBonus,
         personalSkillMult,
-        ex.helpingMult,
-        ex.ingredientBonus,
-        ex.skillMult,
-        ex.berryEnergyMult,
-        ex.effectLabel
+        f.helpingMult,
+        f.ingredientBonus,
+        f.skillMult,
+        f.effectLabel
       );
       pokemons.push(pokemon);
     }
@@ -1293,6 +1481,10 @@ window.addEventListener("DOMContentLoaded", () => {
       const avgExtraPerDay = simulator.average_extra_energy; // 1日あたり 追加エナジー（全体）
       const perDay = simulator.average_extra_energies_per_day;
 
+      const avgBerryEnergies = simulator.average_berry_energies; // ポケモン別 きのみエナジー
+      const avgSkillEnergies = simulator.average_skill_energies; // ポケモン別 スキルエナジー
+      const avgSkillCounts = simulator.average_skill_counts;     // ポケモン別 スキル発動数
+
       const perPokemonExtraPerDay =
         pokemons.length > 0 ? avgExtraPerDay / pokemons.length : 0;
 
@@ -1323,12 +1515,15 @@ window.addEventListener("DOMContentLoaded", () => {
         text += `  おてつだいスピード倍率: ${campTicketConfig.helpingMult} 倍\n`;
         text += `  所持数倍率: ${campTicketConfig.inventoryBonus} 倍\n`;
       }
-      text += `EXフィールド ${exConfig.enabled ? "補正あり" : "補正なし"}\n`;
-      if (exConfig.enabled) {
-        text += `  メインタイプ: ${exConfig.mainType}\n`;
-        text += `  サブタイプ1: ${exConfig.sub1Type}\n`;
-        text += `  サブタイプ2: ${exConfig.sub2Type}\n`;
-        text += `  EXフィールド補正: ${ExEffectLabels[exConfig.effect] || "補正なし"}\n`;
+
+      const fieldLabel = Fields[fieldKey]?.label || fieldKey;
+      text += `\n=== フィールド＆イベント補正設定 ===\n`;
+      text += `フィールド ${fieldLabel}\n`;
+      text += `  メインタイプ: ${fieldConfig.mainType}\n`;
+      text += `  サブタイプ1: ${fieldConfig.sub1Type}\n`;
+      text += `  サブタイプ2: ${fieldConfig.sub2Type}\n`;
+      if (fieldKey === "wakakusa_ex") {
+        text += `  EXフィールド補正: ${ExEffectLabels[fieldConfig.exEffect] || "補正なし"}\n`;
       }
       text += `イベント補正:\n`;
       text += `  おてつだいスピード倍率: ${helpingSpeedMultiplier.toFixed(2)} 倍\n`;
@@ -1354,8 +1549,14 @@ window.addEventListener("DOMContentLoaded", () => {
         }
         text += `\n`;
         text += `  きのみの数: ${pkm.berry_num}\n`;
+        text += `    きのみエナジー倍率: ${pkm.berry_energy_multiplier.toFixed(2)} 倍\n`;
         text += `  メインスキル効果: ${pkm.skill_effect * 100} %\n`;
         text += `  EXフィールド補正: ${pkm.ex_effect_label}\n\n`;
+
+        text += `  1日あたり:\n`;
+        text += `  きのみエナジー: ${avgBerryEnergies[idx].toFixed(3)}\n`;
+        text += `  スキル発動回数: ${avgSkillCounts[idx].toFixed(3)} 回\n`;
+        text += `  スキルエナジー: ${avgSkillEnergies[idx].toFixed(3)}\n\n`;
       });
 
       text += "\n=== シミュレーション結果（1週間 × 試行回数の平均） ===\n";

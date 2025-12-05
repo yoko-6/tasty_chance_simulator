@@ -97,6 +97,28 @@
       margin: 0;
     }
 
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 0.5rem 1.2rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: #007aff;
+      color: white;
+      box-shadow: 0 2px 6px rgba(0, 122, 255, 0.3);
+    }
+
+    button:hover:not(:disabled) {
+      background: #005fcc;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: default;
+      box-shadow: none;
+    }
+
     /* サブスキル・スロットクリア用の小さめボタン */
     .subskill-actions button {
       padding: 0.25rem 0.8rem;
@@ -111,24 +133,6 @@
 
     .subskill-actions button:hover {
       background: #f5bbbb;
-    }
-
-    button {
-      border: none;
-      border-radius: 999px;
-      padding: 0.5rem 1.2rem;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      background: #007aff;
-      color: white;
-      box-shadow: 0 2px 6px rgba(0, 122, 255, 0.3);
-    }
-
-    button:disabled {
-      opacity: 0.6;
-      cursor: default;
-      box-shadow: none;
     }
 
     button.secondary-btn {
@@ -242,6 +246,11 @@
       list-style: none;
     }
 
+    details.advanced-settings>summary:hover {
+      text-decoration: underline;
+      color: #005fcc;
+    }
+
     /* デフォルトの三角マーカーを消す（対応ブラウザ向け） */
     details.advanced-settings>summary::-webkit-details-marker {
       display: none;
@@ -306,36 +315,51 @@
       </div>
     </div>
 
-    <div class="row inline">
-      <input id="exFieldEnabled" type="checkbox" />
-      <span>EXフィールドに行く</span>
+    <hr />
+    <h3 style="font-size:1rem; margin-top:0;">フィールド設定</h3>
+    <div class="grid">
+      <div class="row">
+        <label for="fieldSelect">フィールド</label>
+        <select id="fieldSelect">
+          <option value="wakakusa">ワカクサ本島</option>
+          <option value="cyan">シアンの砂浜</option>
+          <option value="taupe">トープ洞窟</option>
+          <option value="unohana">ウノハナ雪原</option>
+          <option value="lapis">ラピスラズリ湖畔</option>
+          <option value="gold">ゴールド旧発電所</option>
+          <option value="amber">アンバー渓谷</option>
+          <option value="wakakusa_ex">ワカクサ本島EX</option>
+        </select>
+      </div>
     </div>
 
-    <div id="exFieldConfig" class="ex-field-config">
+    <div id="fieldTypeConfig" class="ex-field-config">
       <div class="grid">
         <div class="row">
           <label>メインタイプ</label>
-          <select id="exMainType"></select>
+          <select id="fieldMainType"></select>
         </div>
         <div class="row">
           <label>サブタイプ1</label>
-          <select id="exSub1Type"></select>
+          <select id="fieldSub1Type"></select>
         </div>
         <div class="row">
           <label>サブタイプ2</label>
-          <select id="exSub2Type"></select>
+          <select id="fieldSub2Type"></select>
         </div>
       </div>
-      <div class="row">
-        <label>EX補正</label>
-        <select id="exEffect"></select>
-        <div class="muted">
-          メイン / サブ1 / サブ2 の3タイプに共通でかかる補正を選択します。
-          （きのみエナジー2.4倍 / 食材+1(食材タイプなら50%でさらに+1) / スキル1.25倍）
+    </div>
+
+    <div id="exOptionConfig" class="ex-field-config" style="display:none;">
+      <div class="grid">
+        <div class="row">
+          <label>EX補正</label>
+          <select id="exEffect"></select>
+          <div class="muted">
+            ワカクサ本島EX のときのみ有効です。
+            （きのみエナジー2.4倍 / 食材+1(食材タイプなら50%でさらに+1) / スキル1.25倍）
+          </div>
         </div>
-      </div>
-      <div class="muted" style="margin-top:0.25rem;">
-        ※ メインタイプはおてつだいスピード1.1倍、選ばれなかった残りのタイプは0.85倍となります。
       </div>
     </div>
 
