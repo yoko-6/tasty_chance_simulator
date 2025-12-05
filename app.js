@@ -97,20 +97,20 @@ const Natures = {
 
 // 上がる / 下がる項目のグループ
 const NatureUpGroups = [
-  { id: "help", label: "おてつだいスピード↑" },
-  { id: "ing", label: "食材確率↑" },
-  { id: "skill", label: "スキル確率↑" },
-  { id: "exp", label: "EXP↑" },
-  { id: "energy", label: "げんき回復↑" },
+  { id: "help", label: "おてつだいスピード ▲▲" },
+  { id: "ing", label: "食材おてつだい確率 ▲▲" },
+  { id: "skill", label: "メインスキル発生確率 ▲▲" },
+  { id: "exp", label: "EXP獲得量 ▲▲" },
+  { id: "energy", label: "げんき回復量 ▲▲" },
   { id: "none", label: "無補正" }
 ];
 
 const NatureDownGroups = [
-  { id: "help", label: "おてつだいスピード↓" },
-  { id: "ing", label: "食材確率↓" },
-  { id: "skill", label: "スキル確率↓" },
-  { id: "exp", label: "EXP↓" },
-  { id: "energy", label: "げんき回復↓" },
+  { id: "help", label: "おてつだいスピード ▼▼" },
+  { id: "ing", label: "食材おてつだい確率 ▼▼" },
+  { id: "skill", label: "メインスキル発生確率 ▼▼" },
+  { id: "exp", label: "EXP獲得量 ▼▼" },
+  { id: "energy", label: "げんき回復量 ▼▼" },
   { id: "none", label: "無補正" }
 ];
 
