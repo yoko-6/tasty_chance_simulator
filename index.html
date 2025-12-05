@@ -249,6 +249,14 @@
     details.advanced-settings .advanced-body {
       margin-top: 0.75rem;
     }
+
+    .ex-field-config {
+      margin-top: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      border: 1px dashed #d0d0d7;
+      background: #fafafa;
+    }
   </style>
 </head>
 
@@ -277,26 +285,59 @@
         <input id="day1SuccessChance" type="number" min="0" max="70" step="1" value="0" />
         <div class="muted">週またぎで発動させた料理チャンスの値を入力してください（0〜70%）</div>
       </div>
+    </div>
 
-      <div class="row">
-        <label>&nbsp;</label>
-        <div class="inline">
-          <input id="campTicket" type="checkbox" checked />
-          <span>キャンプチケットを使う</span>
+    <div class="row">
+      <label>&nbsp;</label>
+      <div class="inline">
+        <input id="campTicket" type="checkbox" checked />
+        <span>キャンプチケットを使う</span>
+      </div>
+    </div>
+
+    <div class="row inline">
+      <input id="exFieldEnabled" type="checkbox" />
+      <span>EXフィールドに行く</span>
+    </div>
+
+    <div id="exFieldConfig" class="ex-field-config">
+      <div class="grid">
+        <div class="row">
+          <label>メインタイプ</label>
+          <select id="exMainType"></select>
         </div>
+        <div class="row">
+          <label>サブタイプ1</label>
+          <select id="exSub1Type"></select>
+        </div>
+        <div class="row">
+          <label>サブタイプ2</label>
+          <select id="exSub2Type"></select>
+        </div>
+      </div>
+      <div class="row">
+        <label>EX補正</label>
+        <select id="exEffect"></select>
+        <div class="muted">
+          メイン / サブ1 / サブ2 の3タイプに共通でかかる補正を選択します。
+          （きのみエナジー2.4倍 / 食材+1(食材タイプなら50%でさらに+1) / スキル1.25倍）
+        </div>
+      </div>
+      <div class="muted" style="margin-top:0.25rem;">
+        ※ メインタイプはおてつだいスピード1.1倍、選ばれなかった残りのタイプは0.85倍となります。
       </div>
     </div>
 
     <details class="advanced-settings">
-      <summary>詳細設定（倍率・ボーナス / 生活スケジュール）</summary>
+      <summary>詳細設定（イベントボーナス / 生活スケジュール）</summary>
       <div class="advanced-body">
         <hr />
-        <h3 style="font-size:1rem; margin-top:0;">倍率・ボーナス設定</h3>
+        <h3 style="font-size:1rem; margin-top:0;">イベントボーナス設定</h3>
         <div class="grid">
           <div class="row">
             <label for="helpingSpeedMultiplier">おてつだいスピード倍率</label>
             <input id="helpingSpeedMultiplier" type="number" min="0.1" step="0.05" value="1.0" />
-            <div class="muted">イベントやEXフィールドで倍率がかかっていたら入力してください（例: 1.5 で 1.5倍）</div>
+            <div class="muted">（例: 1.5 で 1.5倍）</div>
           </div>
 
           <div class="row">
@@ -310,13 +351,13 @@
           <div class="row">
             <label for="skillEventMultiplier">スキル確率倍率</label>
             <input id="skillEventMultiplier" type="number" min="0" step="0.05" value="1.0" />
-            <div class="muted">イベントやEXフィールドで倍率がかかっていたら入力してください（例: 1.5 で 1.5倍）</div>
+            <div class="muted">（例: 1.5 で 1.5倍）</div>
           </div>
 
           <div class="row">
             <label for="energyEventMultiplier">料理エナジー倍率</label>
             <input id="energyEventMultiplier" type="number" min="0" step="0.05" value="1.0" />
-            <div class="muted">イベントで倍率がかかっていたら入力してください（例: 1.5 で 1.5倍）</div>
+            <div class="muted">（例: 1.5 で 1.5倍）</div>
           </div>
         </div>
 

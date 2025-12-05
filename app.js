@@ -191,9 +191,20 @@ class Pokemon {
     sub_skills,
     nature,
     skill_level,
-    skill_event_multiplier,
-    ingredient_bonus,
-    helping_speed_multiplier
+    camp_ticket_helping_speed_multiplier,
+    camp_ticket_inventory_limit_bonus,
+    team_helping_speed_multiplier,
+    team_ingredient_bonus,
+    team_skill_multiplier,
+    personal_helping_multiplier,
+    personal_ingredient_bonus,
+    personal_skill_multiplier,
+    ex_helping_multiplier,
+    ex_ingredient_bonus,
+    ex_skill_multiplier,
+    ex_berry_energy_multiplier,        // EX: きのみエナジー倍率（表示用）
+    ex_effect_label,                  // EX: 表示用のラベル
+
   ) {
     this.pokemon_data = pokemon_data;
     this.name = name;
@@ -202,18 +213,50 @@ class Pokemon {
     this.nature = nature;
     this.skill_level = skill_level;
 
-    // イベントによるスキル確率倍率（デフォルト 1.0）
-    this.skill_event_multiplier = Number.isFinite(skill_event_multiplier)
-      ? skill_event_multiplier
+    this.camp_ticket_helping_speed_multiplier = Number.isFinite(camp_ticket_helping_speed_multiplier)
+      ? camp_ticket_helping_speed_multiplier
+      : 1.0;
+    
+    this.camp_ticket_inventory_limit_bonus = Number.isFinite(camp_ticket_inventory_limit_bonus)
+      ? camp_ticket_inventory_limit_bonus
       : 1.0;
 
-    // 食材数ボーナス（1 回の食材獲得ごとに +○ 個）
-    this.ingredient_bonus = Number.isFinite(ingredient_bonus)
-      ? ingredient_bonus
+    this.team_helping_speed_multiplier = Number.isFinite(team_helping_speed_multiplier)
+      ? team_helping_speed_multiplier
+      : 1.0;
+    this.team_ingredient_bonus = Number.isFinite(team_ingredient_bonus)
+      ? team_ingredient_bonus
       : 0;
+    this.team_skill_multiplier = Number.isFinite(team_skill_multiplier)
+      ? team_skill_multiplier
+      : 1.0;
 
-    this.personal_helping_speed_multiplier = Number.isFinite(helping_speed_multiplier)
-      ? helping_speed_multiplier
+    this.personal_helping_speed_multiplier = Number.isFinite(personal_helping_multiplier)
+      ? personal_helping_multiplier
+      : 1.0;
+    this.personal_ingredient_bonus = Number.isFinite(personal_ingredient_bonus)
+      ? personal_ingredient_bonus
+      : 0;
+    this.personal_skill_multiplier = Number.isFinite(personal_skill_multiplier)
+      ? personal_skill_multiplier
+      : 1.0;
+
+    // ★ EX 用倍率
+    this.ex_helping_speed_multiplier = Number.isFinite(ex_helping_multiplier)
+      ? ex_helping_multiplier
+      : 1.0;
+    this.ex_ingredient_bonus = Number.isFinite(ex_ingredient_bonus)
+      ? ex_ingredient_bonus
+      : 0;
+    this.ex_skill_multiplier = Number.isFinite(ex_skill_multiplier)
+      ? ex_skill_multiplier
+      : 1.0;
+
+    // EX専用フラグ
+    this.ex_extra_ingredient_if_specialty = (this.ex_ingredient_bonus > 0) && (this.pokemon_data.specialty === Specialty.Ingredients);
+    this.ex_effect_label = ex_effect_label || "なし";
+    this.ex_berry_energy_multiplier = Number.isFinite(ex_berry_energy_multiplier)
+      ? ex_berry_energy_multiplier
       : 1.0;
 
     this.initStats();
@@ -253,9 +296,11 @@ class Pokemon {
       this.pokemon_data.skill_probability *
       skill_probability_coefficient *
       this.nature.skill_probability_coefficient *
-      this.skill_event_multiplier;
+      this.team_skill_multiplier *
+      this.personal_skill_multiplier *
+      this.ex_skill_multiplier;
 
-    this.inventory_limit = this.pokemon_data.inventory_limit + inventory_up;
+    this.inventory_limit = Math.floor((this.pokemon_data.inventory_limit + inventory_up) * this.camp_ticket_inventory_limit_bonus);
     this.berry_num = this.pokemon_data.berry_num + berry_finding;
     this.ingredient_nums = this.pokemon_data.ingredient_nums.slice();
     this.skill_stock_limit = this.pokemon_data.skill_stock_limit;
@@ -267,11 +312,6 @@ class Pokemon {
     this.inventory = 0;
     this.skill_stock = 0;
     this.health = 100;
-    this.use_camp_ticket = false;
-  }
-
-  apply_camp_ticket() {
-    this.use_camp_ticket = true;
   }
 
   get_health_speed_bonus() {
@@ -288,25 +328,17 @@ class Pokemon {
     }
   }
 
-  get_camp_ticket_speed_bonus() {
-    return this.use_camp_ticket ? 1.2 : 1.0;
-  }
-
-  get_camp_ticket_inventory_limit_bonus() {
-    return this.use_camp_ticket ? 1.2 : 1.0;
-  }
-
-  get_next_helping_time(nowSeconds, helping_speed_bonus) {
+  get_next_helping_time(nowSeconds) {
     const effectiveBonus =
-      this.get_camp_ticket_speed_bonus() *
       this.get_health_speed_bonus() *
-      helping_speed_bonus *
-      this.personal_helping_speed_multiplier;
-
+      this.camp_ticket_helping_speed_multiplier * // キャンプチケット倍率
+      this.team_helping_speed_multiplier *    // イベント倍率
+      this.personal_helping_speed_multiplier * // 個別倍率
+      this.ex_helping_speed_multiplier;        // EX倍率
+    
     const interval = this.helping_speed / effectiveBonus;
     return nowSeconds + Math.floor(interval);
   }
-
 
   help_in_daytime() {
     this.inventory = 0;
@@ -315,15 +347,18 @@ class Pokemon {
   }
 
   help_in_sleeping() {
-    if (this.inventory >= Math.floor(this.inventory_limit * this.get_camp_ticket_inventory_limit_bonus())) {
+    if (this.inventory >= this.inventory_limit) {
       return 0.0;
     }
     if (Math.random() < this.ingredient_probability) {
       const idx = Math.floor(Math.random() * this.ingredient_nums.length);
-      let gain = this.ingredient_nums[idx] + (this.ingredient_bonus || 0);
-      // if (this.specialty === Specialty.Ingredients && Math.random() < 0.5) {
-      //   gain += this.ingredient_bonus;
-      // }
+      let gain = this.ingredient_nums[idx] + this.team_ingredient_bonus + this.personal_ingredient_bonus + this.ex_ingredient_bonus;
+      if (
+        this.ex_extra_ingredient_if_specialty &&
+        Math.random() < 0.5
+      ) {
+        gain += 1;
+      }
       if (gain < 0) gain = 0;
       this.inventory += gain;
     } else {
@@ -360,9 +395,64 @@ class PokemonEvent {
     this.timestamp = timestampSeconds;
   }
 
-  get_next_event(helping_speed_bonus) {
-    const next = this.pokemon.get_next_helping_time(this.timestamp, helping_speed_bonus);
+  get_next_event() {
+    const next = this.pokemon.get_next_helping_time(this.timestamp);
     return new PokemonEvent(this.pokemon, next);
+  }
+}
+
+// EXフィールド用の補正種別
+const ExEffectLabels = {
+  "": "補正なし",
+  berry: "きのみエナジー2.4倍",
+  ingredient: "食材数+1（食材タイプなら50%でさらに+1）",
+  skill: "スキル確率1.25倍"
+};
+
+function populateTypeSelect(selectId) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+
+  // 初期値（未選択）
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "選択なし";
+  sel.appendChild(placeholder);
+
+  // Type オブジェクトから日本語名を入れる
+  for (const key of Object.keys(Type)) {
+    const opt = document.createElement("option");
+    opt.value = Type[key];       // 例: "でんき"
+    opt.textContent = Type[key]; // 表示テキストも同じ
+    sel.appendChild(opt);
+  }
+}
+
+function populateExEffectSelect(selectId) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+
+  Object.entries(ExEffectLabels).forEach(([value, label]) => {
+    const opt = document.createElement("option");
+    opt.value = value;    // "", "berry", "ingredient", "skill"
+    opt.textContent = label;
+    sel.appendChild(opt);
+  });
+}
+
+function initExFieldSelectors() {
+  ["exMainType", "exSub1Type", "exSub2Type"].forEach(populateTypeSelect);
+  populateExEffectSelect("exEffect");
+
+  const exCheckbox = document.getElementById("exFieldEnabled");
+  const exConfig = document.getElementById("exFieldConfig");
+
+  if (exCheckbox && exConfig) {
+    const updateVisibility = () => {
+      exConfig.style.display = exCheckbox.checked ? "block" : "none";
+    };
+    exCheckbox.addEventListener("change", updateVisibility);
+    updateVisibility();
   }
 }
 
@@ -384,7 +474,6 @@ class Simulator {
     this.sunday_chance_bonus = 0.2;
     this.sunday_success_energy_bonus = 1.5;
     this.cooking_energy_event_multiplier = 1.0;
-    this.helping_speed_multiplier = 1.0;
 
     // デフォルト値（UI から上書きされる）
     this.wake_up_time = 7 * 3600;
@@ -394,11 +483,7 @@ class Simulator {
     this.sleep_time = 22.5 * 3600;
   }
 
-  get_helping_bonus() {
-    return this.helping_speed_multiplier;
-  }
-
-  simulate_a_week(pokemons, recipe_energy, use_camp_ticket) {
+  simulate_a_week(pokemons, recipe_energy) {
     const DAY = 24 * 3600;
 
     let extra_energy = 0;
@@ -422,10 +507,7 @@ class Simulator {
     const pokemon_event_queue = [];
 
     for (const pokemon of pokemons) {
-      if (use_camp_ticket) {
-        pokemon.apply_camp_ticket();
-      }
-      const next_help = pokemon.get_next_helping_time(this.wake_up_time, this.get_helping_bonus());
+      const next_help = pokemon.get_next_helping_time(this.wake_up_time);
       pokemon_event_queue.push(new PokemonEvent(pokemon, next_help));
     }
 
@@ -480,7 +562,7 @@ class Simulator {
         cooking_chance_probability += ret;
 
         pokemon_event_queue.push(
-          nextEvent.get_next_event(this.get_helping_bonus())
+          nextEvent.get_next_event()
         );
       }
 
@@ -518,9 +600,9 @@ class Simulator {
     }
   }
 
-  simulate(trial, pokemons, recipe_energy, use_camp_ticket) {
+  simulate(trial, pokemons, recipe_energy) {
     for (let i = 0; i < trial; i++) {
-      this.simulate_a_week(pokemons, recipe_energy, use_camp_ticket);
+      this.simulate_a_week(pokemons, recipe_energy);
     }
 
     this.average_skill_count = this.total_skill_count / 7.0 / trial;
@@ -847,6 +929,68 @@ function clearPokemonSlotSettings(slotIndex) {
   }
 }
 
+function getExEffectForType(pokemonType, exConfig) {
+  if (!exConfig.enabled) {
+    return {
+      helpingMult: 1.0,
+      skillMult: 1.0,
+      ingredientBonus: 0,
+      extraIngredientIfSpecialty: false,
+      berryEnergyMult: 1.0,
+      effectLabel: "なし"
+    };
+  }
+
+  const isMain = pokemonType === exConfig.mainType;
+  const isSub1 = pokemonType === exConfig.sub1Type;
+  const isSub2 = pokemonType === exConfig.sub2Type;
+  const isSelected = isMain || isSub1 || isSub2;
+
+  // おてつだいスピード倍率
+  let helpingMult;
+  if (isMain) {
+    helpingMult = 1.1;    // メインタイプ
+  } else if (!isSelected) {
+    helpingMult = 0.85;   // 選ばれていないすべてのタイプ
+  } else {
+    helpingMult = 1.0;    // サブタイプ1,2
+  }
+
+  // 3タイプ共通のEX補正
+  let effectKind = "";
+  if (isSelected) {
+    effectKind = exConfig.effect || "";
+  }
+
+  let skillMult = 1.0;
+  let ingredientBonus = 0;
+  let extraIngredientIfSpecialty = false;
+  let berryEnergyMult = 1.0;
+
+  switch (effectKind) {
+    case "skill":
+      skillMult = 1.25;
+      break;
+    case "ingredient":
+      ingredientBonus = 1;
+      extraIngredientIfSpecialty = true; // 食材タイプならさらに50%で+1
+      break;
+    case "berry":
+      berryEnergyMult = 2.4;
+      break;
+    default:
+      break;
+  }
+
+  return {
+    helpingMult,
+    skillMult,
+    ingredientBonus,
+    extraIngredientIfSpecialty,
+    berryEnergyMult,
+    effectLabel: ExEffectLabels[effectKind] || "補正なし"
+  };
+}
 
 // ====== 時刻関連のユーティリティ ======
 
@@ -959,6 +1103,7 @@ function applyScheduleFromUI(simulator) {
 
 window.addEventListener("DOMContentLoaded", () => {
   initPokemonSlots();
+  initExFieldSelectors();
 
   const runBtn = document.getElementById("runBtn");
   const statusEl = document.getElementById("status");
@@ -987,6 +1132,35 @@ window.addEventListener("DOMContentLoaded", () => {
       document.getElementById("ingredientBonus").value || "0"
     );
     const ingredientBonus = Math.max(0, Math.floor(ingredientBonusInput || 0));
+
+    const useCampTicket = document.getElementById("campTicket").checked;
+    const campTicketConfig = {
+      enabled: useCampTicket,
+      helpingMult: useCampTicket ? 1.2 : 1.0,
+      inventoryBonus: useCampTicket ? 1.2 : 1.0
+    }
+
+    // ▼ EXフィールド設定を読み込み ▼
+    const exFieldEnabled = document.getElementById("exFieldEnabled").checked;
+    const exConfig = {
+      enabled: exFieldEnabled,
+      mainType: document.getElementById("exMainType").value || "",
+      sub1Type: document.getElementById("exSub1Type").value || "",
+      sub2Type: document.getElementById("exSub2Type").value || "",
+      effect: document.getElementById("exEffect").value || ""
+    };
+
+    // 簡易バリデーション：EXフィールドONならタイプは全部選んでほしい
+    if (exConfig.enabled) {
+      if (!exConfig.mainType || !exConfig.sub1Type || !exConfig.sub2Type) {
+        statusEl.textContent = "EXフィールドが有効ですが、メイン/サブタイプが未選択です。";
+        return;
+      }
+      if (!exConfig.effect) {
+        statusEl.textContent = "EXフィールドが有効ですが、EXフィールド補正が未選択です。";
+        return;
+      }
+    }
 
     const pokemons = [];
 
@@ -1039,9 +1213,8 @@ window.addEventListener("DOMContentLoaded", () => {
       const nature = Natures[natureKey];
       const pokemonName = `${pokemonData.name}${i}`;
 
-      const combinedSkillMultiplier = skillEventMultiplier * personalSkillMult;
-      const combinedIngredientBonus = ingredientBonus + personalIngredientBonus;
-      const combinedHelpingMultiplier = personalHelpMult;
+      // ▼ このタイプに対する EX 補正を計算
+      const ex = getExEffectForType(pokemonData.type, exConfig);
 
       const pokemon = new Pokemon(
         pokemonData,
@@ -1050,9 +1223,19 @@ window.addEventListener("DOMContentLoaded", () => {
         subSkills,
         nature,
         skillLevel,
-        combinedSkillMultiplier,
-        combinedIngredientBonus,
-        combinedHelpingMultiplier
+        campTicketConfig.helpingMult,
+        campTicketConfig.inventoryBonus,
+        helpingSpeedMultiplier,
+        ingredientBonus,
+        skillEventMultiplier,
+        personalHelpMult,
+        personalIngredientBonus,
+        personalSkillMult,
+        ex.helpingMult,
+        ex.ingredientBonus,
+        ex.skillMult,
+        ex.berryEnergyMult,
+        ex.effectLabel
       );
       pokemons.push(pokemon);
     }
@@ -1068,7 +1251,6 @@ window.addEventListener("DOMContentLoaded", () => {
 
     const recipeEnergy = Number(document.getElementById("recipeEnergy").value || "0");
     const trials = Number(document.getElementById("trials").value || "1000");
-    const useCampTicket = document.getElementById("campTicket").checked;
 
     // 1日目の料理大成功確率（%）を 0〜70 にクリップ
     const day1ChancePercentInput = Number(
@@ -1084,9 +1266,6 @@ window.addEventListener("DOMContentLoaded", () => {
     // ▼ 料理エナジーUP(イベント) 倍率を設定
     simulator.cooking_energy_event_multiplier = energyEventMultiplier;
 
-    // ▼ 追加：おてつだいスピード倍率を適用
-    simulator.helping_speed_multiplier = helpingSpeedMultiplier;
-
     // 時刻設定を検証して simulator に反映
     if (!applyScheduleFromUI(simulator)) {
       statusEl.textContent = "時間設定にエラーがあります。";
@@ -1097,7 +1276,7 @@ window.addEventListener("DOMContentLoaded", () => {
     statusEl.textContent = `シミュレーション中…（試行回数: ${trials}）`;
 
     setTimeout(() => {
-      simulator.simulate(trials, pokemons, recipeEnergy, useCampTicket);
+      simulator.simulate(trials, pokemons, recipeEnergy);
 
       const avgSkill = simulator.average_skill_count;     // 1日あたり スキル発動数（全体）
       const avgSuccess = simulator.average_success_count; // 1週間あたり 料理成功回数
@@ -1113,24 +1292,7 @@ window.addEventListener("DOMContentLoaded", () => {
       text += "=== 入力パラメータ ===\n";
       pokemons.forEach((pkm, idx) => {
         const n = idx + 1;
-        // 有効なスキル倍率（グローバル × 個別）
-        const effectiveSkillMult = pkm.skill_event_multiplier ?? 1.0;
-        // 個別スキル倍率 = 有効倍率 / グローバル倍率（0 のときはそのまま）
-        const personalSkillMultOut =
-          skillEventMultiplier > 0
-            ? effectiveSkillMult / skillEventMultiplier
-            : effectiveSkillMult;
 
-        // 有効な食材ボーナス（グローバル + 個別）
-        const effectiveIngredientBonus = pkm.ingredient_bonus ?? 0;
-        // 個別食材ボーナス = 有効 - グローバル（マイナスにはしない）
-        const personalIngredientBonusOut = Math.max(
-          0,
-          effectiveIngredientBonus - ingredientBonus
-        );
-
-        // 個別おてつだいスピード倍率
-        const personalHelpMultOut = pkm.personal_helping_speed_multiplier ?? 1.0;
         const subNames =
           pkm.sub_skills.length > 0
             ? pkm.sub_skills.map(s => s.name).join(", ")
@@ -1140,29 +1302,51 @@ window.addEventListener("DOMContentLoaded", () => {
         text += `  メインスキルレベル: ${pkm.skill_level}\n`;
         text += `  サブスキル: ${subNames}\n`;
         text += `  性格: ${pkm.nature.name}\n`;
-        text += `  個別おてつだいスピード倍率: ${personalHelpMultOut.toFixed(2)} 倍\n`;
-        text += `  個別食材ボーナス: +${personalIngredientBonusOut} 個\n`;
-        text += `  個別スキル確率倍率: ${personalSkillMultOut.toFixed(2)} 倍\n`;
+        text += `  個別おてつだいスピード倍率: ${pkm.personal_helping_speed_multiplier.toFixed(2)} 倍\n`;
+        text += `  個別食材ボーナス: +${pkm.personal_ingredient_bonus} 個\n`;
+        text += `  個別スキル確率倍率: ${pkm.personal_skill_multiplier.toFixed(2)} 倍\n`;
       });
       text += `\nレシピのエネルギー値: ${recipeEnergy}\n`;
-      text += `キャンプチケット: ${useCampTicket ? "使用する" : "使用しない"}\n`;
       text += `試行回数: ${trials}\n\n`;
       text += `月曜日の朝の料理大成功確率: ${day1ChancePercent.toFixed(1)} %\n`;
-      text += `おてつだいスピード倍率: ${helpingSpeedMultiplier.toFixed(2)} 倍\n`;
-      text += `食材数ボーナス: +${ingredientBonus} 個\n`;
-      text += `スキル確率倍率: ${skillEventMultiplier.toFixed(2)} 倍\n`;
-      text += `料理エナジー倍率: ${energyEventMultiplier.toFixed(2)} 倍\n\n`;
+      text += `キャンプチケット: ${useCampTicket ? "使用する" : "使用しない"}\n`;
+      if (useCampTicket) {
+        text += `  おてつだいスピード倍率: ${campTicketConfig.helpingMult} 倍\n`;
+        text += `  所持数倍率: ${campTicketConfig.inventoryBonus} 倍\n`;
+      }
+      text += `EXフィールド: ${exConfig.enabled ? "使用する" : "使用しない"}\n`;
+      if (exConfig.enabled) {
+        text += `  メインタイプ: ${exConfig.mainType}\n`;
+        text += `  サブタイプ1: ${exConfig.sub1Type}\n`;
+        text += `  サブタイプ2: ${exConfig.sub2Type}\n`;
+        text += `  EXフィールド補正: ${ExEffectLabels[exConfig.effect] || "補正なし"}\n`;
+      }
+      text += `イベント補正:\n`;
+      text += `  おてつだいスピード倍率: ${helpingSpeedMultiplier.toFixed(2)} 倍\n`;
+      text += `  食材数ボーナス: +${ingredientBonus} 個\n`;
+      text += `  スキル確率倍率: ${skillEventMultiplier.toFixed(2)} 倍\n`;
+      text += `  料理エナジー倍率: ${energyEventMultiplier.toFixed(2)} 倍\n\n`;
 
       text += "=== ポケモン最終ステータス ===\n";
       pokemons.forEach((pkm, idx) => {
         const n = idx + 1;
         text += `[ポケモン${n}] ${pkm.pokemon_data.name}\n`;
         text += `  おてつだい時間: ${pkm.helping_speed} 秒\n`;
+        text += `    おてつだいスピード倍率: ${(pkm.personal_helping_speed_multiplier * pkm.team_helping_speed_multiplier * pkm.ex_helping_speed_multiplier * pkm.camp_ticket_helping_speed_multiplier).toFixed(2)} 倍\n`;
+        text += `    補正後: ${pkm.helping_speed * 0.45 / (pkm.personal_helping_speed_multiplier * pkm.team_helping_speed_multiplier * pkm.ex_helping_speed_multiplier * pkm.camp_ticket_helping_speed_multiplier)} 秒 (げんき81%↑)\n`;
         text += `  食材確率: ${(pkm.ingredient_probability * 100).toFixed(2)} %\n`;
-        text += `  スキル確率: ${(pkm.skill_probability * 100).toFixed(2)} %\n`;
-        text += `  所持数: ${pkm.inventory_limit}\n`;
+        text += `    食材ボーナス: +${pkm.personal_ingredient_bonus + pkm.team_ingredient_bonus + pkm.ex_ingredient_bonus} 個\n`;
+        text += `  スキル確率: ${(pkm.pokemon_data.skill_probability * 100).toFixed(2)} %\n`;
+        text += `    スキル確率倍率: ${(pkm.personal_skill_multiplier * pkm.team_skill_multiplier * pkm.ex_skill_multiplier).toFixed(2)} 倍\n\n`;
+        text += `    補正後: ${(pkm.skill_probability * 100).toFixed(2)} %\n`;
+        text += `  所持数: ${pkm.inventory_limit}`;
+        if (pkm.inventory_limit_bonus > 0) {
+          text += `(いいキャンプチケット効果を含む)`;
+        }
+        text += `\n`;
         text += `  きのみの数: ${pkm.berry_num}\n`;
         text += `  メインスキル効果: ${pkm.skill_effect * 100} %\n`;
+        text += `  EXフィールド補正: ${pkm.ex_effect_label}\n`;
       });
 
       text += "\n=== シミュレーション結果（1週間 × 試行回数の平均） ===\n";
