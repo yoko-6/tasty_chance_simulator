@@ -104,13 +104,13 @@
       border-radius: 999px;
       border: none;
       cursor: pointer;
-      background: #e0e0e7;
-      color: #333;
+      background: #f79d9d;
+      color: #252525;
       box-shadow: none;
     }
 
     .subskill-actions button:hover {
-      background: #d0d0d7;
+      background: #f5bbbb;
     }
 
     button {
@@ -139,7 +139,18 @@
     }
 
     button.secondary-btn:hover:not(:disabled) {
-      background: #d4d4dd;
+      background: #a2a2a8;
+    }
+
+    button.secondary-delete-btn {
+      background: #f79d9d;
+      color: #333;
+      box-shadow: none;
+      font-weight: 500;
+    }
+
+    button.secondary-delete-btn:hover:not(:disabled) {
+      background: #f5bbbb;
     }
 
     .inline {
@@ -400,7 +411,7 @@
     <div id="pokemonSlots"></div>
     <div style="margin-top:0.5rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
       <button id="addPokemonBtn" type="button" class="secondary-btn">ポケモンを追加</button>
-      <button id="removePokemonBtn" type="button" class="secondary-btn">最後のポケモンを削除</button>
+      <button id="removePokemonBtn" type="button" class="secondary-delete-btn">最後のポケモンを削除</button>
     </div>
     <div class="muted" style="margin-top:0.25rem;">
       ※ 最大 5 匹まで追加できます。最初は 1 匹だけ表示されます。
