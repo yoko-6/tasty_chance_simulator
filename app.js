@@ -97,55 +97,55 @@ const Natures = {
 
 // 上がる / 下がる項目のグループ
 const NatureUpGroups = [
-  { id: "help",   label: "おてつだいスピード↑" },
-  { id: "ing",    label: "食材確率↑" },
-  { id: "skill",  label: "スキル確率↑" },
-  { id: "exp",    label: "EXP↑" },
+  { id: "help", label: "おてつだいスピード↑" },
+  { id: "ing", label: "食材確率↑" },
+  { id: "skill", label: "スキル確率↑" },
+  { id: "exp", label: "EXP↑" },
   { id: "energy", label: "げんき回復↑" },
-  { id: "none",   label: "無補正" }
+  { id: "none", label: "無補正" }
 ];
 
 const NatureDownGroups = [
-  { id: "help",   label: "おてつだいスピード↓" },
-  { id: "ing",    label: "食材確率↓" },
-  { id: "skill",  label: "スキル確率↓" },
-  { id: "exp",    label: "EXP↓" },
+  { id: "help", label: "おてつだいスピード↓" },
+  { id: "ing", label: "食材確率↓" },
+  { id: "skill", label: "スキル確率↓" },
+  { id: "exp", label: "EXP↓" },
   { id: "energy", label: "げんき回復↓" },
-  { id: "none",   label: "無補正" }
+  { id: "none", label: "無補正" }
 ];
 
 // 各性格がどの組み合わせか
 const NatureMeta = {
-  Adamant: { up: "help",   down: "ing"    },
-  Lonely:  { up: "help",   down: "energy" },
-  Naughty: { up: "help",   down: "skill"  },
-  Brave:   { up: "help",   down: "exp"    },
+  Adamant: { up: "help", down: "ing" },
+  Lonely: { up: "help", down: "energy" },
+  Naughty: { up: "help", down: "skill" },
+  Brave: { up: "help", down: "exp" },
 
-  Calm:    { up: "skill",  down: "help"   },
-  Gentle:  { up: "skill",  down: "energy" },
-  Careful: { up: "skill",  down: "ing"    },
-  Sassy:   { up: "skill",  down: "exp"    },
+  Calm: { up: "skill", down: "help" },
+  Gentle: { up: "skill", down: "energy" },
+  Careful: { up: "skill", down: "ing" },
+  Sassy: { up: "skill", down: "exp" },
 
-  Rash:    { up: "ing",    down: "skill"  },
-  Mild:    { up: "ing",    down: "energy" },
-  Modest:  { up: "ing",    down: "help"   },
-  Quiet:   { up: "ing",    down: "exp"    },
+  Rash: { up: "ing", down: "skill" },
+  Mild: { up: "ing", down: "energy" },
+  Modest: { up: "ing", down: "help" },
+  Quiet: { up: "ing", down: "exp" },
 
-  Timid:   { up: "exp",    down: "help"   },
-  Hasty:   { up: "exp",    down: "energy" },
-  Naive:   { up: "exp",    down: "skill"  },
-  Jolly:   { up: "exp",    down: "ing"    },
+  Timid: { up: "exp", down: "help" },
+  Hasty: { up: "exp", down: "energy" },
+  Naive: { up: "exp", down: "skill" },
+  Jolly: { up: "exp", down: "ing" },
 
-  Bold:    { up: "energy", down: "help"   },
-  Lax:     { up: "energy", down: "skill"  },
-  Relaxed: { up: "energy", down: "exp"    },
-  Impish:  { up: "energy", down: "ing"    },
+  Bold: { up: "energy", down: "help" },
+  Lax: { up: "energy", down: "skill" },
+  Relaxed: { up: "energy", down: "exp" },
+  Impish: { up: "energy", down: "ing" },
 
-  Hardy:   { up: "none",   down: "none"   },
-  Quirky:  { up: "none",   down: "none"   },
-  Docile:  { up: "none",   down: "none"   },
-  Bashful: { up: "none",   down: "none"   },
-  Serious: { up: "none",   down: "none"   }
+  Hardy: { up: "none", down: "none" },
+  Quirky: { up: "none", down: "none" },
+  Docile: { up: "none", down: "none" },
+  Bashful: { up: "none", down: "none" },
+  Serious: { up: "none", down: "none" }
 };
 
 class MainSkill {
@@ -1058,12 +1058,12 @@ window.addEventListener("DOMContentLoaded", () => {
         text += `  ${labels[idx]}: ${val.toFixed(3)}\n`;
       });
 
-        // text が 1回分の出力ブロック
-        const sep = "\n\n-------------------------------------------------------------------------------------------------------------------\n\n";
+      // text が 1回分の出力ブロック
+      const sep = "\n\n-------------------------------------------------------------------------------------------------------------------\n\n";
 
-        let old_text = outputEl.textContent;
+      let old_text = outputEl.textContent;
 
-        outputEl.textContent = text + sep + old_text;
+      outputEl.textContent = text + sep + old_text;
 
       statusEl.textContent = "シミュレーション完了";
       runBtn.disabled = false;
