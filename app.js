@@ -1712,32 +1712,32 @@ function buildResultHtml(result) {
             料理チャンス(週またぎ発動)
           </label>
         </div>
-        <div class="energy-toggle-group" style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.5rem;">
           ${pokemons
       .map(
         p => `
-              <label class="inline">
-                <input
-                  type="checkbox"
-                  class="energy-series-toggle"
-                  data-series-id="poke-${p.index}-cook"
-                  checked
-                />
-                ポケモン${p.index}（${p.name}）料理チャンス
-              </label>
-              <label class="inline">
-                <input
-                  type="checkbox"
-                  class="energy-series-toggle"
-                  data-series-id="poke-${p.index}-berry"
-                  checked
-                />
-                ポケモン${p.index}（${p.name}）きのみ
-              </label>
-            `
+              <div class="energy-toggle-group" style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.5rem;">
+                <label class="inline">
+                  <input
+                    type="checkbox"
+                    class="energy-series-toggle"
+                    data-series-id="poke-${p.index}-cook"
+                    checked
+                  />
+                  ポケモン${p.index}（${p.name}）料理チャンス
+                </label>
+                <label class="inline">
+                  <input
+                    type="checkbox"
+                    class="energy-series-toggle"
+                    data-series-id="poke-${p.index}-berry"
+                    checked
+                  />
+                  ポケモン${p.index}（${p.name}）きのみ
+                </label>
+              </div>
+              `
       )
       .join("")}
-        </div>
 
         <div style="width:100%; overflow-x:auto;">
           <div style="min-width:280px; height:240px;">
