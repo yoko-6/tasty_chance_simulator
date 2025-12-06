@@ -1883,11 +1883,14 @@ window.addEventListener("DOMContentLoaded", () => {
   const nextResultBtn = document.getElementById("nextResultBtn");
   const resultPageInfo = document.getElementById("resultPageInfo");
 
-  const resultHistory = [];   // 最新が index 0
+  // 古い順に 0,1,2,...  最新が末尾になる
+  const resultHistory = [];
   let resultIndex = -1;
 
   function renderCurrentResult() {
-    if (resultIndex < 0 || resultIndex >= resultHistory.length) {
+    const totalPages = resultHistory.length;
+
+    if (resultIndex < 0 || resultIndex >= totalPages) {
       outputEl.innerHTML = "";
       if (resultPageInfo) {
         resultPageInfo.textContent = "結果はまだありません";
@@ -1901,29 +1904,37 @@ window.addEventListener("DOMContentLoaded", () => {
     outputEl.innerHTML = buildResultHtml(current);
     renderEnergyChart(current);
 
-    const currentPage = resultIndex + 1;
-    const totalPages = resultHistory.length;
+    // 表示上の番号: 1 〜 totalPages
+    // 0番目(最古) => 1,   (totalPages - 1)番目(最新) => totalPages
+    const displayPage = resultIndex + 1;
+
     if (resultPageInfo) {
-      resultPageInfo.textContent = `結果 ${currentPage} / ${totalPages}（1 が最新）`;
+      resultPageInfo.textContent =
+        `結果 ${displayPage} / ${totalPages}（${totalPages}が最新）`;
     }
 
-    if (prevResultBtn) prevResultBtn.disabled = (resultIndex >= totalPages - 1);
-    if (nextResultBtn) nextResultBtn.disabled = (resultIndex <= 0);
+    // 「前の結果」 = 1つ古い結果 = index を減らす
+    if (prevResultBtn) prevResultBtn.disabled = (resultIndex <= 0);
+
+    // 「次の結果」 = 1つ新しい結果 = index を増やす
+    if (nextResultBtn) nextResultBtn.disabled = (resultIndex >= totalPages - 1);
   }
 
+  // ← 前の結果（古いほうへ）
   if (prevResultBtn) {
     prevResultBtn.addEventListener("click", () => {
-      if (resultIndex < resultHistory.length - 1) {
-        resultIndex += 1;   // 古い結果へ
+      if (resultIndex > 0) {
+        resultIndex -= 1;   // 1つ古い結果へ
         renderCurrentResult();
       }
     });
   }
 
+  // 次の結果 →（新しいほうへ）
   if (nextResultBtn) {
     nextResultBtn.addEventListener("click", () => {
-      if (resultIndex > 0) {
-        resultIndex -= 1;   // 新しい結果へ
+      if (resultIndex < resultHistory.length - 1) {
+        resultIndex += 1;   // 1つ新しい結果へ
         renderCurrentResult();
       }
     });
@@ -2235,10 +2246,10 @@ window.addEventListener("DOMContentLoaded", () => {
         }
       };
 
-      // ▼ 履歴の先頭に追加して、表示を更新
-      resultHistory.unshift(result);
-      resultIndex = 0;
+      resultHistory.push(result);
+      resultIndex = resultHistory.length - 1;
       renderCurrentResult();
+
 
       statusEl.textContent = "シミュレーション完了";
       runBtn.disabled = false;
