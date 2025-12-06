@@ -1706,7 +1706,8 @@ function buildResultHtml(result) {
         </div>
 
         <!-- 表示切り替えチェックボックス -->
-        <div class="energy-toggle-group" style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.5rem;">
+        <div class="result-section-sub" style="margin:0.2rem;">表示切り替えボタン</div>
+        <div class="energy-toggle-group" style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.2rem;">
           <label class="inline">
             <input type="checkbox" class="energy-series-toggle" data-series-id="base" checked />
             ベース料理大成功(10%/30%)
@@ -1719,7 +1720,7 @@ function buildResultHtml(result) {
           ${pokemons
       .map(
         p => `
-              <div class="energy-toggle-group" style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.5rem;">
+              <div class="energy-toggle-group" style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.2rem;">
                 <label class="inline">
                   <input
                     type="checkbox"
