@@ -907,9 +907,14 @@
   </div>
 
   <div id="resultNav" class="result-nav">
-    <button id="prevResultBtn" type="button" class="secondary-btn" disabled>← 前の結果</button>
-    <span id="resultPageInfo" class="muted">結果はまだありません</span>
-    <button id="nextResultBtn" type="button" class="secondary-btn" disabled>次の結果 →</button>
+    <div style="display:flex; gap:0.5rem; align-items:center;">
+      <button id="prevResultBtn" type="button" class="secondary-btn" disabled>← 前の結果</button>
+      <button id="nextResultBtn" type="button" class="secondary-btn" disabled>次の結果 →</button>
+    </div>
+    <div style="display:flex; gap:0.5rem; align-items:center;">
+      <span id="resultPageInfo" class="muted">結果はまだありません</span>
+      <button id="clearHistoryBtn" type="button" class="secondary-delete-btn" disabled>履歴をクリア</button>
+    </div>
   </div>
 
   <hr />

@@ -1928,20 +1928,57 @@ window.addEventListener("DOMContentLoaded", () => {
   const nextResultBtn = document.getElementById("nextResultBtn");
   const resultPageInfo = document.getElementById("resultPageInfo");
 
+  const STORAGE_KEY_RESULTS = "sleepSimResults_v1";
+
   // 古い順に 0,1,2,...  最新が末尾になる
-  const resultHistory = [];
+  let resultHistory = [];
   let resultIndex = -1;
 
-  function renderCurrentResult() {
-    const totalPages = resultHistory.length;
+  function loadResultsFromStorage() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY_RESULTS);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      return parsed;
+    } catch (e) {
+      console.warn("結果履歴の復元に失敗しました:", e);
+      return [];
+    }
+  }
 
-    if (resultIndex < 0 || resultIndex >= totalPages) {
+  function saveResultsToStorage() {
+    try {
+      // 必要であれば「最新◯件だけ残す」などのロジックもここに書けます
+      localStorage.setItem(STORAGE_KEY_RESULTS, JSON.stringify(resultHistory));
+    } catch (e) {
+      console.warn("結果履歴の保存に失敗しました:", e);
+    }
+  }
+
+  function clearResultHistory() {
+    resultHistory = [];
+    resultIndex = -1;
+    try {
+      localStorage.removeItem(STORAGE_KEY_RESULTS);
+    } catch (e) {
+      console.warn("結果履歴の削除に失敗しました:", e);
+    }
+    renderCurrentResult();
+  }
+
+  function renderCurrentResult() {
+    if (resultIndex < 0 || resultIndex >= resultHistory.length) {
       outputEl.innerHTML = "";
       if (resultPageInfo) {
         resultPageInfo.textContent = "結果はまだありません";
       }
       if (prevResultBtn) prevResultBtn.disabled = true;
       if (nextResultBtn) nextResultBtn.disabled = true;
+
+      const clearHistoryBtn = document.getElementById("clearHistoryBtn");
+      if (clearHistoryBtn) clearHistoryBtn.disabled = true;
+
       return;
     }
 
@@ -1949,40 +1986,59 @@ window.addEventListener("DOMContentLoaded", () => {
     outputEl.innerHTML = buildResultHtml(current);
     renderEnergyChart(current);
 
-    // 表示上の番号: 1 〜 totalPages
-    // 0番目(最古) => 1,   (totalPages - 1)番目(最新) => totalPages
-    const displayPage = resultIndex + 1;
-
+    const currentPage = resultIndex + 1;
+    const totalPages = resultHistory.length;
     if (resultPageInfo) {
-      resultPageInfo.textContent =
-        `結果 ${displayPage} / ${totalPages}（${totalPages}が最新）`;
+      resultPageInfo.textContent = `結果 ${currentPage} / ${totalPages}（番号が大きいほど新しい）`;
     }
 
-    // 「前の結果」 = 1つ古い結果 = index を減らす
     if (prevResultBtn) prevResultBtn.disabled = (resultIndex <= 0);
-
-    // 「次の結果」 = 1つ新しい結果 = index を増やす
     if (nextResultBtn) nextResultBtn.disabled = (resultIndex >= totalPages - 1);
+
+    const clearHistoryBtn = document.getElementById("clearHistoryBtn");
+    if (clearHistoryBtn) clearHistoryBtn.disabled = (totalPages === 0);
   }
 
-  // ← 前の結果（古いほうへ）
   if (prevResultBtn) {
     prevResultBtn.addEventListener("click", () => {
+      // 1つ前（番号が小さい＝古い結果）へ
       if (resultIndex > 0) {
-        resultIndex -= 1;   // 1つ古い結果へ
+        resultIndex -= 1;
         renderCurrentResult();
       }
     });
   }
 
-  // 次の結果 →（新しいほうへ）
   if (nextResultBtn) {
     nextResultBtn.addEventListener("click", () => {
+      // 1つ後（番号が大きい＝新しい結果）へ
       if (resultIndex < resultHistory.length - 1) {
-        resultIndex += 1;   // 1つ新しい結果へ
+        resultIndex += 1;
         renderCurrentResult();
       }
     });
+  }
+
+  if (clearHistoryBtn) {
+    clearHistoryBtn.addEventListener("click", () => {
+      if (!resultHistory.length) return;
+
+      const ok = window.confirm("シミュレーション履歴をすべて削除しますか？");
+      if (!ok) return;
+
+      clearResultHistory();
+      statusEl.textContent = "履歴をクリアしました";
+    });
+  }
+
+  // ページ読み込み時に履歴を復元
+  const stored = loadResultsFromStorage();
+  if (stored.length > 0) {
+    resultHistory = stored;
+    resultIndex = resultHistory.length - 1;  // 一番新しい結果を表示
+  } else {
+    resultHistory = [];
+    resultIndex = -1;
   }
 
   renderCurrentResult();
@@ -2344,8 +2400,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
       resultHistory.push(result);
       resultIndex = resultHistory.length - 1;
-      renderCurrentResult();
 
+      saveResultsToStorage();
+      renderCurrentResult();
 
       statusEl.textContent = "シミュレーション完了";
       runBtn.disabled = false;
