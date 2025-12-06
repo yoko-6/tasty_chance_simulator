@@ -1321,8 +1321,8 @@ function getNatureEffectDescription(natureName) {
   const downLabel = meta.down !== "none" ? findLabel(meta.down, NatureDownGroups) : "";
 
   const parts = [];
-  if (upLabel) parts.push(`${upLabel} ▲▲`);
-  if (downLabel) parts.push(`${downLabel} ▼▼`);
+  if (upLabel) parts.push(`${upLabel}↑`);
+  if (downLabel) parts.push(`${downLabel}↓`);
 
   return parts.length ? parts.join(" / ") : "補正なし";
 }
@@ -1631,7 +1631,7 @@ function buildResultHtml(result) {
             <div>
               <div class="pokemon-title">ポケモン${p.index}: ${p.name}</div>
               <div class="pokemon-sub">
-                タイプ: ${p.type || "-"} ／ Lv${p.level} ／ 性格: ${p.natureName}
+                ${p.type || "-"} ／ Lv${p.level} ／ ${p.natureName}
                 ${natureEffectText && natureEffectText !== "補正なし"
           ? `（${natureEffectText}）`
           : ""
