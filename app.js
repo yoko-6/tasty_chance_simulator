@@ -1681,20 +1681,20 @@ function buildResultHtml(result) {
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">料理大成功による増加分</div>
+            <div class="stat-label">料理大成功による増加</div>
             <div class="stat-value">
               ${summary.avgExtraPerDay.toFixed(0)}<span class="stat-unit">エナジー/日</span>
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">料理チャンス発動（全体）</div>
+            <div class="stat-label">料理チャンス（全体）</div>
             <div class="stat-value">
               ${summary.avgSkill.toFixed(2)}<span class="stat-unit">回/日</span>
             </div>
           </div>
 
           <div class="stat-card">
-            <div class="stat-label">料理チャンス（1匹あたり）</div>
+            <div class="stat-label">料理チャンス(1匹あたり)</div>
             <div class="stat-value">
               ${summary.perPokemonExtraPerDay.toFixed(0)}<span class="stat-unit">エナジー/日</span>
             </div>

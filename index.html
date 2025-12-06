@@ -30,12 +30,12 @@
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
       gap: 1rem;
     }
 
     label {
-      font-size: 0.9rem;
+      font-size: 1.0rem;
       font-weight: 600;
       display: block;
       margin-bottom: 0.25rem;
@@ -53,9 +53,18 @@
       box-sizing: border-box;
     }
 
+    .type-box {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 0.25rem 0.75rem;
+      padding: 0.5rem 0.75rem;
+      background: #fafafa;
+      font-size: 0.9rem;
+    }
+
     .subskills-box {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
       gap: 0.25rem 0.75rem;
       border-radius: 6px;
       border: 1px solid #d0d0d7;
@@ -67,6 +76,7 @@
     .subskills-box label {
       display: inline-block;
       font-weight: 400;
+      font-size: 0.9rem;
       margin: 0;
     }
 
@@ -205,7 +215,7 @@
 
     .stat-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
       gap: 0.5rem;
       margin-top: 0.5rem;
     }
@@ -446,10 +456,10 @@
 
     .pokemon-body-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
       gap: 0.4rem 1rem;
       margin-top: 0.4rem;
-      font-size: 0.85rem;
+      font-size: 0.75rem;
     }
 
     .pokemon-body-block-title {
@@ -464,7 +474,7 @@
 
     .input-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
       gap: 0.75rem;
     }
 
@@ -473,7 +483,7 @@
       border-radius: 10px;
       border: 1px solid #e0e0e7;
       padding: 0.6rem 0.8rem;
-      font-size: 0.85rem;
+      font-size: 0.80rem;
     }
 
     .input-block-title {
@@ -584,7 +594,7 @@
       margin-top: 0.5rem;
       padding: 0.5rem 0.75rem;
       border-radius: 8px;
-      border: 1px dashed #d0d0d7;
+      border: 1px solid #d0d0d7;
       background: #fafafa;
     }
 
@@ -676,7 +686,7 @@
       border-radius: 999px;
       background: #eef2ff;
       color: #3730a3;
-      font-size: 0.75rem;
+      font-size: 0.80rem;
     }
 
     .info-list {
@@ -686,6 +696,10 @@
 
     .info-list li {
       margin-bottom: 0.2rem;
+    }
+
+    html {
+      font-size: 22px;
     }
   </style>
 </head>
@@ -709,14 +723,14 @@
         まずは何も設定せずに、下の
         <span class="info-pill">シミュレーション実行</span>
         を押してみてください。<br>
-        デフォルトのデデンネ1匹で、1週間アボカドグラタン(65lv. 82839)を作った場合の、料理チャンス期待値をすぐに確認できます。
+        デデンネ1匹で、アボカドグラタン(65lv. 82839)を作る料理チャンス期待値をすぐに確認できます。
       </p>
       <ul class="info-list">
         <li>
           レシピエナジーを変えると、1回の料理の大成功エナジー量を変更できます。
         </li>
         <li>
-          <span class="info-pill">詳細設定</span>から料理エナジー倍率やスキル確率倍率などのイベントボーナスも設定できます
+          <span class="info-pill">詳細設定</span>からイベントボーナスも設定できます
           （例: 料理エナジー1.25倍、スキル確率1.5倍 など）。
         </li>
         <li>
@@ -730,26 +744,26 @@
   </div>
 
   <div class="card">
-    <h2 style="font-size:1.1rem; margin-top:0;">レシピ・シミュレーション設定</h2>
+    <!-- <h2 style="font-size:1.1rem; margin-top:0;">レシピ・シミュレーション設定</h2> -->
 
     <!-- グローバル設定 -->
     <div class="grid">
       <div class="row">
         <label for="recipeEnergy">レシピエナジー値</label>
         <input id="recipeEnergy" type="number" min="0" value="82839" />
-        <div class="muted">通常時のレシピエナジーの値を入力してください</div>
+        <div class="muted">通常時のレシピレベルを含む値</div>
       </div>
 
       <div class="row">
         <label for="trials">シミュレーション試行回数</label>
         <input id="trials" type="number" min="1" value="10000" />
-        <div class="muted">大きくすると結果は安定しますが時間がかかります</div>
+        <div class="muted">10000回程度はすぐに実行できます</div>
       </div>
 
       <div class="row">
         <label for="day1SuccessChance">月曜日の朝の料理大成功確率</label>
         <input id="day1SuccessChance" type="number" min="0" max="70" step="1" value="0" />
-        <div class="muted">週またぎで発動させた料理チャンスの値を入力してください（0〜70%）</div>
+        <div class="muted">週またぎで発動させる料理チャンスの値（0〜70%）</div>
       </div>
     </div>
 
@@ -833,7 +847,7 @@
     </details>
 
     <hr />
-    <h3 style="font-size:1rem; margin-top:0;">フィールド設定</h3>
+    <!-- <h3 style="font-size:1rem; margin-top:0;">フィールド設定</h3> -->
     <div class="grid">
       <div class="row">
         <label for="fieldSelect">フィールド</label>
@@ -855,7 +869,7 @@
     </div>
 
     <div id="fieldTypeConfig" class="ex-field-config">
-      <div class="grid">
+      <div class="type-box">
         <div class="row">
           <label>メインタイプ</label>
           <select id="fieldMainType"></select>
