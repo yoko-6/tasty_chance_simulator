@@ -287,7 +287,7 @@ class Pokemon {
     ex_ingredient_bonus,
     ex_skill_multiplier,
     ex_effect_label,                  // EX: 表示用のラベル
-
+    field_energy_multiplier,
   ) {
     this.pokemon_data = pokemon_data;
     this.name = name;
@@ -342,6 +342,11 @@ class Pokemon {
     // EX専用フラグ
     this.ex_extra_ingredient_if_specialty = (this.ex_ingredient_bonus > 0) && (this.pokemon_data.specialty === Specialty.Ingredients);
     this.ex_effect_label = ex_effect_label || "なし";
+
+    // ★ フィールドボーナス（エナジー用）
+    this.field_energy_multiplier = Number.isFinite(field_energy_multiplier)
+      ? field_energy_multiplier
+      : 1.0;
 
     this.initStats();
   }
@@ -462,7 +467,7 @@ class Pokemon {
   }
 
   get_berries() {
-    this.total_berry_energy += this.get_berry_energy() * this.berry_num * this.berry_energy_multiplier;
+    this.total_berry_energy += this.get_berry_energy() * this.berry_num * this.berry_energy_multiplier * this.field_energy_multiplier;
     if (this.inventory < this.inventory_limit) {
       this.inventory += this.berry_num;
     }
@@ -654,6 +659,7 @@ class Simulator {
     this.sunday_chance_bonus = 0.2;
     this.sunday_success_energy_bonus = 1.5;
     this.cooking_energy_event_multiplier = 1.0;
+    this.field_energy_multiplier = 1.0;
 
     // デフォルト値（UI から上書きされる）
     this.wake_up_time = 7 * 3600;
@@ -761,7 +767,8 @@ class Simulator {
         base_cooking_energy =
           recipe_energy *
           this.cooking_energy_event_multiplier *
-          (eventDay === 7 ? this.sunday_success_energy_bonus : 1.0);
+          (eventDay === 7 ? this.sunday_success_energy_bonus : 1.0) *
+          this.field_energy_multiplier;
 
         if (eventDay === 2) {
           for (let i = 0; i < pokemons.length; i++) {
@@ -1640,6 +1647,13 @@ function buildResultHtml(result) {
     ? (field.exEffectLabel || "補正なし")
     : "なし";
 
+  const fieldBonusPercentText =
+    field.fieldBonusPercent != null
+      ? field.fieldBonusPercent.toFixed(1)
+      : (field.fieldEnergyMultiplier != null
+        ? (field.fieldEnergyMultiplier * 100).toFixed(1)
+        : "100.0");
+
   return `
     <div class="result-container">
       <!-- 料理・エナジー結果（棒グラフ） -->
@@ -1657,7 +1671,7 @@ function buildResultHtml(result) {
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">料理大成功</div>
+            <div class="stat-label">料理大成功による増加分</div>
             <div class="stat-value">
               ${summary.avgExtraPerDay.toFixed(0)}<span class="stat-unit">エナジー/日</span>
             </div>
@@ -1752,6 +1766,7 @@ function buildResultHtml(result) {
             <div class="input-block-row">サブタイプ1: ${field.sub1Type || "-"}</div>
             <div class="input-block-row">サブタイプ2: ${field.sub2Type || "-"}</div>
             <div class="input-block-row">EX補正: ${fieldExText}</div>
+            <div class="input-block-row">フィールドボーナス: ${fieldBonusPercentText} %</div>
           </div>
           <div class="input-block">
             <div class="input-block-title">イベント補正</div>
@@ -1978,6 +1993,12 @@ window.addEventListener("DOMContentLoaded", () => {
     );
     const ingredientBonus = Math.max(0, Math.floor(ingredientBonusInput || 0));
 
+    const fieldBonusPercentInput = Number(
+      document.getElementById("fieldBonus").value || "0"
+    );
+    const fieldBonusPercent = Math.max(0, fieldBonusPercentInput || 0);
+    const fieldEnergyMultiplier = 1.0 + fieldBonusPercent / 100.0;
+
     const useCampTicket = document.getElementById("campTicket").checked;
     const campTicketConfig = {
       enabled: useCampTicket,
@@ -2075,7 +2096,8 @@ window.addEventListener("DOMContentLoaded", () => {
         f.helpingMult,
         f.ingredientBonus,
         f.skillMult,
-        f.effectLabel
+        f.effectLabel,
+        fieldEnergyMultiplier
       );
       pokemons.push(pokemon);
     }
@@ -2105,6 +2127,8 @@ window.addEventListener("DOMContentLoaded", () => {
 
     // ▼ 料理エナジーUP(イベント) 倍率を設定
     simulator.cooking_energy_event_multiplier = energyEventMultiplier;
+
+    simulator.field_energy_multiplier = fieldEnergyMultiplier;
 
     // 時刻設定を検証して simulator に反映
     if (!applyScheduleFromUI(simulator)) {
@@ -2137,7 +2161,7 @@ window.addEventListener("DOMContentLoaded", () => {
         pokemons.length > 0
           ? Math.max(0, (avgExtraPerDay - baseAvgPerDay - carryAvgPerDay) / pokemons.length)
           : 0;
-      
+
       const cookingEnergyPerPokemonPerDay = pokemons.map((_, idx) =>
         simulator.average_cooking_energies_per_pokemon_per_day[idx].slice()
       );
@@ -2252,7 +2276,9 @@ window.addEventListener("DOMContentLoaded", () => {
             sub1Type: fieldConfig.sub1Type,
             sub2Type: fieldConfig.sub2Type,
             exEffect: fieldConfig.exEffect,
-            exEffectLabel: ExEffectLabels[fieldConfig.exEffect] || ""
+            exEffectLabel: ExEffectLabels[fieldConfig.exEffect] || "",
+            fieldBonusPercent,
+            fieldEnergyMultiplier
           },
           events: {
             helpingSpeedMultiplier,
