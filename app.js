@@ -509,7 +509,10 @@ class Pokemon {
   }
 
   get_ingredients() {
-    const idx = Math.floor(Math.random() * this.ingredient_nums.length);
+    let ingredient_upper_length = 1;
+    if (this.level >= 30) ingredient_upper_length = 2;
+    if (this.level >= 60) ingredient_upper_length = 3;
+    const idx = Math.floor(Math.random() * ingredient_upper_length);
     let gain = this.ingredient_nums[idx] + this.team_ingredient_bonus + this.personal_ingredient_bonus + this.ex_ingredient_bonus;
     if (
       this.ex_extra_ingredient_if_specialty &&
