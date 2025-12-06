@@ -1400,7 +1400,7 @@ function renderEnergyChart(result) {
       const yAxis = chart.scales.y;
 
       ctx.save();
-      ctx.font = '11px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+      ctx.font = '20px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
       ctx.fillStyle = "#333";
       ctx.textAlign = "center";
       ctx.textBaseline = "bottom";
@@ -1433,44 +1433,59 @@ function renderEnergyChart(result) {
     }
   };
 
-  energyChartInstance = new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels,
-      datasets
-    },
-    plugins: [totalLabelPlugin],
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: false
+energyChartInstance = new Chart(ctx, {
+  type: "bar",
+  data: {
+    labels,
+    datasets
+  },
+  plugins: [totalLabelPlugin],
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false
+      },
+      tooltip: {
+        // ★ ツールチップのフォントサイズ
+        titleFont: {
+          size: 18
         },
-        tooltip: {
-          callbacks: {
-            label: function (ctx) {
-              const label = ctx.dataset.label || "";
-              const val = ctx.parsed.y || 0;
-              return `${label}: ${val.toFixed(0)}`;
-            }
+        bodyFont: {
+          size: 16
+        },
+        callbacks: {
+          label: function (ctx) {
+            const label = ctx.dataset.label || "";
+            const val = ctx.parsed.y || 0;
+            return `${label}: ${val.toFixed(0)}`;
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        stacked: true,
+        // ★ X軸の曜日ラベル
+        ticks: {
+          font: {
+            size: 18
           }
         }
       },
-      scales: {
-        x: {
-          stacked: true
-        },
-        y: {
-          stacked: true,
-          title: {
-            display: true,
-            text: "エナジー"
+      y: {
+        stacked: true,
+        // ★ Y軸の目盛り
+        ticks: {
+          font: {
+            size: 20
           }
         }
       }
     }
-  });
+  }
+});
 
   // チェックボックスで各シリーズの表示・非表示を切り替え
   document
