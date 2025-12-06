@@ -125,7 +125,7 @@ const SubSkills = {
   SkillTriggerS: new SubSkill("スキル確率アップS", 0.0, 0.0, 0.18, 0, 0),
   HelpingSpeedM: new SubSkill("おてつだいスピードM", 0.14, 0.0, 0.0, 0, 0),
   HelpingSpeedS: new SubSkill("おてつだいスピードS", 0.07, 0.0, 0.0, 0, 0),
-  HelpingBonus: new SubSkill("おてつだいボーナス", 0.14, 0.0, 0.0, 0, 0),
+  HelpingBonus: new SubSkill("おてつだいボーナス", 0.05, 0.0, 0.0, 0, 0),
   BerryFindingS: new SubSkill("きのみの数S", 0.0, 0.0, 0.0, 0, 1),
   IngredientFinderM: new SubSkill("食材確率アップM", 0.0, 0.36, 0.0, 0, 0),
   IngredientFinderS: new SubSkill("食材確率アップS", 0.0, 0.18, 0.0, 0, 0),
@@ -272,6 +272,7 @@ class Pokemon {
     name,
     level,
     sub_skills,
+    team_sub_skills,
     nature,
     skill_level,
     berry_energy_multiplier,
@@ -293,6 +294,7 @@ class Pokemon {
     this.name = name;
     this.level = level;
     this.sub_skills = sub_skills;
+    this.team_sub_skills = team_sub_skills;
     this.nature = nature;
     this.skill_level = skill_level;
 
@@ -366,6 +368,14 @@ class Pokemon {
       berry_finding += sub.berry_finding;
     }
 
+    for (const sub of this.team_sub_skills) {
+      helping_speed_coefficient -= sub.helping_speed;
+      ingredient_probability_coefficient += sub.ingredient_probability;
+      skill_probability_coefficient += sub.skill_probability;
+      inventory_up += sub.inventory_up;
+      berry_finding += sub.berry_finding;
+    }
+
     helping_speed_coefficient = Math.max(helping_speed_coefficient, 0.65);
     const level_speed_coefficient = 1 - (this.level - 1) * 0.002;
 
@@ -384,10 +394,7 @@ class Pokemon {
     this.skill_probability =
       this.pokemon_data.skill_probability *
       skill_probability_coefficient *
-      this.nature.skill_probability_coefficient *
-      this.team_skill_multiplier *
-      this.personal_skill_multiplier *
-      this.ex_skill_multiplier;
+      this.nature.skill_probability_coefficient;
 
     this.inventory_limit = Math.floor((this.pokemon_data.inventory_limit + inventory_up) * this.camp_ticket_inventory_limit_bonus);
     this.berry_num = this.pokemon_data.berry_num + berry_finding;
@@ -493,7 +500,7 @@ class Pokemon {
       return 0.0;
     }
 
-    if (Math.random() < this.skill_probability) {
+    if (Math.random() < this.skill_probability * this.team_skill_multiplier * this.personal_skill_multiplier * this.ex_skill_multiplier) {
       this.skill_stock += 1;
       this.total_skill_count += 1;
       return this.skill_effect;
@@ -1549,13 +1556,13 @@ function buildResultHtml(result) {
             <div>
               <div class="pokemon-body-block-title">おてつだい</div>
               <div class="pokemon-body-block-row">
-                基礎時間: ${p.helpBase} 秒
+                おてつだい時間: ${p.helpBase} 秒
               </div>
               <div class="pokemon-body-block-row">
-                スピード倍率合計: ${p.helpTotalMult.toFixed(2)} 倍
+                個別・全体補正: ${p.helpTotalMult.toFixed(2)} 倍
               </div>
               <div class="pokemon-body-block-row">
-                げんき100%換算: ${p.helpEffectiveFastTime.toFixed(1)} 秒
+                補正後: ${p.helpEffectiveTime.toFixed(1)} 秒
               </div>
               <div class="pokemon-body-block-row">
                 所持数: ${p.inventoryLimit}
@@ -1564,7 +1571,7 @@ function buildResultHtml(result) {
             <div>
               <div class="pokemon-body-block-title">きのみ・食材</div>
               <div class="pokemon-body-block-row">
-                食材確率（補正後）: ${(p.ingredientProb * 100).toFixed(2)} %
+                食材確率: ${(p.ingredientProb * 100).toFixed(2)} %
               </div>
               <div class="pokemon-body-block-row">
                 食材ボーナス合計: +${p.ingredientBonusTotal} 個
@@ -1579,13 +1586,13 @@ function buildResultHtml(result) {
             <div>
               <div class="pokemon-body-block-title">スキル</div>
               <div class="pokemon-body-block-row">
-                スキル確率（基礎）: ${(p.skillBaseProb * 100).toFixed(2)} %
+                スキル確率: ${(p.skillBaseProb * 100).toFixed(2)} %
               </div>
               <div class="pokemon-body-block-row">
-                確率倍率合計: ${p.skillMultTotal.toFixed(2)} 倍
+                個別・全体補正: ${p.skillMultTotal.toFixed(2)} 倍
               </div>
               <div class="pokemon-body-block-row">
-                確率（補正後）: ${(p.skillFinalProb * 100).toFixed(2)} %
+                補正後: ${(p.skillFinalProb * 100).toFixed(2)} %
               </div>
               <div class="pokemon-body-block-row">
                 メインスキル効果: ${p.skillEffectPercent.toFixed(1)} %
@@ -1606,6 +1613,9 @@ function buildResultHtml(result) {
           </div>
           <div class="pokemon-body-block-row" style="margin-top:0.4rem;">
             サブスキル: ${p.subSkillsLabel}
+          </div>
+          <div class="pokemon-body-block-row" style="margin-top:0.4rem;">
+            サブスキル(他ポケモンの効果): ${p.teamSubSkillsLabel}
           </div>
           <div class="pokemon-body-block-row">
             個別補正: おてつだい×${p.personal.helpMult.toFixed(2)} ／ 食材+${p.personal.ingBonus} ／ スキル×${p.personal.skillMult.toFixed(2)}
@@ -1689,10 +1699,6 @@ function buildResultHtml(result) {
               ${summary.perPokemonExtraPerDay.toFixed(0)}<span class="stat-unit">エナジー/日</span>
             </div>
           </div>
-        </div>
-
-        <div class="muted" style="margin-top:0.75rem; margin-bottom:0.25rem;">
-          各曜日ごとのエナジーを、ベース・ポケモンごとの料理／きのみ別に積み上げ表示しています。
         </div>
 
         <!-- 表示切り替えチェックボックス -->
@@ -2024,7 +2030,7 @@ window.addEventListener("DOMContentLoaded", () => {
       exEffect: exEffectValue
     };
 
-    const pokemons = [];
+    const slotConfigs = [];   // ← ここに一旦すべての情報を入れる
 
     for (let i = 1; i <= MAX_SLOTS; i++) {
       const card = document.getElementById(`slot-${i}-card`);
@@ -2071,45 +2077,77 @@ window.addEventListener("DOMContentLoaded", () => {
         Math.floor(slotIngBonusInput || 0)
       );
 
-      const pokemonData = PokemonList[selectedPokemonKey];
-      const nature = Natures[natureKey];
-      const pokemonName = `${pokemonData.name}${i}`;
-
-      const f = getFieldEffectForType(pokemonData.type, fieldConfig);
-
-      const pokemon = new Pokemon(
-        pokemonData,
-        pokemonName,
-        level,
+      slotConfigs.push({
+        slotIndex: i,
         subSkills,
-        nature,
+        selectedPokemonKey,
+        level,
         skillLevel,
-        f.berryEnergyMult,
-        campTicketConfig.helpingMult,
-        campTicketConfig.inventoryBonus,
-        helpingSpeedMultiplier,
-        ingredientBonus,
-        skillEventMultiplier,
+        natureKey,
         personalHelpMult,
-        personalIngredientBonus,
         personalSkillMult,
-        f.helpingMult,
-        f.ingredientBonus,
-        f.skillMult,
-        f.effectLabel,
-        fieldEnergyMultiplier
-      );
-      pokemons.push(pokemon);
+        personalIngredientBonus,
+      });
     }
 
     if (hasError) {
       statusEl.textContent = "入力エラーがあります。各ポケモンのサブスキルを確認してください。";
       return;
     }
-    if (pokemons.length === 0) {
+    if (slotConfigs.length === 0) {
       statusEl.textContent = "少なくとも 1 匹は表示されたポケモンを使ってください。";
       return;
     }
+
+    // チーム全体のおてつだいボーナス数
+    const teamHelpingBonusCount = slotConfigs.reduce((cnt, cfg) => {
+      const selfCount = cfg.subSkills.filter(s => s === SubSkills.HelpingBonus).length;
+      return cnt + selfCount;
+    }, 0);
+
+    const pokemons = slotConfigs.map(cfg => {
+      const pokemonData = PokemonList[cfg.selectedPokemonKey];
+      const nature = Natures[cfg.natureKey];
+      const pokemonName = `${pokemonData.name}${cfg.slotIndex}`;
+
+      const f = getFieldEffectForType(pokemonData.type, fieldConfig);
+
+      // 自分が元々持っているおてつだいボーナスの数
+      const selfHelpingBonusCount = cfg.subSkills.filter(
+        s => s === SubSkills.HelpingBonus
+      ).length;
+
+      // ★「チーム合計」と「自分の個数」の差だけ追加する
+      const extraHelpingBonus = Math.max(0, teamHelpingBonusCount - selfHelpingBonusCount);
+
+      const teamSubSkills = [];
+      for (let k = 0; k < extraHelpingBonus; k++) {
+        teamSubSkills.push(SubSkills.HelpingBonus);
+      }
+
+      return new Pokemon(
+        pokemonData,
+        pokemonName,
+        cfg.level,
+        cfg.subSkills,
+        teamSubSkills,
+        nature,
+        cfg.skillLevel,
+        f.berryEnergyMult,
+        campTicketConfig.helpingMult,
+        campTicketConfig.inventoryBonus,
+        helpingSpeedMultiplier,
+        ingredientBonus,
+        skillEventMultiplier,
+        cfg.personalHelpMult,
+        cfg.personalIngredientBonus,
+        cfg.personalSkillMult,
+        f.helpingMult,
+        f.ingredientBonus,
+        f.skillMult,
+        f.effectLabel
+      );
+    });
 
     const recipeEnergy = Number(document.getElementById("recipeEnergy").value || "0");
     const trials = Number(document.getElementById("trials").value || "1000");
@@ -2207,20 +2245,19 @@ window.addEventListener("DOMContentLoaded", () => {
             pkm.ex_helping_speed_multiplier *
             pkm.camp_ticket_helping_speed_multiplier;
 
-          const helpEffectiveFastTime =
-            pkm.helping_speed * 0.45 / totalHelpMult;
+          const helpEffectiveTime = pkm.helping_speed / totalHelpMult;
 
           const totalIngBonus =
             pkm.personal_ingredient_bonus +
             pkm.team_ingredient_bonus +
             pkm.ex_ingredient_bonus;
 
-          const baseSkillProb = pkm.pokemon_data.skill_probability;
+          const baseSkillProb = pkm.skill_probability;
           const skillMultTotal =
             pkm.personal_skill_multiplier *
             pkm.team_skill_multiplier *
             pkm.ex_skill_multiplier;
-          const finalSkillProb = pkm.skill_probability;
+          const finalSkillProb = pkm.skill_probability * pkm.personal_skill_multiplier * pkm.team_skill_multiplier * pkm.ex_skill_multiplier;
 
           // フィールド一致情報（表示用）
           const fInfo = getFieldEffectForType(pkm.pokemon_data.type, fieldConfig);
@@ -2237,7 +2274,7 @@ window.addEventListener("DOMContentLoaded", () => {
             berryEnergyMultiplier: pkm.berry_energy_multiplier,
             helpBase: pkm.helping_speed,
             helpTotalMult: totalHelpMult,
-            helpEffectiveFastTime,
+            helpEffectiveTime,
             ingredientProb: pkm.ingredient_probability,
             ingredientBonusTotal: totalIngBonus,
             skillBaseProb: baseSkillProb,
@@ -2252,6 +2289,10 @@ window.addEventListener("DOMContentLoaded", () => {
             subSkillsLabel:
               pkm.sub_skills.length > 0
                 ? pkm.sub_skills.map(s => s.name).join(", ")
+                : "なし",
+            teamSubSkillsLabel:
+              pkm.team_sub_skills.length > 0
+                ? pkm.team_sub_skills.map(s => s.name).join(", ")
                 : "なし",
             personal: {
               helpMult: pkm.personal_helping_speed_multiplier,
