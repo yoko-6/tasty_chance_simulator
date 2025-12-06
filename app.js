@@ -1908,6 +1908,18 @@ window.addEventListener("DOMContentLoaded", () => {
   initPokemonSlots();
   initFieldUI();
 
+  const howtoCard = document.getElementById("howtoCard");
+  const howtoHeader = document.getElementById("howtoHeader");
+
+  if (howtoCard && howtoHeader) {
+    // 最初は閉じておく
+    howtoCard.classList.add("collapsed");
+
+    howtoHeader.addEventListener("click", () => {
+      howtoCard.classList.toggle("collapsed");
+    });
+  }
+
   const runBtn = document.getElementById("runBtn");
   const statusEl = document.getElementById("status");
   const outputEl = document.getElementById("output");

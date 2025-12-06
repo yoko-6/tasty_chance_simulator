@@ -594,11 +594,145 @@
       gap: 0.5rem;
       margin-bottom: 0.5rem;
     }
+
+    /* 使い方カード */
+    .info-card {
+      background: linear-gradient(135deg, #fdfbfb, #eef1ff);
+      border-radius: 12px;
+      padding: 0.75rem 1rem;
+      margin: 0 0 1rem 0;
+      border: 1px solid #dfe3ff;
+      box-shadow: 0 2px 6px rgba(30, 64, 175, 0.08);
+    }
+
+    .info-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      cursor: pointer;
+    }
+
+    .info-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .info-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      font-weight: 700;
+      background: #4f46e5;
+      color: #fff;
+    }
+
+    .info-sub {
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+
+    .info-toggle-icon {
+      font-size: 0.85rem;
+      color: #4b5563;
+      transition: transform 0.2s ease;
+    }
+
+    .info-card:not(.collapsed) .info-toggle-icon {
+      transform: rotate(180deg);
+    }
+
+    .info-body {
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      color: #4b5563;
+      line-height: 1.5;
+      max-height: 500px;
+      opacity: 1;
+      overflow: hidden;
+      transition:
+        max-height 0.25s ease,
+        opacity 0.2s ease,
+        margin-top 0.2s ease;
+    }
+
+    /* 閉じているとき */
+    .info-card.collapsed .info-body {
+      max-height: 0;
+      opacity: 0;
+      margin-top: 0;
+      pointer-events: none;
+    }
+
+    .info-pill {
+      display: inline-block;
+      padding: 0.05rem 0.5rem;
+      border-radius: 999px;
+      background: #eef2ff;
+      color: #3730a3;
+      font-size: 0.75rem;
+    }
+
+    .info-list {
+      margin: 0.4rem 0 0;
+      padding-left: 1.2rem;
+    }
+
+    .info-list li {
+      margin-bottom: 0.2rem;
+    }
   </style>
 </head>
 
 <body>
   <h1>ポケモンスリープ 料理大成功シミュレーター</h1>
+
+  <div id="howtoCard" class="info-card collapsed">
+    <div id="howtoHeader" class="info-header">
+      <div class="info-title">
+        <div class="info-icon">?</div>
+        <div>
+          <div>このシミュレーターの使い方</div>
+          <div class="info-sub">タップして説明を表示 / 非表示</div>
+        </div>
+      </div>
+      <div class="info-toggle-icon">▼</div>
+    </div>
+    <div class="info-body">
+      <p>
+        まずは何も設定せずに、下の
+        <span class="info-pill">シミュレーション実行</span>
+        を押してみてください。<br>
+        デフォルトのデデンネ1匹で、1週間アボカドグラタン(65lv. 82839)を作った場合の、料理チャンス期待値をすぐに確認できます。
+      </p>
+      <ul class="info-list">
+        <li>
+          レシピエナジーを変えると、1回の料理の大成功エナジー量を変更できます。
+        </li>
+        <li>
+          <span class="info-pill">詳細設定</span>から料理エナジー倍率やスキル確率倍率などのイベントボーナスも設定できます
+          （例: 料理エナジー1.25倍、スキル確率1.5倍 など）。
+        </li>
+        <li>
+          フィールド・EX補正・サブスキル・性格を設定して、自分の編成を再現できます。
+        </li>
+        <li>
+          結果画面では、曜日ごとのエナジー推移と、各ポケモンの「きのみ」「料理チャンス」「スキル」の寄与を確認できます。
+        </li>
+        <li>
+          条件をそろえれば、他ツールと数値を比較することもできます。
+          ただし、現在このシミュレーターは
+          <span class="info-pill">元気常時81%以上</span>
+          を前提に計算しているため、厳密な比較を行う場合は同じ前提条件にそろえてください。
+        </li>
+      </ul>
+    </div>
+  </div>
 
   <div class="card">
     <h2 style="font-size:1.1rem; margin-top:0;">レシピ・シミュレーション設定</h2>
