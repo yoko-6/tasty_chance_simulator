@@ -1657,17 +1657,18 @@ function buildResultHtml(result) {
             </div>
           </div>
           <div class="stat-card">
+            <div class="stat-label">料理大成功</div>
+            <div class="stat-value">
+              ${summary.avgExtraPerDay.toFixed(0)}<span class="stat-unit">エナジー/日</span>
+            </div>
+          </div>
+          <div class="stat-card">
             <div class="stat-label">料理チャンス発動（全体）</div>
             <div class="stat-value">
               ${summary.avgSkill.toFixed(2)}<span class="stat-unit">回/日</span>
             </div>
           </div>
-          <div class="stat-card">
-            <div class="stat-label">料理チャンス効果（全体）</div>
-            <div class="stat-value">
-              ${summary.avgExtraPerDay.toFixed(0)}<span class="stat-unit">エナジー/日</span>
-            </div>
-          </div>
+
           <div class="stat-card">
             <div class="stat-label">料理チャンス（1匹あたり）</div>
             <div class="stat-value">
@@ -2126,12 +2127,17 @@ window.addEventListener("DOMContentLoaded", () => {
       const avgSkillEnergies = simulator.average_skill_energies;
       const avgSkillCounts = simulator.average_skill_counts;
 
-      const perPokemonExtraPerDay =
-        pokemons.length > 0 ? avgExtraPerDay / pokemons.length : 0;
-
       const baseEnergyPerDay = simulator.average_base_energies_per_day.slice();
       const carryOverEnergyPerDay = simulator.average_carry_over_energies_per_day.slice();
 
+      const baseAvgPerDay = baseEnergyPerDay.reduce((sum, v) => sum + v, 0) / baseEnergyPerDay.length;
+      const carryAvgPerDay = carryOverEnergyPerDay.reduce((sum, v) => sum + v, 0) / carryOverEnergyPerDay.length;
+
+      const perPokemonExtraPerDay =
+        pokemons.length > 0
+          ? Math.max(0, (avgExtraPerDay - baseAvgPerDay - carryAvgPerDay) / pokemons.length)
+          : 0;
+      
       const cookingEnergyPerPokemonPerDay = pokemons.map((_, idx) =>
         simulator.average_cooking_energies_per_pokemon_per_day[idx].slice()
       );
