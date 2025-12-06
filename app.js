@@ -2010,6 +2010,40 @@ function applyScheduleFromUI(simulator) {
   return true;
 }
 
+function applyNatureFromKey(slotIndex, natureKey) {
+  const upSelect      = document.getElementById(`slot-${slotIndex}-nature-up`);
+  const downSelect    = document.getElementById(`slot-${slotIndex}-nature-down`);
+  const natureSelect  = document.getElementById(`slot-${slotIndex}-nature`);
+
+  if (!upSelect || !downSelect || !natureSelect) return;
+  if (!natureKey) return;
+
+  const meta = NatureMeta[natureKey];
+  if (!meta) return;
+
+  // 上がる項目
+  upSelect.value = meta.up || "none";
+
+  // 下がる項目
+  if (meta.up === "none") {
+    // 両方補正なし
+    downSelect.value = "none";
+    downSelect.disabled = true;
+  } else {
+    downSelect.disabled = false;
+    downSelect.value = meta.down || "none";
+  }
+
+  // up/down の組に対して選択可能な性格リストを再生成
+  updateNatureOptions(slotIndex);
+
+  // 性格 select を natureKey にセット
+  const opt = natureSelect.querySelector(`option[value="${natureKey}"]`);
+  if (opt) {
+    natureSelect.value = natureKey;
+  }
+}
+
 // =========================
 // ポケモンプリセット 保存用
 // =========================
@@ -2109,22 +2143,7 @@ function applyPresetToSlot(slotIndex, preset) {
   const natureUpSel = document.getElementById(`slot-${slotIndex}-nature-up`);
   const natureDownSel = document.getElementById(`slot-${slotIndex}-nature-down`);
   if (natureUpSel && natureDownSel) {
-    if (preset.natureUp) {
-      natureUpSel.value = preset.natureUp;
-    }
-    if (preset.natureDown) {
-      natureDownSel.disabled = (preset.natureUp === "none");
-      natureDownSel.value = preset.natureDown;
-    }
-    updateNatureOptions(slotIndex);
-
-    const natureSel = document.getElementById(`slot-${slotIndex}-nature`);
-    if (natureSel) {
-      natureSel.value = preset.natureKey || "がんばりや";
-      if (!natureSel.value) {
-        natureSel.value = "がんばりや";
-      }
-    }
+    applyNatureFromKey(slotIndex, preset.natureKey);
   }
 
   // サブスキル
