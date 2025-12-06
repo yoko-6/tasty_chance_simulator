@@ -2355,6 +2355,8 @@ function savePokemonPresetFromResult(p) {
     natureKey: p.natureKey,
     subskills: Array.isArray(p.subSkillKeys) ? [...p.subSkillKeys] : [],
 
+    skillLevel: p.skillLevel || 1,
+
     // 個別補正も必要なら保存
     personal: {
       helpMult: p.personal?.helpMult ?? 1.0,
