@@ -1760,7 +1760,7 @@ function buildResultHtml(result) {
       .join("")}
 
         <div style="width:100%; overflow-x:auto;">
-          <div style="min-width:280px; height:240px;">
+          <div style="min-width:280px; height:480px;">
             <canvas id="energyChart"></canvas>
           </div>
         </div>
