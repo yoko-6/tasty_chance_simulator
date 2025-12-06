@@ -2235,7 +2235,8 @@ window.addEventListener("DOMContentLoaded", () => {
         f.helpingMult,
         f.ingredientBonus,
         f.skillMult,
-        f.effectLabel
+        f.effectLabel,
+        fieldEnergyMultiplier,
       );
     });
 
