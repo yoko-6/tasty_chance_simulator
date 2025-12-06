@@ -632,6 +632,22 @@ class Simulator {
     this.average_skill_energies = new Array(MAX_SLOTS).fill(0.0);
     this.average_skill_counts = new Array(MAX_SLOTS).fill(0.0);
 
+    this.total_base_energies_per_day = new Array(7).fill(0); // base_chance 由来
+    this.total_carry_over_energies_per_day = new Array(7).fill(0); // 持ち越し由来
+    this.total_cooking_energies_per_pokemon_per_day = Array.from(
+      { length: MAX_SLOTS },
+      () => new Array(7).fill(0)
+    );
+    this.total_berry_energies_per_pokemon_per_day = Array.from(
+      { length: MAX_SLOTS },
+      () => new Array(7).fill(0)
+    );
+
+    this.average_base_energies_per_day = new Array(7).fill(0);
+    this.average_carry_over_energies_per_day = new Array(7).fill(0);
+    this.average_cooking_energies_per_pokemon_per_day = []; // simulate 内で長さ決定
+    this.average_berry_energies_per_pokemon_per_day = [];
+
     this.chance_limit = 0.7;
     this.base_cooking_chance = 0.1;
     this.first_day_base_success_chance = 0.0;
@@ -652,13 +668,23 @@ class Simulator {
 
     let extra_energy = 0;
     const extra_energies_per_day = new Array(7).fill(0);
+    const base_energies_per_day = new Array(7).fill(0);
+    const carry_over_energies_per_day = new Array(7).fill(0);
+    const cooking_energies_per_pokemon_per_day = Array.from(
+      { length: pokemons.length },
+      () => new Array(7).fill(0)
+    );
+    const berry_energies_per_pokemon_per_day = Array.from(
+      { length: pokemons.length },
+      () => new Array(7).fill(0)
+    );
     let cooking_chance_probability = 0.0;
     let cooking_chance_probabilities = new Array(pokemons.length).fill(0.0);
     let skill_count = 0;
     let success_count = 0;
 
-    let day = 1;
     let base_cooking_chance = 0.0;
+    let carry_over_cooking_chance = this.first_day_base_success_chance;
     let base_cooking_energy = 0;
 
     const user_event_queue = [];
@@ -681,24 +707,6 @@ class Simulator {
       const user_event = user_event_queue.shift();
       user_event_queue.push(user_event.get_next_day_event());
 
-      if (user_event.event === UserEventType.wake_up) {
-        day = Math.floor(user_event.timestamp / DAY) + 1;
-
-        if (day === 1) {
-          // 1日目だけ、入力された「1日目の料理大成功確率（イベント）」をそのまま使用
-          base_cooking_chance = this.first_day_base_success_chance;
-        } else {
-          // 2〜6日目: 基本値 this.base_cooking_chance
-          // 7日目: さらに日曜ボーナスを加算
-          base_cooking_chance =
-            this.base_cooking_chance + (day === 7 ? this.sunday_chance_bonus : 0.0);
-        }
-
-        base_cooking_energy =
-          recipe_energy *
-          this.cooking_energy_event_multiplier *
-          (day === 7 ? this.sunday_success_energy_bonus : 1.0);
-      }
       // ポケモンイベント（最小タイムスタンプ順に処理）
       while (true) {
         let nextEvents = [];
@@ -734,7 +742,7 @@ class Simulator {
           skill_count += 1;
         }
 
-        ret = Math.min(ret, this.chance_limit - cooking_chance_probability);
+        ret = Math.min(ret, this.chance_limit - cooking_chance_probability - carry_over_cooking_chance);
         cooking_chance_probability += ret;
         cooking_chance_probabilities[nextEvent.idx] += ret;
 
@@ -743,7 +751,30 @@ class Simulator {
         );
       }
 
-      const eventDay = Math.floor(user_event.timestamp / DAY) + 1;
+      const eventDay = Math.floor((user_event.timestamp - 4 * 3600) / DAY) + 1;
+      const dayIndex = eventDay - 1; // 0〜6
+
+      if (user_event.event === UserEventType.wake_up) {
+        base_cooking_chance =
+          this.base_cooking_chance + (eventDay === 7 ? this.sunday_chance_bonus : 0.0);
+
+        base_cooking_energy =
+          recipe_energy *
+          this.cooking_energy_event_multiplier *
+          (eventDay === 7 ? this.sunday_success_energy_bonus : 1.0);
+
+        if (eventDay === 2) {
+          for (let i = 0; i < pokemons.length; i++) {
+            berry_energies_per_pokemon_per_day[i][eventDay - 2] = pokemons[i].total_berry_energy;
+          }
+        }
+        else if (eventDay > 2) {
+          for (let i = 0; i < pokemons.length; i++) {
+            berry_energies_per_pokemon_per_day[i][eventDay - 2] = pokemons[i].total_berry_energy - berry_energies_per_pokemon_per_day[i][eventDay - 3];
+          }
+        }
+      }
+
       if (eventDay === 8) break;
 
       if (
@@ -754,21 +785,33 @@ class Simulator {
       }
 
       let p = Math.random();
-      if (p < base_cooking_chance + cooking_chance_probability) {
+      if (p < base_cooking_chance + carry_over_cooking_chance + cooking_chance_probability) {
         success_count += 1;
-        cooking_chance_probability = 0.0;
+        extra_energy += base_cooking_energy;
+        extra_energies_per_day[dayIndex] += base_cooking_energy;
 
-        let total_cooking_chance_probability = base_cooking_chance;
-        for (let i = 0; i < pokemons.length; i++) {
-          if (p > total_cooking_chance_probability && p < total_cooking_chance_probability + cooking_chance_probabilities[i]) {
-            extra_energy += base_cooking_energy;
-            extra_energies_per_day[day - 1] += base_cooking_energy;
-            pokemons[i].total_skill_energy += base_cooking_energy;
-            break;
+        if (p < base_cooking_chance) {
+          base_energies_per_day[dayIndex] += base_cooking_energy;
+        } else if (p < base_cooking_chance + carry_over_cooking_chance) {
+          carry_over_energies_per_day[dayIndex] += base_cooking_energy;
+        } else {
+          // ★ どのポケモンの料理チャンスかを判定
+          let total_cooking_chance_probability = base_cooking_chance + carry_over_cooking_chance;
+          for (let i = 0; i < pokemons.length; i++) {
+            const segEnd = total_cooking_chance_probability + cooking_chance_probabilities[i];
+            if (p < segEnd) {
+              pokemons[i].total_skill_energy += base_cooking_energy;
+              cooking_energies_per_pokemon_per_day[i][dayIndex] += base_cooking_energy;
+
+              break;
+            }
+            total_cooking_chance_probability = segEnd;
           }
-          total_cooking_chance_probability += cooking_chance_probabilities[i];
         }
 
+        // リセット
+        cooking_chance_probability = 0.0;
+        carry_over_cooking_chance = 0.0;
         cooking_chance_probabilities = new Array(pokemons.length).fill(0.0);
       }
     }
@@ -776,13 +819,25 @@ class Simulator {
     this.total_skill_count += skill_count;
     this.total_success_count += success_count;
     this.total_extra_energy += extra_energy;
+
     for (let d = 0; d < 7; d++) {
       this.total_extra_energies_per_day[d] += extra_energies_per_day[d];
+      this.total_base_energies_per_day[d] += base_energies_per_day[d];
+      this.total_carry_over_energies_per_day[d] += carry_over_energies_per_day[d];
     }
+
     for (let i = 0; i < pokemons.length; i++) {
       this.total_berry_energies[i] += pokemons[i].total_berry_energy;
       this.total_skill_energies[i] += pokemons[i].total_skill_energy;
       this.total_skill_counts[i] += pokemons[i].total_skill_count;
+
+      // ★ 料理エナジー（ポケモン別/曜日別）
+      for (let d = 0; d < 7; d++) {
+        this.total_cooking_energies_per_pokemon_per_day[i][d] +=
+          cooking_energies_per_pokemon_per_day[i][d];
+        this.total_berry_energies_per_pokemon_per_day[i][d] +=
+          berry_energies_per_pokemon_per_day[i][d];
+      }
     }
   }
 
@@ -794,17 +849,43 @@ class Simulator {
     this.average_skill_count = this.total_skill_count / 7.0 / trial;
     this.average_success_count = this.total_success_count / 7.0 / trial;
     this.average_extra_energy = this.total_extra_energy / 7.0 / trial;
+
     for (let d = 0; d < 7; d++) {
       this.average_extra_energies_per_day[d] =
         this.total_extra_energies_per_day[d] / trial;
+      this.average_base_energies_per_day[d] =
+        this.total_base_energies_per_day[d] / trial;
+      this.average_carry_over_energies_per_day[d] =
+        this.total_carry_over_energies_per_day[d] / trial;
     }
-    for (let i = 0; i < pokemons.length; i++) {
+
+    const n = pokemons.length;
+    this.average_berry_energies = new Array(n).fill(0);
+    this.average_skill_energies = new Array(n).fill(0);
+    this.average_skill_counts = new Array(n).fill(0);
+    this.average_cooking_energies_per_pokemon_per_day = Array.from(
+      { length: n },
+      () => new Array(7).fill(0)
+    );
+    this.average_berry_energies_per_pokemon_per_day = Array.from(
+      { length: n },
+      () => new Array(7).fill(0)
+    );
+
+    for (let i = 0; i < n; i++) {
       this.average_berry_energies[i] =
         this.total_berry_energies[i] / 7.0 / trial;
       this.average_skill_energies[i] =
         this.total_skill_energies[i] / 7.0 / trial;
       this.average_skill_counts[i] =
         this.total_skill_counts[i] / 7.0 / trial;
+
+      for (let d = 0; d < 7; d++) {
+        this.average_cooking_energies_per_pokemon_per_day[i][d] =
+          this.total_cooking_energies_per_pokemon_per_day[i][d] / trial;
+        this.average_berry_energies_per_pokemon_per_day[i][d] =
+          this.total_berry_energies_per_pokemon_per_day[i][d] / trial;
+      }
     }
   }
 }
@@ -1228,6 +1309,169 @@ function getNatureEffectDescription(natureName) {
 
   return parts.length ? parts.join(" / ") : "補正なし";
 }
+
+let energyChartInstance = null;
+
+function renderEnergyChart(result) {
+  const canvas = document.getElementById("energyChart");
+  if (!canvas) return;
+
+  const ctx = canvas.getContext("2d");
+
+  if (energyChartInstance) {
+    energyChartInstance.destroy();
+    energyChartInstance = null;
+  }
+
+  const { summary, pokemons } = result;
+  const breakdown = summary.energyBreakdown;
+  const labels = ["月", "火", "水", "木", "金", "土", "日"];
+
+  const base = breakdown.basePerDay || new Array(7).fill(0);
+  const carryOver = breakdown.carryOverPerDay || new Array(7).fill(0);
+  const cookPerPoke = breakdown.cookingPerPokemonPerDay || [];
+  const berryPerPoke = breakdown.berryPerPokemonPerDay || [];
+
+  const datasets = [];
+
+  // ベース料理大成功エナジー
+  datasets.push({
+    id: "base",
+    label: "ベース(10%/30%)大成功エナジー",
+    data: base,
+    type: "bar",
+    stack: "energy"
+  });
+
+  datasets.push({
+    id: "carry-over",
+    label: "料理チャンス（週またぎ発動）",
+    data: carryOver,
+    type: "bar",
+    stack: "energy"
+  });
+
+  // ポケモンごとの料理エナジー & きのみエナジー
+  for (let i = 0; i < pokemons.length; i++) {
+    const p = pokemons[i];
+    const cook = cookPerPoke[i] || new Array(7).fill(0);
+    const berry = berryPerPoke[i] || new Array(7).fill(0);
+
+    datasets.push({
+      id: `poke-${p.index}-cook`,
+      label: `ポケモン${p.index}（${p.name}）料理チャンス`,
+      data: cook,
+      type: "bar",
+      stack: "energy"
+    });
+
+    datasets.push({
+      id: `poke-${p.index}-berry`,
+      label: `ポケモン${p.index}（${p.name}）きのみ`,
+      data: berry,
+      type: "bar",
+      stack: "energy"
+    });
+  }
+
+  // 棒の上に合計値を表示するローカルプラグイン
+  const totalLabelPlugin = {
+    id: "totalLabelPlugin",
+    afterDatasetsDraw(chart, args, pluginOptions) {
+      const { ctx, data } = chart;
+      const xAxis = chart.scales.x;
+      const yAxis = chart.scales.y;
+
+      ctx.save();
+      ctx.font = '11px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+      ctx.fillStyle = "#333";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "bottom";
+
+      data.labels.forEach((_, index) => {
+        let total = 0;
+        chart.data.datasets.forEach((ds, dsIndex) => {
+          const meta = chart.getDatasetMeta(dsIndex);
+          if (meta.hidden || ds.hidden) return;
+          const v = ds.data[index];
+          if (typeof v === "number" && !Number.isNaN(v)) {
+            total += v;
+          }
+        });
+
+        if (total <= 0) return;
+
+        // x,y 座標を計算（x は一番目のデータセットのバー位置を利用）
+        const firstMeta = chart.getDatasetMeta(0);
+        const bar = firstMeta.data[index];
+        if (!bar) return;
+
+        const x = bar.x;
+        const y = yAxis.getPixelForValue(total);
+
+        ctx.fillText(total.toFixed(0), x, y - 3);
+      });
+
+      ctx.restore();
+    }
+  };
+
+  energyChartInstance = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets
+    },
+    plugins: [totalLabelPlugin],
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: function (ctx) {
+              const label = ctx.dataset.label || "";
+              const val = ctx.parsed.y || 0;
+              return `${label}: ${val.toFixed(0)}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          stacked: true
+        },
+        y: {
+          stacked: true,
+          title: {
+            display: true,
+            text: "エナジー"
+          }
+        }
+      }
+    }
+  });
+
+  // チェックボックスで各シリーズの表示・非表示を切り替え
+  document
+    .querySelectorAll(".energy-series-toggle")
+    .forEach((cb) => {
+      const id = cb.dataset.seriesId;
+      cb.addEventListener("change", () => {
+        if (!energyChartInstance) return;
+        energyChartInstance.data.datasets.forEach(ds => {
+          if (ds.id === id) {
+            ds.hidden = !cb.checked;
+          }
+        });
+        energyChartInstance.update();
+      });
+    });
+}
+
 function buildResultHtml(result) {
   const { timestampStr, summary, pokemons, settings } = result;
   const dayLabels = [
@@ -1387,11 +1631,13 @@ function buildResultHtml(result) {
 
   return `
     <div class="result-container">
+      <!-- 料理・エナジー結果（棒グラフ） -->
       <section class="result-section">
         <div class="result-section-header">
-          <div class="result-section-title">料理・エナジー結果（1日あたりの平均）</div>
+          <div class="result-section-title">料理・エナジー結果</div>
           <div class="result-section-sub">実行日時: ${timestampStr}</div>
         </div>
+
         <div class="stat-grid">
           <div class="stat-card">
             <div class="stat-label">料理大成功回数</div>
@@ -1406,7 +1652,7 @@ function buildResultHtml(result) {
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">追加エナジー合計</div>
+            <div class="stat-label">追加エナジー合計（料理チャンス）</div>
             <div class="stat-value">
               ${summary.avgExtraPerDay.toFixed(0)}<span class="stat-unit">/日</span>
             </div>
@@ -1418,17 +1664,54 @@ function buildResultHtml(result) {
             </div>
           </div>
         </div>
-        <table class="day-table">
-          <thead>
-            <tr>
-              <th>曜日</th>
-              <th>追加エナジー</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${dayRows}
-          </tbody>
-        </table>
+
+        <div class="muted" style="margin-top:0.75rem; margin-bottom:0.25rem;">
+          各曜日ごとのエナジーを、ベース・ポケモンごとの料理／きのみ別に積み上げ表示しています。
+        </div>
+
+        <!-- 表示切り替えチェックボックス -->
+        <div class="energy-toggle-group" style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.5rem;">
+          <label class="inline">
+            <input type="checkbox" class="energy-series-toggle" data-series-id="base" checked />
+            ベース料理大成功(10%/30%)
+          </label>
+          <label class="inline">
+            <input type="checkbox" class="energy-series-toggle" data-series-id="carry-over" checked />
+            料理チャンス(週またぎ発動)
+          </label>
+        </div>
+        <div class="energy-toggle-group" style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.5rem;">
+          ${pokemons
+      .map(
+        p => `
+              <label class="inline">
+                <input
+                  type="checkbox"
+                  class="energy-series-toggle"
+                  data-series-id="poke-${p.index}-cook"
+                  checked
+                />
+                ポケモン${p.index}（${p.name}）料理チャンス
+              </label>
+              <label class="inline">
+                <input
+                  type="checkbox"
+                  class="energy-series-toggle"
+                  data-series-id="poke-${p.index}-berry"
+                  checked
+                />
+                ポケモン${p.index}（${p.name}）きのみ
+              </label>
+            `
+      )
+      .join("")}
+        </div>
+
+        <div style="width:100%; overflow-x:auto;">
+          <div style="min-width:280px; height:240px;">
+            <canvas id="energyChart"></canvas>
+          </div>
+        </div>
       </section>
 
       <section class="result-section">
@@ -1616,6 +1899,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
     const current = resultHistory[resultIndex];
     outputEl.innerHTML = buildResultHtml(current);
+    renderEnergyChart(current);
 
     const currentPage = resultIndex + 1;
     const totalPages = resultHistory.length;
@@ -1823,6 +2107,17 @@ window.addEventListener("DOMContentLoaded", () => {
       const perPokemonExtraPerDay =
         pokemons.length > 0 ? avgExtraPerDay / pokemons.length : 0;
 
+      const baseEnergyPerDay = simulator.average_base_energies_per_day.slice();
+      const carryOverEnergyPerDay = simulator.average_carry_over_energies_per_day.slice();
+
+      const cookingEnergyPerPokemonPerDay = pokemons.map((_, idx) =>
+        simulator.average_cooking_energies_per_pokemon_per_day[idx].slice()
+      );
+
+      const berryEnergyPerPokemonPerDay = pokemons.map((_, idx) =>
+        simulator.average_berry_energies_per_pokemon_per_day[idx].slice()
+      );
+
       const now = new Date();
       const timestampStr = now.toLocaleString("ja-JP");
 
@@ -1845,7 +2140,13 @@ window.addEventListener("DOMContentLoaded", () => {
           avgSuccess,
           avgExtraPerDay,
           perPokemonExtraPerDay,
-          perDayValues: perDay
+          perDayValues: perDay,
+          energyBreakdown: {
+            basePerDay: baseEnergyPerDay,
+            carryOverPerDay: carryOverEnergyPerDay,
+            cookingPerPokemonPerDay: cookingEnergyPerPokemonPerDay,
+            berryPerPokemonPerDay: berryEnergyPerPokemonPerDay
+          }
         },
         pokemons: pokemons.map((pkm, idx) => {
           const totalHelpMult =
