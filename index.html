@@ -73,7 +73,7 @@
       margin-bottom: 0.25rem;
     }
 
-    
+
     .slot-card {
       border: 1px solid #e0e0e7;
       border-radius: 10px;
@@ -90,6 +90,19 @@
       margin-bottom: 0.5rem;
       font-weight: 600;
 
+    }
+
+    .slot-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .slot-header-actions button {
+      padding: 0.25rem 0.8rem;
+      font-size: 0.8rem;
     }
 
     .nature-box {
@@ -728,6 +741,228 @@
       margin-bottom: 0.2rem;
     }
 
+    /* ===== ポケモンプリセットモーダル ===== */
+    .preset-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .preset-modal.open {
+      display: flex;
+    }
+
+    .preset-modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.35);
+    }
+
+    .preset-modal-dialog {
+      position: relative;
+      z-index: 1001;
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 0.75rem 0.9rem;
+      width: min(420px, 90vw);
+      max-height: 80vh;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.2);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .preset-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .preset-modal-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    button.preset-modal-close {
+      border: none;
+      background: #ffffff;
+      font-size: 1.1rem;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0.1rem 0.3rem;
+      border-radius: 999px;
+      color: #991b1b;
+    }
+
+    button.preset-modal-close:hover {
+      color: #ffffff;
+      background: #803939;
+    }
+
+    .preset-modal-body {
+      overflow-y: auto;
+      padding-top: 0.25rem;
+    }
+
+    .preset-empty-message {
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+
+    .preset-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .preset-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.4rem;
+      padding: 0.4rem 0.5rem;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+    }
+
+    .preset-main {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+      font-size: 0.8rem;
+    }
+
+    .preset-name {
+      font-weight: 600;
+    }
+
+    .preset-meta {
+      color: #64748b;
+      font-size: 0.75rem;
+    }
+
+    .preset-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    button.preset-select-btn,
+    button.preset-delete-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 0.25rem 0.7rem;
+      font-size: 0.75rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    button.preset-select-btn {
+      background: #3b82f6;
+      color: #fff;
+    }
+
+    button.preset-select-btn:hover {
+      background: #2563eb;
+    }
+
+    button.preset-delete-btn {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    button.preset-delete-btn:hover {
+      background: #fecaca;
+    }
+
+    /* ポケモンスロットヘッダーのレイアウト（既にあれば重複OK） */
+    .slot-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .slot-header-actions {
+      display: flex;
+      gap: 0.4rem;
+    }
+
+    .slot-header-actions button {
+      padding: 0.25rem 0.8rem;
+      font-size: 0.8rem;
+    }
+
+    /* ポケモンカード右上アクション枠（タグ＋保存ボタンを横並びに） */
+    .pokemon-header-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.25rem;
+    }
+
+    /* 保存ボタン（小さめでおしゃれなアウトラインボタン） */
+    button.preset-save {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.2rem 0.7rem;
+      border-radius: 999px;
+      border: 1px solid #c4c9ff;
+      background: #ffffff;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #4f46e5;
+      box-shadow: 0 1px 3px rgba(79, 70, 229, 0.15);
+      cursor: pointer;
+    }
+
+    button.preset-save:hover {
+      background: #eef2ff;
+      box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);
+      transform: translateY(-1px);
+    }
+
+    button.preset-save:active {
+      box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+      transform: translateY(0);
+    }
+
+    /* 保存ボタン（小さめでおしゃれなアウトラインボタン） */
+    .preset-save-from-result-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.2rem 0.7rem;
+      border-radius: 999px;
+      border: 1px solid #c4c9ff;
+      background: #ffffff;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #4f46e5;
+      box-shadow: 0 1px 3px rgba(79, 70, 229, 0.15);
+      cursor: pointer;
+    }
+
+    /* ホバー時のちょっとした浮き上がり効果 */
+    .preset-save-from-result-btn:hover {
+      background: #eef2ff;
+      box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);
+      transform: translateY(-1px);
+    }
+
+    /* 押したときの沈み込み */
+    .preset-save-from-result-btn:active {
+      box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+      transform: translateY(0);
+    }
+
     html {
       font-size: 26px;
     }
@@ -943,8 +1178,9 @@
 
   <div id="resultNav" class="result-nav">
     <div style="display:flex; gap:0.5rem; align-items:center;">
-      <button id="prevResultBtn" type="button" class="secondary-btn" disabled>< 前</button>
-      <button id="nextResultBtn" type="button" class="secondary-btn" disabled>次 ></button>
+      <button id="prevResultBtn" type="button" class="secondary-btn" disabled>
+        < 前</button>
+          <button id="nextResultBtn" type="button" class="secondary-btn" disabled>次 ></button>
     </div>
     <div style="display:flex; gap:0.5rem; align-items:center;">
       <span id="resultPageInfo" class="muted">結果はまだありません</span>
@@ -957,6 +1193,25 @@
   <div class="card">
     <h2 style="font-size:1.1rem; margin-top:0;">結果</h2>
     <div id="output" class="result"></div>
+  </div>
+
+  <!-- ポケモンプリセット選択モーダル -->
+  <div id="pokemonPresetModal" class="preset-modal" aria-hidden="true">
+    <div class="preset-modal-backdrop"></div>
+    <div class="preset-modal-dialog">
+      <div class="preset-modal-header">
+        <div class="preset-modal-title">ポケモンボックス</div>
+        <button type="button" class="preset-modal-close" id="pokemonPresetCloseBtn">×</button>
+      </div>
+      <div class="preset-modal-body">
+        <div id="pokemonPresetEmpty" class="preset-empty-message" style="display:none;">
+          保存されたポケモンがありません。
+        </div>
+        <div id="pokemonPresetList" class="preset-list">
+          <!-- JS でボタンを並べる -->
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ロジック本体 -->

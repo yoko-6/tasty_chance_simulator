@@ -110,7 +110,8 @@ const Specialty = {
 };
 
 class SubSkill {
-  constructor(name, helping_speed, ingredient_probability, skill_probability, inventory_up, berry_finding) {
+  constructor(key, name, helping_speed, ingredient_probability, skill_probability, inventory_up, berry_finding) {
+    this.key = key;
     this.name = name;
     this.helping_speed = helping_speed;
     this.ingredient_probability = ingredient_probability;
@@ -121,21 +122,22 @@ class SubSkill {
 }
 
 const SubSkills = {
-  SkillTriggerM: new SubSkill("スキル確率アップM", 0.0, 0.0, 0.36, 0, 0),
-  SkillTriggerS: new SubSkill("スキル確率アップS", 0.0, 0.0, 0.18, 0, 0),
-  HelpingSpeedM: new SubSkill("おてつだいスピードM", 0.14, 0.0, 0.0, 0, 0),
-  HelpingSpeedS: new SubSkill("おてつだいスピードS", 0.07, 0.0, 0.0, 0, 0),
-  HelpingBonus: new SubSkill("おてつだいボーナス", 0.05, 0.0, 0.0, 0, 0),
-  BerryFindingS: new SubSkill("きのみの数S", 0.0, 0.0, 0.0, 0, 1),
-  IngredientFinderM: new SubSkill("食材確率アップM", 0.0, 0.36, 0.0, 0, 0),
-  IngredientFinderS: new SubSkill("食材確率アップS", 0.0, 0.18, 0.0, 0, 0),
-  InventoryUpL: new SubSkill("最大確率アップL", 0.0, 0.0, 0.0, 18, 0),
-  InventoryUpM: new SubSkill("最大確率アップM", 0.0, 0.0, 0.0, 12, 0),
-  InventoryUpS: new SubSkill("最大確率アップS", 0.0, 0.0, 0.0, 6, 0),
+  SkillTriggerM: new SubSkill("SkillTriggerM", "スキル確率アップM", 0.0, 0.0, 0.36, 0, 0),
+  SkillTriggerS: new SubSkill("SkillTriggerS", "スキル確率アップS", 0.0, 0.0, 0.18, 0, 0),
+  HelpingSpeedM: new SubSkill("HelpingSpeedM", "おてつだいスピードM", 0.14, 0.0, 0.0, 0, 0),
+  HelpingSpeedS: new SubSkill("HelpingSpeedS", "おてつだいスピードS", 0.07, 0.0, 0.0, 0, 0),
+  HelpingBonus: new SubSkill("HelpingBonus", "おてつだいボーナス", 0.05, 0.0, 0.0, 0, 0),
+  BerryFindingS: new SubSkill("BerryFindingS", "きのみの数S", 0.0, 0.0, 0.0, 0, 1),
+  IngredientFinderM: new SubSkill("IngredientFinderM", "食材確率アップM", 0.0, 0.36, 0.0, 0, 0),
+  IngredientFinderS: new SubSkill("IngredientFinderS", "食材確率アップS", 0.0, 0.18, 0.0, 0, 0),
+  InventoryUpL: new SubSkill("InventoryUpL", "最大確率アップL", 0.0, 0.0, 0.0, 18, 0),
+  InventoryUpM: new SubSkill("InventoryUpM", "最大確率アップM", 0.0, 0.0, 0.0, 12, 0),
+  InventoryUpS: new SubSkill("InventoryUpS", "最大確率アップS", 0.0, 0.0, 0.0, 6, 0),
 };
 
 class Nature {
-  constructor(name, helping_speed_coefficient, ingredient_probability_coefficient, skill_probability_coefficient) {
+  constructor(key, name, helping_speed_coefficient, ingredient_probability_coefficient, skill_probability_coefficient) {
+    this.key = key;
     this.name = name;
     this.helping_speed_coefficient = helping_speed_coefficient;
     this.ingredient_probability_coefficient = ingredient_probability_coefficient;
@@ -143,38 +145,37 @@ class Nature {
   }
 }
 
-// ユーザー指定の性格一覧
 const Natures = {
-  Adamant: new Nature("いじっぱり", 0.9, 0.8, 1.0),
-  Lonely: new Nature("さみしがり", 0.9, 1.0, 1.0),
-  Naughty: new Nature("やんちゃ", 0.9, 1.0, 0.8),
-  Brave: new Nature("ゆうかん", 0.9, 1.0, 1.0),
+  Adamant: new Nature("Adamant", "いじっぱり", 0.9, 0.8, 1.0),
+  Lonely: new Nature("Lonely", "さみしがり", 0.9, 1.0, 1.0),
+  Naughty: new Nature("Naughty", "やんちゃ", 0.9, 1.0, 0.8),
+  Brave: new Nature("Brave", "ゆうかん", 0.9, 1.0, 1.0),
 
-  Calm: new Nature("おだやか", 1.075, 1.0, 1.2),
-  Gentle: new Nature("おとなしい", 1.0, 1.0, 1.2),
-  Careful: new Nature("しんちょう", 1.0, 0.8, 1.2),
-  Sassy: new Nature("なまいき", 1.0, 1.0, 1.2),
+  Calm: new Nature("Calm", "おだやか", 1.075, 1.0, 1.2),
+  Gentle: new Nature("Gentle", "おとなしい", 1.0, 1.0, 1.2),
+  Careful: new Nature("Careful", "しんちょう", 1.0, 0.8, 1.2),
+  Sassy: new Nature("Sassy", "なまいき", 1.0, 1.0, 1.2),
 
-  Rash: new Nature("うっかりや", 1.0, 1.2, 0.8),
-  Mild: new Nature("おっとり", 1.0, 1.2, 1.0),
-  Modest: new Nature("ひかえめ", 1.075, 1.2, 1.0),
-  Quiet: new Nature("れいせい", 1.0, 1.2, 1.0),
+  Rash: new Nature("Rash", "うっかりや", 1.0, 1.2, 0.8),
+  Mild: new Nature("Mild", "おっとり", 1.0, 1.2, 1.0),
+  Modest: new Nature("Modest", "ひかえめ", 1.075, 1.2, 1.0),
+  Quiet: new Nature("Quiet", "れいせい", 1.0, 1.2, 1.0),
 
-  Timid: new Nature("おくびょう", 1.075, 1.0, 1.0),
-  Hasty: new Nature("せっかち", 1.0, 1.0, 1.0),
-  Naive: new Nature("むじゃき", 1.0, 1.0, 0.8),
-  Jolly: new Nature("ようき", 1.0, 0.8, 1.0),
+  Timid: new Nature("Timid", "おくびょう", 1.075, 1.0, 1.0),
+  Hasty: new Nature("Hasty", "せっかち", 1.0, 1.0, 1.0),
+  Naive: new Nature("Naive", "むじゃき", 1.0, 1.0, 0.8),
+  Jolly: new Nature("Jolly", "ようき", 1.0, 0.8, 1.0),
 
-  Bold: new Nature("ずぶとい", 1.075, 1.0, 1.0),
-  Lax: new Nature("のうてんき", 1.0, 1.0, 0.8),
-  Relaxed: new Nature("のんき", 1.0, 1.0, 1.0),
-  Impish: new Nature("わんぱく", 1.0, 0.8, 1.0),
+  Bold: new Nature("Bold", "ずぶとい", 1.075, 1.0, 1.0),
+  Lax: new Nature("Lax", "のうてんき", 1.0, 1.0, 0.8),
+  Relaxed: new Nature("Relaxed", "のんき", 1.0, 1.0, 1.0),
+  Impish: new Nature("Impish", "わんぱく", 1.0, 0.8, 1.0),
 
-  Hardy: new Nature("がんばりや", 1.0, 1.0, 1.0),
-  Quirky: new Nature("きまぐれ", 1.0, 1.0, 1.0),
-  Docile: new Nature("すなお", 1.0, 1.0, 1.0),
-  Bashful: new Nature("てれや", 1.0, 1.0, 1.0),
-  Serious: new Nature("まじめ", 1.0, 1.0, 1.0)
+  Hardy: new Nature("Hardy", "がんばりや", 1.0, 1.0, 1.0),
+  Quirky: new Nature("Quirky", "きまぐれ", 1.0, 1.0, 1.0),
+  Docile: new Nature("Docile", "すなお", 1.0, 1.0, 1.0),
+  Bashful: new Nature("Bashful", "てれや", 1.0, 1.0, 1.0),
+  Serious: new Nature("Serious", "まじめ", 1.0, 1.0, 1.0)
 };
 
 // 上がる / 下がる項目のグループ
@@ -242,7 +243,8 @@ const MainSkills = {
 };
 
 class PokemonData {
-  constructor(name, type, berry, specialty, helping_speed, ingredient_probability, skill_probability, inventory_limit, main_skill) {
+  constructor(key, name, type, berry, specialty, helping_speed, ingredient_probability, skill_probability, inventory_limit, main_skill) {
+    this.key = key;
     this.name = name;
     this.type = type;
     this.berry = berry;
@@ -260,10 +262,10 @@ class PokemonData {
 }
 
 const PokemonList = {
-  dedenne: new PokemonData("デデンネ", Type.Electric, Berries.Grepa, Specialty.Skills, 2500, 0.177, 0.045, 19, MainSkills.TastyChanceS),
-  uu: new PokemonData("ウッウ", Type.Flying, Berries.Pamtre, Specialty.Ingredients, 2700, 0.165, 0.039, 19, MainSkills.TastyChanceS),
-  laglarge: new PokemonData("ラグラージ", Type.Ground, Berries.Figy, Specialty.Berries, 2800, 0.146, 0.034, 30, MainSkills.TastyChanceS),
-  manyula: new PokemonData("マニューラ", Type.Dark, Berries.Wiki, Specialty.Berries, 2700, 0.251, 0.018, 26, MainSkills.TastyChanceS)
+  dedenne: new PokemonData("dedenne", "デデンネ", Type.Electric, Berries.Grepa, Specialty.Skills, 2500, 0.177, 0.045, 19, MainSkills.TastyChanceS),
+  uu: new PokemonData("uu", "ウッウ", Type.Flying, Berries.Pamtre, Specialty.Ingredients, 2700, 0.165, 0.039, 19, MainSkills.TastyChanceS),
+  laglarge: new PokemonData("laglarge", "ラグラージ", Type.Ground, Berries.Figy, Specialty.Berries, 2800, 0.146, 0.034, 30, MainSkills.TastyChanceS),
+  manyula: new PokemonData("manyula", "マニューラ", Type.Dark, Berries.Wiki, Specialty.Berries, 2700, 0.251, 0.018, 26, MainSkills.TastyChanceS)
 };
 
 class Pokemon {
@@ -350,7 +352,7 @@ class Pokemon {
     this.field_energy_multiplier = Number.isFinite(field_energy_multiplier)
       ? field_energy_multiplier
       : 1.0;
-    
+
     this.energy_decay = Number.isFinite(energy_decay)
       ? energy_decay
       : 0.0;
@@ -990,6 +992,21 @@ function clearSubskillsForSlot(slotIndex) {
   }
 }
 
+function openPokemonPresetPickerForSlot(slotIndex) {
+  const presets = loadPokemonPresets(); // localStorage から読み込み
+  if (!presets || presets.length === 0) {
+    alert("保存されたポケモンがありません。");
+    return;
+  }
+
+  const names = presets.map((p, idx) => `${idx + 1}: ${p.name}`).join("\n");
+  const input = prompt(`読み込むポケモンを選んでください:\n${names}`);
+  const idx = Number(input) - 1;
+  if (Number.isNaN(idx) || idx < 0 || idx >= presets.length) return;
+
+  applyPresetToSlot(slotIndex, presets[idx]);
+}
+
 function initPokemonSlots() {
   const container = document.getElementById("pokemonSlots");
 
@@ -1000,7 +1017,25 @@ function initPokemonSlots() {
     if (i > 1) card.style.display = "none";
 
     card.innerHTML = `
-      <div class="slot-header">ポケモン${i}</div>
+      <div class="slot-header-row">
+        ポケモン${i}
+        <div class="slot-header-actions">
+          <button
+            type="button"
+            class="preset-save"
+            id="slot-${i}-savePresetBtn"
+          >
+            保存
+          </button>
+          <button
+            type="button"
+            class="preset-save"
+            id="slot-${i}-loadPresetBtn"
+          >
+            読込
+          </button>
+        </div>
+      </div>
       <div class="grid">
         <div class="row">
           <label for="slot-${i}-pokemon">料理チャンスポケモン</label>
@@ -1097,6 +1132,20 @@ function initPokemonSlots() {
     `;
 
     container.appendChild(card);
+
+    const saveBtn = document.getElementById(`slot-${i}-savePresetBtn`);
+    const loadBtn = document.getElementById(`slot-${i}-loadPresetBtn`);
+
+    if (saveBtn) {
+      saveBtn.addEventListener("click", () => {
+        addPokemonPresetFromSlot(i);
+      });
+    }
+    if (loadBtn) {
+      loadBtn.addEventListener("click", () => {
+        openPokemonPresetModal(i);
+      });
+    }
 
     // 性格セレクトの初期化
     const upSelect = document.getElementById(`slot-${i}-nature-up`);
@@ -1459,59 +1508,59 @@ function renderEnergyChart(result) {
     }
   };
 
-energyChartInstance = new Chart(ctx, {
-  type: "bar",
-  data: {
-    labels,
-    datasets
-  },
-  plugins: [totalLabelPlugin],
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: false
-      },
-      tooltip: {
-        // ★ ツールチップのフォントサイズ
-        titleFont: {
-          size: 18
-        },
-        bodyFont: {
-          size: 16
-        },
-        callbacks: {
-          label: function (ctx) {
-            const label = ctx.dataset.label || "";
-            const val = ctx.parsed.y || 0;
-            return `${label}: ${val.toFixed(0)}`;
-          }
-        }
-      }
+  energyChartInstance = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets
     },
-    scales: {
-      x: {
-        stacked: true,
-        // ★ X軸の曜日ラベル
-        ticks: {
-          font: {
+    plugins: [totalLabelPlugin],
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          // ★ ツールチップのフォントサイズ
+          titleFont: {
             size: 18
+          },
+          bodyFont: {
+            size: 16
+          },
+          callbacks: {
+            label: function (ctx) {
+              const label = ctx.dataset.label || "";
+              const val = ctx.parsed.y || 0;
+              return `${label}: ${val.toFixed(0)}`;
+            }
           }
         }
       },
-      y: {
-        stacked: true,
-        // ★ Y軸の目盛り
-        ticks: {
-          font: {
-            size: 20
+      scales: {
+        x: {
+          stacked: true,
+          // ★ X軸の曜日ラベル
+          ticks: {
+            font: {
+              size: 18
+            }
+          }
+        },
+        y: {
+          stacked: true,
+          // ★ Y軸の目盛り
+          ticks: {
+            font: {
+              size: 20
+            }
           }
         }
       }
     }
-  }
-});
+  });
 
   // チェックボックスで各シリーズの表示・非表示を切り替え
   document
@@ -1684,6 +1733,13 @@ function buildResultHtml(result) {
             <div class="pokemon-tags">
               ${fieldTags.join("")}
             </div>
+            <button
+              type="button"
+              class="preset-save-from-result-btn"
+              data-pokemon-idx="${p.index - 1}"
+            >
+              ボックスに保存
+            </button>
           </div>
           ${mainChipsHtml}
           ${detailsHtml}
@@ -1951,6 +2007,357 @@ function applyScheduleFromUI(simulator) {
   return true;
 }
 
+// =========================
+// ポケモンプリセット 保存用
+// =========================
+
+const POKEMON_PRESET_STORAGE_KEY = "sleepSim_pokemonPresets_v1";
+
+function loadPokemonPresets() {
+  try {
+    const raw = localStorage.getItem(POKEMON_PRESET_STORAGE_KEY);
+    if (!raw) return [];
+    const data = JSON.parse(raw);
+    if (!Array.isArray(data)) return [];
+    return data;
+  } catch (e) {
+    console.warn("failed to load pokemon presets", e);
+    return [];
+  }
+}
+
+function savePokemonPresets(presets) {
+  try {
+    localStorage.setItem(POKEMON_PRESET_STORAGE_KEY, JSON.stringify(presets));
+  } catch (e) {
+    console.warn("failed to save pokemon presets", e);
+  }
+}
+
+// スロットの入力欄から保存用オブジェクトを作る
+function collectSlotPokemonConfig(slotIndex) {
+  const pokemonSel = document.getElementById(`slot-${slotIndex}-pokemon`);
+  const levelInput = document.getElementById(`slot-${slotIndex}-level`);
+  const skillLevelInput = document.getElementById(`slot-${slotIndex}-skillLevel`);
+  const natureUpSel = document.getElementById(`slot-${slotIndex}-nature-up`);
+  const natureDownSel = document.getElementById(`slot-${slotIndex}-nature-down`);
+  const natureSel = document.getElementById(`slot-${slotIndex}-nature`);
+
+  const pokemonKey = pokemonSel ? pokemonSel.value : "dedenne";
+  const pokemonData = PokemonList[pokemonKey];
+  const pokemonName = pokemonData ? pokemonData.name : pokemonKey;
+
+  const level = levelInput ? Number(levelInput.value || "1") : 1;
+  const skillLevel = skillLevelInput ? Number(skillLevelInput.value || "1") : 1;
+
+  const natureUp = natureUpSel ? natureUpSel.value : "none";
+  const natureDown = natureDownSel ? natureDownSel.value : "none";
+  const natureKey = (natureSel && natureSel.value) ? natureSel.value : "Hardy";
+
+  // サブスキル：チェックされている key の配列
+  const subskills = [];
+  for (const key of Object.keys(SubSkills)) {
+    const cb = document.getElementById(`slot-${slotIndex}-subskill-${key}`);
+    if (cb && cb.checked) {
+      subskills.push(key);
+    }
+  }
+
+  // 個別補正
+  const helpInput = document.getElementById(`slot-${slotIndex}-help-mult`);
+  const ingInput = document.getElementById(`slot-${slotIndex}-ing-bonus`);
+  const skillInput = document.getElementById(`slot-${slotIndex}-skill-mult`);
+
+  const personal = {
+    helpMult: helpInput ? Number(helpInput.value || "1") : 1,
+    ingBonus: ingInput ? Number(ingInput.value || "0") : 0,
+    skillMult: skillInput ? Number(skillInput.value || "1") : 1,
+  };
+
+  return {
+    pokemonKey,
+    pokemonName,
+    level,
+    skillLevel,
+    natureUp,
+    natureDown,
+    natureKey,
+    subskills,
+    personal,
+  };
+}
+
+// プリセット内容を指定スロットの入力欄に反映
+function applyPresetToSlot(slotIndex, preset) {
+  const pokemonSel = document.getElementById(`slot-${slotIndex}-pokemon`);
+  if (pokemonSel && preset.pokemonKey) {
+    pokemonSel.value = preset.pokemonKey;
+  }
+
+  const levelInput = document.getElementById(`slot-${slotIndex}-level`);
+  const skillLevelInput = document.getElementById(`slot-${slotIndex}-skillLevel`);
+  if (levelInput && typeof preset.level === "number") {
+    levelInput.value = String(preset.level);
+  }
+  if (skillLevelInput && typeof preset.skillLevel === "number") {
+    skillLevelInput.value = String(preset.skillLevel);
+  }
+
+  const natureUpSel = document.getElementById(`slot-${slotIndex}-nature-up`);
+  const natureDownSel = document.getElementById(`slot-${slotIndex}-nature-down`);
+  if (natureUpSel && natureDownSel) {
+    if (preset.natureUp) {
+      natureUpSel.value = preset.natureUp;
+    }
+    if (preset.natureDown) {
+      natureDownSel.disabled = (preset.natureUp === "none");
+      natureDownSel.value = preset.natureDown;
+    }
+    updateNatureOptions(slotIndex);
+
+    const natureSel = document.getElementById(`slot-${slotIndex}-nature`);
+    if (natureSel) {
+      natureSel.value = preset.natureKey || "がんばりや";
+      if (!natureSel.value) {
+        natureSel.value = "がんばりや";
+      }
+    }
+  }
+
+  // サブスキル
+  for (const key of Object.keys(SubSkills)) {
+    const cb = document.getElementById(`slot-${slotIndex}-subskill-${key}`);
+    if (cb) cb.checked = false;
+  }
+  if (Array.isArray(preset.subskills)) {
+    for (const key of preset.subskills) {
+      const cb = document.getElementById(`slot-${slotIndex}-subskill-${key}`);
+      if (cb) cb.checked = true;
+    }
+  }
+
+  // 個別補正
+  const helpInput = document.getElementById(`slot-${slotIndex}-help-mult`);
+  const ingInput = document.getElementById(`slot-${slotIndex}-ing-bonus`);
+  const skillInput = document.getElementById(`slot-${slotIndex}-skill-mult`);
+
+  if (helpInput) {
+    helpInput.value = (preset.personal?.helpMult ?? 1).toString();
+  }
+  if (ingInput) {
+    ingInput.value = (preset.personal?.ingBonus ?? 0).toString();
+  }
+  if (skillInput) {
+    skillInput.value = (preset.personal?.skillMult ?? 1).toString();
+  }
+}
+
+// スロットからプリセットを保存
+function addPokemonPresetFromSlot(slotIndex) {
+  const cfg = collectSlotPokemonConfig(slotIndex);
+  const defaultName = `${cfg.pokemonName || cfg.pokemonKey}`;
+
+  const name = (prompt("保存名を入力してください", defaultName) || "").trim();
+  if (!name) return;
+
+  const presets = loadPokemonPresets();
+  presets.push({
+    id: Date.now(),
+    name,
+    ...cfg,
+  });
+  savePokemonPresets(presets);
+  alert(`「${name}」として保存しました。`);
+}
+
+// ===== モーダル関連 =====
+
+let currentPresetTargetSlot = null;
+function renderPokemonPresetList(slotIndex) {
+  const presets = loadPokemonPresets();
+  const listEl = document.getElementById("pokemonPresetList");
+  const emptyEl = document.getElementById("pokemonPresetEmpty");
+  if (!listEl || !emptyEl) return;
+
+  listEl.innerHTML = "";
+
+  if (!presets.length) {
+    emptyEl.style.display = "block";
+    return;
+  }
+  emptyEl.style.display = "none";
+
+  presets.forEach((p, idx) => {
+    const row = document.createElement("div");
+    row.className = "preset-row";
+
+    const main = document.createElement("div");
+    main.className = "preset-main";
+
+    // ① ニックネーム
+    const nameEl = document.createElement("div");
+    nameEl.className = "preset-name";
+    nameEl.textContent = p.name || "(ニックネームなし)";
+
+    // ② 元の名前 + レベル + 性格（日本語）
+    const metaEl = document.createElement("div");
+    metaEl.className = "preset-meta";
+
+    const pokemonName = p.pokemonName || p.pokemonKey || "";
+    const lvStr = (typeof p.level === "number") ? ` Lv${p.level}` : "";
+
+    // 性格を Natures から引いて name を使う
+    let natureText = "";
+    if (p.natureKey && typeof Natures !== "undefined" && Natures[p.natureKey]) {
+      natureText = `性格: ${Natures[p.natureKey].name}`;
+    } else if (p.natureKey) {
+      // 念のためキーだけでも表示
+      natureText = `性格: ${p.natureKey}`;
+    }
+
+    metaEl.textContent =
+      `${pokemonName}${lvStr}` +
+      (natureText ? ` ／ ${natureText}` : "");
+
+    // ③ サブスキル一覧（日本語）
+    const subEl = document.createElement("div");
+    subEl.className = "preset-meta";
+
+    let subskillText = "-";
+    if (Array.isArray(p.subskills) && p.subskills.length > 0) {
+      subskillText = p.subskills.map(key => {
+        if (typeof SubSkills !== "undefined" && SubSkills[key]) {
+          return SubSkills[key].name;        // ★ ここで name を使う
+        }
+        return key; // 念のため fallback
+      }).join(", ");
+    }
+    subEl.textContent = `サブスキル: ${subskillText}`;
+
+    main.appendChild(nameEl);
+    main.appendChild(metaEl);
+    main.appendChild(subEl);
+
+    // ボタン類（読込・削除）
+    const actions = document.createElement("div");
+    actions.className = "preset-actions";
+
+    const selectBtn = document.createElement("button");
+    selectBtn.type = "button";
+    selectBtn.className = "preset-select-btn";
+    selectBtn.textContent = "読込";
+    selectBtn.addEventListener("click", () => {
+      applyPresetToSlot(slotIndex, p);
+      closePokemonPresetModal();
+    });
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.className = "preset-delete-btn";
+    deleteBtn.textContent = "削除";
+    deleteBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (!confirm(`「${p.name}」を削除しますか？`)) return;
+      const newList = loadPokemonPresets();
+      newList.splice(idx, 1);
+      savePokemonPresets(newList);
+      renderPokemonPresetList(slotIndex);
+    });
+
+    actions.appendChild(selectBtn);
+    actions.appendChild(deleteBtn);
+
+    row.appendChild(main);
+    row.appendChild(actions);
+    listEl.appendChild(row);
+  });
+}
+
+function openPokemonPresetModal(slotIndex) {
+  currentPresetTargetSlot = slotIndex;
+  const modal = document.getElementById("pokemonPresetModal");
+  if (!modal) return;
+  renderPokemonPresetList(slotIndex);
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden", "false");
+}
+
+function closePokemonPresetModal() {
+  const modal = document.getElementById("pokemonPresetModal");
+  if (!modal) return;
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden", "true");
+  currentPresetTargetSlot = null;
+}
+
+function attachResultPresetSaveHandlers(result) {
+  const buttons = document.querySelectorAll(".preset-save-from-result-btn");
+  buttons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const idx = Number(btn.dataset.pokemonIdx);
+      if (!result || !Array.isArray(result.pokemons)) return;
+      if (Number.isNaN(idx) || !result.pokemons[idx]) return;
+
+      const p = result.pokemons[idx];
+      savePokemonPresetFromResult(p);
+    });
+  });
+}
+
+function savePokemonPresetFromResult(p) {
+  const presets = loadPokemonPresets ? loadPokemonPresets() : [];
+
+  const defaultName = p.name || "";
+  const nickname = window.prompt(
+    "保存するポケモン名（ニックネーム）を入力してください:",
+    defaultName
+  );
+  if (nickname === null) return;
+
+  const finalName = (nickname.trim() || defaultName || "ななしポケモン");
+
+  const preset = {
+    id: Date.now(),
+
+    // プリセットの表示名
+    name: finalName,
+
+    // ★ セレクト復元用のキー
+    pokemonKey: p.pokemonKey || "",
+
+    // 表示用
+    pokemonName: p.name,
+    level: p.level || 1,
+
+    // ★ 性格・サブスキルもキーで保存
+    natureKey: p.natureKey,
+    subskills: Array.isArray(p.subSkillKeys) ? [...p.subSkillKeys] : [],
+
+    // 個別補正も必要なら保存
+    personal: {
+      helpMult: p.personal?.helpMult ?? 1.0,
+      ingBonus: p.personal?.ingBonus ?? 0,
+      skillMult: p.personal?.skillMult ?? 1.0
+    }
+  };
+
+  presets.push(preset);
+
+  if (typeof savePokemonPresets === "function") {
+    savePokemonPresets(presets);
+  } else {
+    try {
+      localStorage.setItem("pokemon-presets", JSON.stringify(presets));
+    } catch (e) {
+      console.error(e);
+      alert("プリセットの保存に失敗しました。");
+      return;
+    }
+  }
+
+  alert(`「${finalName}」をプリセットに保存しました。`);
+}
+
 // ====== DOM 初期化とシミュレーション ======
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -2033,6 +2440,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
     const current = resultHistory[resultIndex];
     outputEl.innerHTML = buildResultHtml(current);
+    attachResultPresetSaveHandlers(current);
     renderEnergyChart(current);
 
     const currentPage = resultIndex + 1;
@@ -2387,6 +2795,10 @@ window.addEventListener("DOMContentLoaded", () => {
 
           return {
             index: idx + 1,
+            pokemonKey: pkm.pokemon_data.key,
+            natureKey: pkm.nature.key,
+            subSkillKeys: pkm.sub_skills.map(s => s.key),
+            teamSubSkillKeys: pkm.team_sub_skills.map(s => s.key),
             name: pkm.pokemon_data.name,
             type: pkm.pokemon_data.type,
             level: pkm.level,
@@ -2464,4 +2876,22 @@ window.addEventListener("DOMContentLoaded", () => {
       runBtn.disabled = false;
     }, 10);
   });
+
+  // プリセットモーダルのクローズ挙動
+  const presetModal = document.getElementById("pokemonPresetModal");
+  const presetCloseBtn = document.getElementById("pokemonPresetCloseBtn");
+  const presetBackdrop = presetModal
+    ? presetModal.querySelector(".preset-modal-backdrop")
+    : null;
+
+  if (presetCloseBtn) {
+    presetCloseBtn.addEventListener("click", () => {
+      closePokemonPresetModal();
+    });
+  }
+  if (presetBackdrop) {
+    presetBackdrop.addEventListener("click", () => {
+      closePokemonPresetModal();
+    });
+  }
 });
