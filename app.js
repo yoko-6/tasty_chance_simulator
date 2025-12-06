@@ -1511,17 +1511,25 @@ function buildResultHtml(result) {
 
       const mainChipsHtml = `
         <div class="pokemon-main-stats">
+          <div class="stat-chip-main">
+            <span class="chip-label">合計</span>
+            <span class="chip-value">${(perDayBerry + perDaySkillEnergy).toFixed(0)}</span>
+            <span class="chip-label">エナジー/日</span>
+          </div>
           <div class="stat-chip">
-            <span class="chip-label">きのみエナジー/日</span>
+            <span class="chip-label">きのみ</span>
             <span class="chip-value">${perDayBerry.toFixed(0)}</span>
+            <span class="chip-label">エナジー/日</span>
           </div>
           <div class="stat-chip">
-            <span class="chip-label">料理エナジー/日</span>
+            <span class="chip-label">料理チャンス</span>
             <span class="chip-value">${perDaySkillEnergy.toFixed(0)}</span>
+            <span class="chip-label">エナジー/日</span>
           </div>
           <div class="stat-chip">
-            <span class="chip-label">スキル発動/日</span>
+            <span class="chip-label">スキル発動</span>
             <span class="chip-value">${perDaySkillCount.toFixed(2)}</span>
+            <span class="chip-label">回/日</span>
           </div>
         </div>
       `;
@@ -1540,7 +1548,7 @@ function buildResultHtml(result) {
                 スピード倍率合計: ${p.helpTotalMult.toFixed(2)} 倍
               </div>
               <div class="pokemon-body-block-row">
-                げんき81%以上の目安: ${p.helpEffectiveFastTime.toFixed(1)} 秒
+                げんき100%換算: ${p.helpEffectiveFastTime.toFixed(1)} 秒
               </div>
               <div class="pokemon-body-block-row">
                 所持数: ${p.inventoryLimit}
@@ -1643,27 +1651,27 @@ function buildResultHtml(result) {
 
         <div class="stat-grid">
           <div class="stat-card">
-            <div class="stat-label">料理大成功回数</div>
+            <div class="stat-label">料理大成功</div>
             <div class="stat-value">
               ${summary.avgSuccess.toFixed(2)}<span class="stat-unit">回/日</span>
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">スキル発動（全体）</div>
+            <div class="stat-label">料理チャンス発動（全体）</div>
             <div class="stat-value">
               ${summary.avgSkill.toFixed(2)}<span class="stat-unit">回/日</span>
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">追加エナジー合計（料理チャンス）</div>
+            <div class="stat-label">料理チャンス効果（全体）</div>
             <div class="stat-value">
-              ${summary.avgExtraPerDay.toFixed(0)}<span class="stat-unit">/日</span>
+              ${summary.avgExtraPerDay.toFixed(0)}<span class="stat-unit">エナジー/日</span>
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-label">1匹あたり追加エナジー</div>
+            <div class="stat-label">料理チャンス（1匹あたり）</div>
             <div class="stat-value">
-              ${summary.perPokemonExtraPerDay.toFixed(0)}<span class="stat-unit">/日</span>
+              ${summary.perPokemonExtraPerDay.toFixed(0)}<span class="stat-unit">エナジー/日</span>
             </div>
           </div>
         </div>

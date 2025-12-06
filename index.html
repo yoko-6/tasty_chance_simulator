@@ -344,6 +344,34 @@
       font-size: 0.75rem;
     }
 
+    /* メインチップを少し強調 */
+    .stat-chip-main {
+      background: linear-gradient(135deg, #fff7e6, #ffe0b2);
+      border-color: #ffb74d;
+      box-shadow: 0 0 0 1px rgba(255, 183, 77, 0.4);
+      gap: 0.2rem;
+      padding: 0.25rem 0.55rem;
+      border-radius: 999px;
+    }
+
+    .stat-chip-main .chip-label:first-child {
+      font-weight: 700;
+      color: #e65100;
+    }
+
+    .stat-chip-main .chip-value {
+      font-weight: 700;
+      font-size: 1.0rem;
+    }
+
+    /* もし .pokemon-main-stats がまだなければ、レイアウト用にこんな感じもおすすめ */
+    .pokemon-main-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 0.4rem 0 0.3rem;
+    }
+
     /* 詳細は折りたたみ */
     .pokemon-details {
       margin-top: 0.55rem;
@@ -573,7 +601,7 @@
   <h1>ポケモンスリープ シミュレーター</h1>
 
   <div class="card">
-    <h2 style="font-size:1.1rem; margin-top:0;">ポケモン・レシピ設定</h2>
+    <h2 style="font-size:1.1rem; margin-top:0;">レシピ・シミュレーション設定</h2>
 
     <!-- グローバル設定 -->
     <div class="grid">
@@ -601,54 +629,6 @@
       <div class="inline">
         <input id="campTicket" type="checkbox" checked />
         <span>キャンプチケットを使う</span>
-      </div>
-    </div>
-
-    <hr />
-    <h3 style="font-size:1rem; margin-top:0;">フィールド設定</h3>
-    <div class="grid">
-      <div class="row">
-        <label for="fieldSelect">フィールド</label>
-        <select id="fieldSelect">
-          <option value="wakakusa">ワカクサ本島</option>
-          <option value="cyan">シアンの砂浜</option>
-          <option value="taupe">トープ洞窟</option>
-          <option value="unohana">ウノハナ雪原</option>
-          <option value="lapis">ラピスラズリ湖畔</option>
-          <option value="gold">ゴールド旧発電所</option>
-          <option value="amber">アンバー渓谷</option>
-          <option value="wakakusa_ex">ワカクサ本島EX</option>
-        </select>
-      </div>
-    </div>
-
-    <div id="fieldTypeConfig" class="ex-field-config">
-      <div class="grid">
-        <div class="row">
-          <label>メインタイプ</label>
-          <select id="fieldMainType"></select>
-        </div>
-        <div class="row">
-          <label>サブタイプ1</label>
-          <select id="fieldSub1Type"></select>
-        </div>
-        <div class="row">
-          <label>サブタイプ2</label>
-          <select id="fieldSub2Type"></select>
-        </div>
-      </div>
-    </div>
-
-    <div id="exOptionConfig" class="ex-field-config" style="display:none;">
-      <div class="grid">
-        <div class="row">
-          <label>EX補正</label>
-          <select id="exEffect"></select>
-          <div class="muted">
-            ワカクサ本島EX のときのみ有効です。
-            （きのみエナジー2.4倍 / 食材+1(食材タイプなら50%でさらに+1) / スキル1.25倍）
-          </div>
-        </div>
       </div>
     </div>
 
@@ -718,6 +698,54 @@
         <div id="timeError" class="error" style="display:none;"></div>
       </div>
     </details>
+
+    <hr />
+    <h3 style="font-size:1rem; margin-top:0;">フィールド設定</h3>
+    <div class="grid">
+      <div class="row">
+        <label for="fieldSelect">フィールド</label>
+        <select id="fieldSelect">
+          <option value="wakakusa">ワカクサ本島</option>
+          <option value="cyan">シアンの砂浜</option>
+          <option value="taupe">トープ洞窟</option>
+          <option value="unohana">ウノハナ雪原</option>
+          <option value="lapis">ラピスラズリ湖畔</option>
+          <option value="gold">ゴールド旧発電所</option>
+          <option value="amber">アンバー渓谷</option>
+          <option value="wakakusa_ex">ワカクサ本島EX</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="fieldTypeConfig" class="ex-field-config">
+      <div class="grid">
+        <div class="row">
+          <label>メインタイプ</label>
+          <select id="fieldMainType"></select>
+        </div>
+        <div class="row">
+          <label>サブタイプ1</label>
+          <select id="fieldSub1Type"></select>
+        </div>
+        <div class="row">
+          <label>サブタイプ2</label>
+          <select id="fieldSub2Type"></select>
+        </div>
+      </div>
+    </div>
+
+    <div id="exOptionConfig" class="ex-field-config" style="display:none;">
+      <div class="grid">
+        <div class="row">
+          <label>EX補正</label>
+          <select id="exEffect"></select>
+          <div class="muted">
+            ワカクサ本島EX のときのみ有効です。
+            （きのみエナジー2.4倍 / 食材+1(食材タイプなら50%でさらに+1) / スキル1.25倍）
+          </div>
+        </div>
+      </div>
+    </div>
 
     <hr />
     <!-- ポケモンスロット（最大 5 匹） -->
