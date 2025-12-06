@@ -1013,40 +1013,43 @@ function initPokemonSlots() {
           </div>
         </div>
       </div>
-      <div class="row">
-      <label>個別補正</label>
-      <div class="slot-modifiers">
-        <div class="modifier-field">
-          <span class="muted">おてつだいスピード倍率</span>
-          <input
-            id="slot-${i}-help-mult"
-            type="number"
-            min="0.1"
-            step="0.05"
-            value="1.0"
-          >
+      <details class="advanced-settings">
+        <summary>個別補正</summary>
+        <div class="advanced-body">
+          <div class="slot-modifiers">
+            <div class="modifier-field">
+              <span class="muted">おてつだいスピード倍率</span>
+              <input
+                id="slot-${i}-help-mult"
+                type="number"
+                min="0.1"
+                step="0.05"
+                value="1.0"
+              >
+            </div>
+            <div class="modifier-field">
+              <span class="muted">食材数ボーナス</span>
+              <input
+                id="slot-${i}-ing-bonus"
+                type="number"
+                min="0"
+                step="1"
+                value="0"
+              >
+            </div>
+            <div class="modifier-field">
+              <span class="muted">スキル確率倍率</span>
+              <input
+                id="slot-${i}-skill-mult"
+                type="number"
+                min="0"
+                step="0.05"
+                value="1.0"
+              >
+            </div>
+          </div>
         </div>
-        <div class="modifier-field">
-          <span class="muted">食材数ボーナス</span>
-          <input
-            id="slot-${i}-ing-bonus"
-            type="number"
-            min="0"
-            step="1"
-            value="0"
-          >
-        </div>
-        <div class="modifier-field">
-          <span class="muted">スキル確率倍率</span>
-          <input
-            id="slot-${i}-skill-mult"
-            type="number"
-            min="0"
-            step="0.05"
-            value="1.0"
-          >
-        </div>
-      </div>
+      </details>
       <div class="subskill-actions">
         <button type="button" id="slot-${i}-clear-slot">このポケモンの設定をクリア</button>
       </div>
