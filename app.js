@@ -2372,12 +2372,12 @@ function savePokemonPresetFromResult(p) {
       localStorage.setItem("pokemon-presets", JSON.stringify(presets));
     } catch (e) {
       console.error(e);
-      alert("プリセットの保存に失敗しました。");
+      alert("ボックスへの保存に失敗しました。");
       return;
     }
   }
 
-  alert(`「${finalName}」をプリセットに保存しました。`);
+  alert(`「${finalName}」をボックスに保存しました。`);
 }
 
 // ====== DOM 初期化とシミュレーション ======
