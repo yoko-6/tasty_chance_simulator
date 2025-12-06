@@ -1995,7 +1995,7 @@ window.addEventListener("DOMContentLoaded", () => {
     const currentPage = resultIndex + 1;
     const totalPages = resultHistory.length;
     if (resultPageInfo) {
-      resultPageInfo.textContent = `結果 ${currentPage} / ${totalPages}（番号が大きいほど新しい）`;
+      resultPageInfo.textContent = `結果 ${currentPage} / ${totalPages}（最新: ${totalPages}）`;
     }
 
     if (prevResultBtn) prevResultBtn.disabled = (resultIndex <= 0);
