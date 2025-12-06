@@ -1583,6 +1583,8 @@ function buildResultHtml(result) {
                 きのみエナジー倍率: ${p.berryEnergyMultiplier.toFixed(2)} 倍
               </div>
             </div>
+          </div>
+          <div class="pokemon-body-grid" style="margin-top:1rem;">
             <div>
               <div class="pokemon-body-block-title">スキル</div>
               <div class="pokemon-body-block-row">
@@ -1611,10 +1613,10 @@ function buildResultHtml(result) {
               </div>
             </div>
           </div>
-          <div class="pokemon-body-block-row" style="margin-top:0.4rem;">
+          <div class="pokemon-body-block-row" style="margin-top:1rem;">
             サブスキル: ${p.subSkillsLabel}
           </div>
-          <div class="pokemon-body-block-row" style="margin-top:0.4rem;">
+          <div class="pokemon-body-block-row">
             サブスキル(他ポケモンの効果): ${p.teamSubSkillsLabel}
           </div>
           <div class="pokemon-body-block-row">
@@ -1686,6 +1688,8 @@ function buildResultHtml(result) {
               ${summary.avgExtraPerDay.toFixed(0)}<span class="stat-unit">エナジー/日</span>
             </div>
           </div>
+        </div>
+        <div class="stat-grid" style="margin-top:0.5rem;">
           <div class="stat-card">
             <div class="stat-label">料理チャンス（全体）</div>
             <div class="stat-value">
@@ -1774,6 +1778,8 @@ function buildResultHtml(result) {
             <div class="input-block-row">EX補正: ${fieldExText}</div>
             <div class="input-block-row">フィールドボーナス: ${fieldBonusPercentText} %</div>
           </div>
+        </div>
+        <div class="input-grid">
           <div class="input-block">
             <div class="input-block-title">イベント補正</div>
             <div class="input-block-row">おてつだいスピード倍率: ${ev.helpingSpeedMultiplier.toFixed(2)} 倍</div>
