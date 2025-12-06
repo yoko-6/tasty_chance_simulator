@@ -230,6 +230,11 @@
       font-size: 0.7rem;
     }
 
+    label.inline {
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
     .error {
       color: #c00;
       font-size: 0.9rem;
@@ -758,10 +763,7 @@
           <span class="info-pill">詳細設定</span>から料理エナジー1.25倍、スキル確率1.5倍など設定できます
         </li>
         <li>
-          条件をそろえれば、他ツールと数値を比較することもできます。
-          ただし、現在このシミュレーターは
-          <span class="info-pill">元気常時81%以上</span>
-          を前提に計算しているため、同じ前提条件にしてください。
+          条件をそろえれば、他ツールと数値を比較することもできます。きのみタイプとの比較や料理チャンスの期待値計算にもどうぞ
         </li>
       </ul>
     </div>
@@ -792,14 +794,17 @@
     </div>
 
     <div class="row">
-      <div class="inline">
+      <label class="inline">
         <input id="campTicket" type="checkbox" checked />
-        <label>キャンプチケットを使う</label>
-      </div>
+        <span>キャンプチケットを使う</span>
+      </label>
     </div>
 
-    <div class="muted" style="margin-top:0.25rem;">
-      ※ 元気が常に81%以上としてシミュレーションしています。元気減少機能は今後対応予定です。
+    <div class="row">
+      <label class="inline">
+        <input id="disableEnergyDecay" type="checkbox" checked />
+        <span>げんき常時81%以上</span>
+      </label>
     </div>
 
     <details class="advanced-settings">

@@ -289,6 +289,7 @@ class Pokemon {
     ex_skill_multiplier,
     ex_effect_label,                  // EX: 表示用のラベル
     field_energy_multiplier,
+    energy_decay
   ) {
     this.pokemon_data = pokemon_data;
     this.name = name;
@@ -349,6 +350,10 @@ class Pokemon {
     this.field_energy_multiplier = Number.isFinite(field_energy_multiplier)
       ? field_energy_multiplier
       : 1.0;
+    
+    this.energy_decay = Number.isFinite(energy_decay)
+      ? energy_decay
+      : 0.0;
 
     this.initStats();
   }
@@ -412,6 +417,7 @@ class Pokemon {
     this.inventory = 0;
     this.skill_stock = 0;
     this.health = 100;
+    this.phase = "sleeping";
 
     this.total_berry_energy = 0;
     this.total_skill_energy = 0;
@@ -436,7 +442,7 @@ class Pokemon {
     return Math.round(Math.max(this.pokemon_data.berry.energy + (this.level - 1), this.pokemon_data.berry.energy * Math.pow(1.025, this.level - 1)));
   }
 
-  get_next_helping_time(nowSeconds) {
+  get_help_interval() {
     const effectiveBonus =
       this.get_health_speed_bonus() *
       this.camp_ticket_helping_speed_multiplier * // キャンプチケット倍率
@@ -445,18 +451,18 @@ class Pokemon {
       this.ex_helping_speed_multiplier;        // EX倍率
 
     const interval = this.helping_speed / effectiveBonus;
-    return nowSeconds + Math.floor(interval);
+    return Math.floor(interval);
   }
 
-  help_in_daytime() {
-    let skill_effect = this.help_in_sleeping();
-
-    this.inventory = 0;
-    this.skill_stock = 0;
-    return skill_effect;
+  get_next_helping_time(nowSeconds) {
+    return nowSeconds + this.get_help_interval();
   }
 
-  help_in_sleeping() {
+  refresh_health() {
+    this.health = 100;
+  }
+
+  do_help() {
     let skill_effect = 0.0;
 
     if (this.inventory >= this.inventory_limit) {
@@ -470,7 +476,27 @@ class Pokemon {
       this.get_berries();
     }
 
+    this.health -= this.energy_decay * this.get_help_interval();
+    this.health = Math.max(this.health, 0);
+
     return this.trigger_skill();
+  }
+
+  help_in_daytime() {
+    let skill_effect = this.do_help();
+
+    this.inventory = 0;
+    this.skill_stock = 0;
+    if (this.phase === "sleeping") {
+      this.phase = "daytime";
+      this.refresh_health();
+    }
+    return skill_effect;
+  }
+
+  help_in_sleeping() {
+    this.phase = "sleeping";
+    return this.do_help();
   }
 
   get_berries() {
@@ -1784,6 +1810,7 @@ function buildResultHtml(result) {
             <div class="input-block-row">試行回数: ${settings.trials}</div>
             <div class="input-block-row">月曜朝の大成功確率: ${settings.day1ChancePercent.toFixed(1)} %</div>
             <div class="input-block-row">キャンプチケット: ${settings.useCampTicket ? "使用する" : "使用しない"}</div>
+            <div class="input-block-row">元気常時81%以上: ${settings.disableEnergyDecay ? "有効" : "無効"}</div>
           </div>
           <div class="input-block">
             <div class="input-block-title">フィールド設定</div>
@@ -2102,6 +2129,10 @@ window.addEventListener("DOMContentLoaded", () => {
       inventoryBonus: useCampTicket ? 1.2 : 1.0
     }
 
+    // ★ 元気減少ON/OFF
+    const disableEnergyDecay = document.getElementById("disableEnergyDecay").checked;
+    const energyDecay = (disableEnergyDecay) ? 0.0 : 1.0 / 600.0;
+
     // ▼ EXフィールド設定を読み込み ▼
     const fieldKey = document.getElementById("fieldSelect").value || "wakakusa";
     const fieldMainType = document.getElementById("fieldMainType").value || "";
@@ -2237,6 +2268,7 @@ window.addEventListener("DOMContentLoaded", () => {
         f.skillMult,
         f.effectLabel,
         fieldEnergyMultiplier,
+        energyDecay
       );
     });
 
@@ -2400,6 +2432,7 @@ window.addEventListener("DOMContentLoaded", () => {
           day1ChancePercent,
           useCampTicket,
           campTicket: campTicketConfig,
+          disableEnergyDecay,
           schedule: sched,
           field: {
             key: fieldKey,
