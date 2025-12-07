@@ -2769,11 +2769,6 @@ window.addEventListener("DOMContentLoaded", () => {
       const baseAvgPerDay = baseEnergyPerDay.reduce((sum, v) => sum + v, 0) / baseEnergyPerDay.length;
       const carryAvgPerDay = carryOverEnergyPerDay.reduce((sum, v) => sum + v, 0) / carryOverEnergyPerDay.length;
 
-      // totalEnergyPerDayのデータをコンソールに展開
-      console.log("Total Energy Per Day:", totalEnergyPerDay);
-      console.log("Base Energy Per Day:", baseEnergyPerDay);
-      console.log("Carry Over Energy Per Day:", carryOverEnergyPerDay);
-
       const sundayExtraEnergy = totalEnergyPerDay[6] || 0;
       const sundayBaseEnergy = baseEnergyPerDay[6] || 0;
       const sundayCarryOverEnergy = carryOverEnergyPerDay[6] || 0;
