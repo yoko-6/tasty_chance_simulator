@@ -967,6 +967,42 @@
       transform: translateY(0);
     }
 
+    .result-section-header {
+      display: flex;
+      align-items: center;
+      /* baseline → center にしてもOK */
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+
+    /* タイトル + 実行日時を横並びにする */
+    .result-title-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0.5rem;
+    }
+
+    .result-run-at {
+      font-size: 0.8rem;
+      color: #777;
+    }
+
+    /* ヘッダ右側のチップ群 */
+    .result-header-chips {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 0.3rem;
+    }
+
+    /* もしヘッダだけ少し小さくしたければ（任意） */
+    .result-header-chips .stat-chip {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.5rem;
+    }
+
     html {
       font-size: 26px;
     }

@@ -1754,6 +1754,7 @@ function buildResultHtml(result) {
   const field = settings.field;
   const ev = settings.events;
   const sched = settings.schedule;
+  const recipeEnergy = settings.recipeEnergy;
 
   const fieldExText = field.key === "wakakusa_ex"
     ? (field.exEffectLabel || "補正なし")
@@ -1769,13 +1770,67 @@ function buildResultHtml(result) {
   const withoutSundayPerPokemonExtraPerDay = summary.withoutSundayPerPokemonExtraPerDay ?? 0;
   const sundayPerPokemonExtra = summary.sundayPerPokemonExtra ?? 0;
 
+  const headerChipParts = [];
+  // レシピエナジーをチップにするかどうかは好みですが、
+  // 「補正」とは別枠なので常に表示しておく実装例にしています。
+  headerChipParts.push(`
+    <div class="stat-chip">
+      <span class="chip-label">レシピ</span>
+      <span class="chip-value">${recipeEnergy.toLocaleString()}</span>
+      <span class="chip-unit">エナジー</span>
+    </div>
+  `);
+
+  // 料理エナジー倍率（1.0 からズレているときだけ表示）
+  if (ev.energyEventMultiplier && Math.abs(ev.energyEventMultiplier - 1.0) > 1e-6) {
+    headerChipParts.push(`
+      <div class="stat-chip" style="background-color:#ffd966; color:#000;">
+        <span class="chip-label">料理エナジー</span>
+        <span class="chip-value">×${ev.energyEventMultiplier.toFixed(2)}</span>
+      </div>
+    `);
+  }
+
+  // スキル確率倍率
+  if (ev.skillEventMultiplier && Math.abs(ev.skillEventMultiplier - 1.0) > 1e-6) {
+    headerChipParts.push(`
+      <div class="stat-chip" style="background-color:#a4c2f4; color:#000;">
+        <span class="chip-label">スキル確率</span>
+        <span class="chip-value">×${ev.skillEventMultiplier.toFixed(2)}</span>
+      </div>
+    `);
+  }
+
+  if (ev.helpingSpeedMultiplier && Math.abs(ev.helpingSpeedMultiplier - 1.0) > 1e-6) {
+    headerChipParts.push(`
+      <div class="stat-chip" style="background-color:#b6d7a8; color:#000;">
+        <span class="chip-label">おてつだいスピード</span>
+        <span class="chip-value">×${ev.helpingSpeedMultiplier.toFixed(2)}</span>
+      </div>
+    `);
+  }
+
+  // フィールドボーナス（%）
+  if (field.fieldBonusPercent && Math.abs(field.fieldBonusPercent) > 1e-6) {
+    headerChipParts.push(`
+      <div class="stat-chip">
+        <span class="chip-label">フィールドボーナス</span>
+        <span class="chip-value">+${field.fieldBonusPercent.toFixed(0)}%</span>
+      </div>
+    `);
+  }
+
+  // 1個もなければ空文字列
+  const headerChipsHtml = headerChipParts.length
+    ? `<div class="result-header-chips">${headerChipParts.join("")}</div>`
+    : "";
+
   return `
     <div class="result-container">
       <!-- 料理・エナジー結果（棒グラフ） -->
       <section class="result-section">
         <div class="result-section-header">
-          <div class="result-section-title">料理・エナジー結果</div>
-          <div class="result-section-sub">実行日時: ${timestampStr}</div>
+          ${headerChipsHtml}
         </div>
 
         <div class="stat-grid">
