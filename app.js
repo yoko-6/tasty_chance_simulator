@@ -1621,22 +1621,22 @@ function buildResultHtml(result) {
           <div class="stat-chip-main">
             <span class="chip-label">合計</span>
             <span class="chip-value">${(perDayBerry + perDaySkillEnergy).toFixed(0)}</span>
-            <span class="chip-label">エナジー/日</span>
+            <span class="chip-sub-label">エナジー/日</span>
           </div>
           <div class="stat-chip">
             <span class="chip-label">スキル</span>
             <span class="chip-value">${perDaySkillCount.toFixed(2)}</span>
-            <span class="chip-label">回/日</span>
+            <span class="chip-sub-label">回/日</span>
           </div>
           <div class="stat-chip">
             <span class="chip-label">きのみ</span>
             <span class="chip-value">${perDayBerry.toFixed(0)}</span>
-            <span class="chip-label">エナジー/日</span>
+            <span class="chip-sub-label">エナジー/日</span>
           </div>
           <div class="stat-chip">
             <span class="chip-label">料理チャンス</span>
             <span class="chip-value">${perDaySkillEnergy.toFixed(0)}</span>
-            <span class="chip-label">エナジー/日</span>
+            <span class="chip-sub-label">エナジー/日</span>
           </div>
         </div>
       `;
