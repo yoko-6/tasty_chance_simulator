@@ -1096,7 +1096,7 @@ function initPokemonSlots() {
         <div class="advanced-body">
           <div class="slot-modifiers">
             <div class="modifier-field">
-              <span class="muted">おてつだいスピード倍率</span>
+              <span class="muted">スピード倍率</span>
               <input
                 id="slot-${i}-help-mult"
                 type="number"
@@ -1624,6 +1624,11 @@ function buildResultHtml(result) {
             <span class="chip-label">エナジー/日</span>
           </div>
           <div class="stat-chip">
+            <span class="chip-label">スキル</span>
+            <span class="chip-value">${perDaySkillCount.toFixed(2)}</span>
+            <span class="chip-label">回/日</span>
+          </div>
+          <div class="stat-chip">
             <span class="chip-label">きのみ</span>
             <span class="chip-value">${perDayBerry.toFixed(0)}</span>
             <span class="chip-label">エナジー/日</span>
@@ -1632,11 +1637,6 @@ function buildResultHtml(result) {
             <span class="chip-label">料理チャンス</span>
             <span class="chip-value">${perDaySkillEnergy.toFixed(0)}</span>
             <span class="chip-label">エナジー/日</span>
-          </div>
-          <div class="stat-chip">
-            <span class="chip-label">スキル発動</span>
-            <span class="chip-value">${perDaySkillCount.toFixed(2)}</span>
-            <span class="chip-label">回/日</span>
           </div>
         </div>
       `;
@@ -1733,16 +1733,18 @@ function buildResultHtml(result) {
               <div class="pokemon-sub">サブスキル: ${p.subSkillsLabel || "なし"}
               </div>
             </div>
-            <div class="pokemon-tags">
-              ${fieldTags.join("")}
+            <div class="pokemon-side-controls">
+              <button
+                type="button"
+                class="preset-save-from-result-btn"
+                data-pokemon-idx="${p.index - 1}"
+              >
+                保存
+              </button>
+              <div class="pokemon-tags pokemon-tags-right">
+                ${fieldTags.join("")}
+              </div>
             </div>
-            <button
-              type="button"
-              class="preset-save-from-result-btn"
-              data-pokemon-idx="${p.index - 1}"
-            >
-              ボックスに保存
-            </button>
           </div>
           ${mainChipsHtml}
           ${detailsHtml}

@@ -146,7 +146,7 @@
     .subskills-box label {
       display: inline-block;
       font-weight: 450;
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       margin: 0.0rem;
     }
 
@@ -185,6 +185,8 @@
       background: #007aff;
       color: white;
       box-shadow: 0 2px 6px rgba(0, 122, 255, 0.3);
+      white-space: nowrap;
+      text-align: center;
     }
 
     button:hover:not(:disabled) {
@@ -336,6 +338,22 @@
       font-size: 0.75rem;
       color: #777;
       margin-top: 0.15rem;
+    }
+
+    /* 右側の「保存ボタン＋タグ」用コンテナ */
+    .pokemon-side-controls {
+      display: flex;
+      flex-direction: column;
+      /* 縦に並べる */
+      align-items: flex-end;
+      /* 右揃え */
+      gap: 0.35rem;
+      /* ボタンとタグの間の余白 */
+    }
+
+    /* タグの並びも右側に寄せる */
+    .pokemon-tags-right {
+      justify-content: flex-end;
     }
 
     /* タグ類（タイプ一致・EX補正など） */
