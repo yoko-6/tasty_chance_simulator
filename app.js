@@ -1804,17 +1804,32 @@ function buildResultHtml(result) {
             </div>
           </div>
         </div>
+        <div class="stat-grid" style="margin-top:0.5rem;">
+          <div class="stat-card">
+            <div class="stat-label">料理チャンス（月~土）</div>
+            <div class="stat-value">
+              ${summary.withoutSundayPerPokemonExtraPerDay.toFixed(0)}<span class="stat-unit">エナジー/日</span>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-label">料理チャンス(日曜)</div>
+            <div class="stat-value">
+              ${summary.sundayPerPokemonExtra.toFixed(0)}<span class="stat-unit">エナジー/日</span>
+            </div>
+          </div>
+        </div>
 
         <!-- 表示切り替えチェックボックス -->
         <div class="result-section-sub" style="margin:0.2rem;">表示切り替えボタン</div>
         <div class="energy-toggle-group" style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.2rem;">
           <label class="inline">
             <input type="checkbox" class="energy-series-toggle" data-series-id="base" checked />
-            ベース料理大成功(10%/30%)
+            ベース大成功(10%/30%)
           </label>
           <label class="inline">
             <input type="checkbox" class="energy-series-toggle" data-series-id="carry-over" checked />
-            料理チャンス(週またぎ発動)
+            週またぎ料理チャンス
           </label>
         </div>
           ${pokemons
@@ -1828,7 +1843,7 @@ function buildResultHtml(result) {
                     data-series-id="poke-${p.index}-cook"
                     checked
                   />
-                  ポケモン${p.index}（${p.name}）料理チャンス
+                  ${p.index}.${p.name}料理チャンス
                 </label>
                 <label class="inline">
                   <input
@@ -1837,7 +1852,7 @@ function buildResultHtml(result) {
                     data-series-id="poke-${p.index}-berry"
                     checked
                   />
-                  ポケモン${p.index}（${p.name}）きのみ
+                  ${p.index}.${p.name}きのみ
                 </label>
               </div>
               `
@@ -2744,15 +2759,48 @@ window.addEventListener("DOMContentLoaded", () => {
       const avgSkillEnergies = simulator.average_skill_energies;
       const avgSkillCounts = simulator.average_skill_counts;
 
+      const totalEnergyPerDay = perDay;
       const baseEnergyPerDay = simulator.average_base_energies_per_day.slice();
       const carryOverEnergyPerDay = simulator.average_carry_over_energies_per_day.slice();
 
       const baseAvgPerDay = baseEnergyPerDay.reduce((sum, v) => sum + v, 0) / baseEnergyPerDay.length;
       const carryAvgPerDay = carryOverEnergyPerDay.reduce((sum, v) => sum + v, 0) / carryOverEnergyPerDay.length;
 
+      // totalEnergyPerDayのデータをコンソールに展開
+      console.log("Total Energy Per Day:", totalEnergyPerDay);
+      console.log("Base Energy Per Day:", baseEnergyPerDay);
+      console.log("Carry Over Energy Per Day:", carryOverEnergyPerDay);
+
+      const sundayExtraEnergy = totalEnergyPerDay[6] || 0;
+      const sundayBaseEnergy = baseEnergyPerDay[6] || 0;
+      const sundayCarryOverEnergy = carryOverEnergyPerDay[6] || 0;
+
+      const withoutSundayExtraEnergy = totalEnergyPerDay.reduce((sum, v, idx) => {
+        if (idx === 6) return sum;
+        return sum + v;
+      }, 0);
+      const withoutSundayBaseEnergy = baseEnergyPerDay.reduce((sum, v, idx) => {
+        if (idx === 6) return sum;
+        return sum + v;
+      }, 0);
+      const withoutSundayCarryOverEnergy = carryOverEnergyPerDay.reduce((sum, v, idx) => {
+        if (idx === 6) return sum;
+        return sum + v;
+      }, 0);
+
       const perPokemonExtraPerDay =
         pokemons.length > 0
           ? Math.max(0, (avgExtraPerDay - baseAvgPerDay - carryAvgPerDay) / pokemons.length)
+          : 0;
+        
+      const sundayPerPokemonExtra = 
+        pokemons.length > 0
+          ? Math.max(0, (sundayExtraEnergy - sundayBaseEnergy - sundayCarryOverEnergy) / pokemons.length)
+          : 0;
+        
+      const withoutSundayPerPokemonExtraPerDay =
+        pokemons.length > 0
+          ? Math.max(0, (withoutSundayExtraEnergy - withoutSundayBaseEnergy - withoutSundayCarryOverEnergy) / pokemons.length / 6)
           : 0;
 
       const cookingEnergyPerPokemonPerDay = pokemons.map((_, idx) =>
@@ -2786,11 +2834,13 @@ window.addEventListener("DOMContentLoaded", () => {
           avgExtraPerDay,
           perPokemonExtraPerDay,
           perDayValues: perDay,
+          withoutSundayPerPokemonExtraPerDay,
+          sundayPerPokemonExtra,
           energyBreakdown: {
             basePerDay: baseEnergyPerDay,
             carryOverPerDay: carryOverEnergyPerDay,
             cookingPerPokemonPerDay: cookingEnergyPerPokemonPerDay,
-            berryPerPokemonPerDay: berryEnergyPerPokemonPerDay
+            berryPerPokemonPerDay: berryEnergyPerPokemonPerDay,
           }
         },
         pokemons: pokemons.map((pkm, idx) => {
