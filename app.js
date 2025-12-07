@@ -1765,6 +1765,9 @@ function buildResultHtml(result) {
       : (field.fieldEnergyMultiplier != null
         ? (field.fieldEnergyMultiplier * 100).toFixed(1)
         : "100.0");
+    
+  const withoutSundayPerPokemonExtraPerDay = summary.withoutSundayPerPokemonExtraPerDay ?? 0;
+  const sundayPerPokemonExtra = summary.sundayPerPokemonExtra ?? 0;
 
   return `
     <div class="result-container">
@@ -1808,14 +1811,14 @@ function buildResultHtml(result) {
           <div class="stat-card">
             <div class="stat-label">料理チャンス（月~土）</div>
             <div class="stat-value">
-              ${summary.withoutSundayPerPokemonExtraPerDay.toFixed(0)}<span class="stat-unit">エナジー/日</span>
+              ${withoutSundayPerPokemonExtraPerDay.toFixed(0)}<span class="stat-unit">エナジー/日</span>
             </div>
           </div>
 
           <div class="stat-card">
             <div class="stat-label">料理チャンス(日曜)</div>
             <div class="stat-value">
-              ${summary.sundayPerPokemonExtra.toFixed(0)}<span class="stat-unit">エナジー/日</span>
+              ${sundayPerPokemonExtra.toFixed(0)}<span class="stat-unit">エナジー/日</span>
             </div>
           </div>
         </div>
