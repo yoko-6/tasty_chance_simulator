@@ -1780,7 +1780,7 @@ function buildResultHtml(result) {
     <div class="header-chip" style="background-color:#f2c09d; color:#000;">
       <span class="chip-label">レシピ</span>
       <span class="chip-value">${recipeEnergy.toLocaleString()}</span>
-      <span class="chip-unit">エナジー</span>
+      <span class="chip-label">エナジー</span>
     </div>
   `);
 
