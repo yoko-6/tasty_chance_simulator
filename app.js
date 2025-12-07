@@ -1766,25 +1766,33 @@ function buildResultHtml(result) {
       : (field.fieldEnergyMultiplier != null
         ? (field.fieldEnergyMultiplier * 100).toFixed(1)
         : "100.0");
-    
+
   const withoutSundayPerPokemonExtraPerDay = summary.withoutSundayPerPokemonExtraPerDay ?? 0;
   const sundayPerPokemonExtra = summary.sundayPerPokemonExtra ?? 0;
 
   const headerChipParts = [];
-  // レシピエナジーをチップにするかどうかは好みですが、
-  // 「補正」とは別枠なので常に表示しておく実装例にしています。
-  headerChipParts.push(`
-    <div class="stat-chip">
+  const line1Chips = [];
+  const line2Chips = [];
+
+  line1Chips.push(`
+    <div class="header-chip" style="background-color:#f2c09d; color:#000;">
       <span class="chip-label">レシピ</span>
       <span class="chip-value">${recipeEnergy.toLocaleString()}</span>
       <span class="chip-unit">エナジー</span>
     </div>
   `);
 
+  line1Chips.push(`
+    <div class="header-chip" style="background-color:#b6d7a8; color:#000;">
+      <span class="chip-label">フィールドボーナス</span>
+      <span class="chip-value">+${field.fieldBonusPercent.toFixed(0)}%</span>
+    </div>
+  `);
+
   // 料理エナジー倍率（1.0 からズレているときだけ表示）
   if (ev.energyEventMultiplier && Math.abs(ev.energyEventMultiplier - 1.0) > 1e-6) {
-    headerChipParts.push(`
-      <div class="stat-chip" style="background-color:#ffd966; color:#000;">
+    line2Chips.push(`
+      <div class="header-chip" style="background-color:#ffd966; color:#000;">
         <span class="chip-label">料理エナジー</span>
         <span class="chip-value">×${ev.energyEventMultiplier.toFixed(2)}</span>
       </div>
@@ -1793,8 +1801,8 @@ function buildResultHtml(result) {
 
   // スキル確率倍率
   if (ev.skillEventMultiplier && Math.abs(ev.skillEventMultiplier - 1.0) > 1e-6) {
-    headerChipParts.push(`
-      <div class="stat-chip" style="background-color:#a4c2f4; color:#000;">
+    line2Chips.push(`
+      <div class="header-chip" style="background-color:#d8b5f7; color:#000;">
         <span class="chip-label">スキル確率</span>
         <span class="chip-value">×${ev.skillEventMultiplier.toFixed(2)}</span>
       </div>
@@ -1802,34 +1810,38 @@ function buildResultHtml(result) {
   }
 
   if (ev.helpingSpeedMultiplier && Math.abs(ev.helpingSpeedMultiplier - 1.0) > 1e-6) {
-    headerChipParts.push(`
-      <div class="stat-chip" style="background-color:#b6d7a8; color:#000;">
+    line2Chips.push(`
+      <div class="header-chip" style="background-color:#a4c2f4; color:#000;">
         <span class="chip-label">おてつだいスピード</span>
         <span class="chip-value">×${ev.helpingSpeedMultiplier.toFixed(2)}</span>
       </div>
     `);
   }
 
-  // フィールドボーナス（%）
-  if (field.fieldBonusPercent && Math.abs(field.fieldBonusPercent) > 1e-6) {
-    headerChipParts.push(`
-      <div class="stat-chip">
-        <span class="chip-label">フィールドボーナス</span>
-        <span class="chip-value">+${field.fieldBonusPercent.toFixed(0)}%</span>
-      </div>
-    `);
-  }
-
-  // 1個もなければ空文字列
-  const headerChipsHtml = headerChipParts.length
-    ? `<div class="result-header-chips">${headerChipParts.join("")}</div>`
-    : "";
+  const headerChipsHtml =
+    (line1Chips.length || line2Chips.length)
+      ? `
+        <div class="header-chips">
+          ${line1Chips.length
+            ? `<div class="header-chip-row header-chip-row-1">${line1Chips.join("")}</div>`
+            : ""
+          }
+          ${line2Chips.length
+            ? `<div class="header-chip-row header-chip-row-2">${line2Chips.join("")}</div>`
+            : ""
+          }
+        </div>
+      `
+      : "";
 
   return `
     <div class="result-container">
       <!-- 料理・エナジー結果（棒グラフ） -->
       <section class="result-section">
         <div class="result-section-header">
+          <div class="result-title-row">
+            <div class="result-section-title result-section-title-main">結果</div>
+          </div>
           ${headerChipsHtml}
         </div>
 
@@ -2084,9 +2096,9 @@ function applyScheduleFromUI(simulator) {
 }
 
 function applyNatureFromKey(slotIndex, natureKey) {
-  const upSelect      = document.getElementById(`slot-${slotIndex}-nature-up`);
-  const downSelect    = document.getElementById(`slot-${slotIndex}-nature-down`);
-  const natureSelect  = document.getElementById(`slot-${slotIndex}-nature`);
+  const upSelect = document.getElementById(`slot-${slotIndex}-nature-up`);
+  const downSelect = document.getElementById(`slot-${slotIndex}-nature-down`);
+  const natureSelect = document.getElementById(`slot-${slotIndex}-nature`);
 
   if (!upSelect || !downSelect || !natureSelect) return;
   if (!natureKey) return;
@@ -2845,12 +2857,12 @@ window.addEventListener("DOMContentLoaded", () => {
         pokemons.length > 0
           ? Math.max(0, (avgExtraPerDay - baseAvgPerDay - carryAvgPerDay) / pokemons.length)
           : 0;
-        
-      const sundayPerPokemonExtra = 
+
+      const sundayPerPokemonExtra =
         pokemons.length > 0
           ? Math.max(0, (sundayExtraEnergy - sundayBaseEnergy - sundayCarryOverEnergy) / pokemons.length)
           : 0;
-        
+
       const withoutSundayPerPokemonExtraPerDay =
         pokemons.length > 0
           ? Math.max(0, (withoutSundayExtraEnergy - withoutSundayBaseEnergy - withoutSundayCarryOverEnergy) / pokemons.length / 6)

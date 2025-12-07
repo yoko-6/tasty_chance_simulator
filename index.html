@@ -260,31 +260,6 @@
       gap: 1rem;
     }
 
-    .result-section {
-      background: #f9fafb;
-      border-radius: 12px;
-      padding: 1rem 1.25rem;
-      border: 1px solid #e0e4f2;
-    }
-
-    .result-section-header {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 0.5rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .result-section-title {
-      font-size: 1rem;
-      font-weight: 600;
-    }
-
-    .result-section-sub {
-      font-size: 0.8rem;
-      color: #777;
-    }
-
     .stat-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
@@ -980,8 +955,35 @@
     .result-title-row {
       display: flex;
       flex-wrap: wrap;
-      align-items: baseline;
+      align-items: flex-start;
       gap: 0.5rem;
+    }
+
+    .result-section {
+      background: #f9fafb;
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      border: 1px solid #e0e4f2;
+    }
+
+    .result-section-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .result-section-title {
+      font-size: 1rem;
+      font-weight: 600;
+      white-space: nowrap;
+      align-self: flex-start;
+    }
+
+    .result-section-sub {
+      font-size: 0.8rem;
+      color: #777;
     }
 
     .result-run-at {
@@ -1001,6 +1003,50 @@
     .result-header-chips .stat-chip {
       font-size: 0.75rem;
       padding: 0.2rem 0.5rem;
+    }
+
+    .header-chips {
+      display: flex;
+      flex-direction: column;
+      /* 1行目・2行目を縦に並べる */
+      gap: 0.25rem;
+      align-items: flex-end;
+      /* 右寄せにしたくなければ flex-start に */
+    }
+
+    .header-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      justify-content: flex-end;
+      /* タイトルの右側に揃える */
+    }
+
+    /* 既存の header-chip がある場合は流用でOK。なければ例： */
+    .header-chip {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0.2rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      background: #eef1ff;
+
+      font-size: 0.75rem;
+      padding: 0.2rem 0.5rem;
+    }
+
+    .header-chip .chip-label {
+      color: #555;
+    }
+
+    .header-chip .chip-value {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .header-chip .chip-unit {
+      color: #888;
+      font-size: 0.75rem;
     }
 
     html {
@@ -1231,7 +1277,7 @@
   <hr />
 
   <div class="card">
-    <h2 style="font-size:1.1rem; margin-top:0;">結果</h2>
+    <!-- <h2 style="font-size:1.1rem; margin-top:0;">結果</h2> -->
     <div id="output" class="result"></div>
   </div>
 
