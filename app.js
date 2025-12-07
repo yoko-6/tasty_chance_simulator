@@ -1504,7 +1504,7 @@ function renderEnergyChart(result) {
         const x = bar.x;
         const y = yAxis.getPixelForValue(total);
 
-        ctx.fillText(total.toFixed(0), x, y - 3);
+        ctx.fillText(total.toFixed(0), x, y + 3);
       });
 
       ctx.restore();
