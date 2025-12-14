@@ -145,7 +145,7 @@
 
             const isInteractive = (el) => {
                 if (!el || el.nodeType !== 1) return false;
-                return !!el.closest("button, a, input, select, textarea, label, details, summary");
+                return !!el.closest("button, a, input, select, textarea, label, summary");
             };
 
             const canMoveTo = (newIndex) => {
