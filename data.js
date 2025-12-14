@@ -92,9 +92,9 @@
         BerryFindingS: new SubSkill("BerryFindingS", "きのみの数S", 0.0, 0.0, 0.0, 0, 1),
         IngredientFinderM: new SubSkill("IngredientFinderM", "食材確率アップM", 0.0, 0.36, 0.0, 0, 0),
         IngredientFinderS: new SubSkill("IngredientFinderS", "食材確率アップS", 0.0, 0.18, 0.0, 0, 0),
-        InventoryUpL: new SubSkill("InventoryUpL", "最大確率アップL", 0.0, 0.0, 0.0, 18, 0),
-        InventoryUpM: new SubSkill("InventoryUpM", "最大確率アップM", 0.0, 0.0, 0.0, 12, 0),
-        InventoryUpS: new SubSkill("InventoryUpS", "最大確率アップS", 0.0, 0.0, 0.0, 6, 0),
+        InventoryUpL: new SubSkill("InventoryUpL", "最大所持数アップL", 0.0, 0.0, 0.0, 18, 0),
+        InventoryUpM: new SubSkill("InventoryUpM", "最大所持数アップM", 0.0, 0.0, 0.0, 12, 0),
+        InventoryUpS: new SubSkill("InventoryUpS", "最大所持数アップS", 0.0, 0.0, 0.0, 6, 0),
     };
 
     PS.NatureParams = [
