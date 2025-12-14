@@ -228,44 +228,7 @@
             statusEl.textContent = `シミュレーション中…（試行回数: ${trials}）`;
 
             setTimeout(() => {
-                simulator.simulate(trials, pokemons, recipeEnergy);
-
-                const avgSkill = simulator.average_skill_count;
-                const avgSuccess = simulator.average_success_count;
-                const avgExtraPerDay = simulator.average_extra_energy;
-                const perDay = simulator.average_extra_energies_per_day;
-
-                const avgBerryEnergies = simulator.average_berry_energies;
-                const avgSkillEnergies = simulator.average_skill_energies;
-                const avgSkillCounts = simulator.average_skill_counts;
-
-                const baseEnergyPerDay = simulator.average_base_energies_per_day.slice();
-                const carryOverEnergyPerDay = simulator.average_carry_over_energies_per_day.slice();
-
-                const baseAvgPerDay = baseEnergyPerDay.reduce((sum, v) => sum + v, 0) / baseEnergyPerDay.length;
-                const carryAvgPerDay = carryOverEnergyPerDay.reduce((sum, v) => sum + v, 0) / carryOverEnergyPerDay.length;
-
-                const sundayExtraEnergy = perDay[6] || 0;
-                const sundayBaseEnergy = baseEnergyPerDay[6] || 0;
-                const sundayCarryOverEnergy = carryOverEnergyPerDay[6] || 0;
-
-                const withoutSundayExtraEnergy = perDay.slice(0, 6).reduce((s, v) => s + v, 0);
-                const withoutSundayBaseEnergy = baseEnergyPerDay.slice(0, 6).reduce((s, v) => s + v, 0);
-                const withoutSundayCarryOverEnergy = carryOverEnergyPerDay.slice(0, 6).reduce((s, v) => s + v, 0);
-
-                const perPokemonExtraPerDay =
-                    pokemons.length > 0 ? Math.max(0, (avgExtraPerDay - baseAvgPerDay - carryAvgPerDay) / pokemons.length) : 0;
-
-                const sundayPerPokemonExtra =
-                    pokemons.length > 0 ? Math.max(0, (sundayExtraEnergy - sundayBaseEnergy - sundayCarryOverEnergy) / pokemons.length) : 0;
-
-                const withoutSundayPerPokemonExtraPerDay =
-                    pokemons.length > 0
-                        ? Math.max(0, (withoutSundayExtraEnergy - withoutSundayBaseEnergy - withoutSundayCarryOverEnergy) / pokemons.length / 6)
-                        : 0;
-
-                const cookingEnergyPerPokemonPerDay = pokemons.map((_, idx) => simulator.average_cooking_energies_per_pokemon_per_day[idx].slice());
-                const berryEnergyPerPokemonPerDay = pokemons.map((_, idx) => simulator.average_berry_energies_per_pokemon_per_day[idx].slice());
+                const avg = simulator.simulate(trials, pokemons, recipeEnergy);
 
                 const timestampStr = new Date().toLocaleString("ja-JP");
 
@@ -282,18 +245,14 @@
                 const result = {
                     timestampStr,
                     summary: {
-                        avgSkill,
-                        avgSuccess,
-                        avgExtraPerDay,
-                        perPokemonExtraPerDay,
-                        perDayValues: perDay,
-                        withoutSundayPerPokemonExtraPerDay,
-                        sundayPerPokemonExtra,
+                        extraEnergyByDay: avg.extraEnergyByDay,
+                        successCountByDay: avg.successCountByDay,
                         energyBreakdown: {
-                            basePerDay: baseEnergyPerDay,
-                            carryOverPerDay: carryOverEnergyPerDay,
-                            cookingPerPokemonPerDay: cookingEnergyPerPokemonPerDay,
-                            berryPerPokemonPerDay: berryEnergyPerPokemonPerDay,
+                            baseByDay: avg.baseEnergyByDay,
+                            carryOverByDay: avg.carryOverEnergyByDay,
+                            cookingEnergyByPokemonByDay: avg.cookingEnergyByPokemonByDay,
+                            berryEnergyByPokemonByDay: avg.berryEnergyByPokemonByDay,
+                            skillCountByPokemonByDay: avg.skillCountByPokemonByDay,
                         },
                     },
                     pokemons: pokemons.map((pkm, idx) => {
@@ -339,9 +298,6 @@
                             skillEffectPercent: pkm.skill_effect * 100,
                             inventoryLimit: pkm.inventory_limit,
                             exEffectLabel: pkm.ex_effect_label,
-                            perDayBerryEnergy: avgBerryEnergies[idx],
-                            perDaySkillCount: avgSkillCounts[idx],
-                            perDaySkillEnergy: avgSkillEnergies[idx],
                             subSkillsLabel: pkm.sub_skills.length ? pkm.sub_skills.map((s) => s.name).join(", ") : "なし",
                             teamSubSkillsLabel: pkm.team_sub_skills.length ? pkm.team_sub_skills.map((s) => s.name).join(", ") : "なし",
                             personal: {

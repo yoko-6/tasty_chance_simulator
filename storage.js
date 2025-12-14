@@ -43,7 +43,7 @@
     const savePokemonPresets = (presets) => saveSchemaArray(POKEMON_BOX_STORAGE_KEY, POKEMON_BOX_SCHEMA_VERSION, "presets", presets);
 
     // ====== Result History ======
-    const HISTORY_SCHEMA_VERSION = 2;
+    const HISTORY_SCHEMA_VERSION = 3;
     const HISTORY_STORAGE_KEY = "psleep_sim_result_history";
 
     const loadResultHistory = () => loadSchemaArray(HISTORY_STORAGE_KEY, HISTORY_SCHEMA_VERSION, "history");

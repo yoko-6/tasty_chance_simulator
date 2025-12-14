@@ -712,23 +712,23 @@
         const breakdown = summary.energyBreakdown;
         const labels = ["月", "火", "水", "木", "金", "土", "日"];
 
-        const base = breakdown.basePerDay || new Array(7).fill(0);
-        const carryOver = breakdown.carryOverPerDay || new Array(7).fill(0);
-        const cookPerPoke = breakdown.cookingPerPokemonPerDay || [];
-        const berryPerPoke = breakdown.berryPerPokemonPerDay || [];
+        const base = breakdown.baseByDay || new Array(7).fill(0);
+        const carryOverByDay = breakdown.carryOverByDay || new Array(7).fill(0);
+        const cookingEnergyByPokemonByDay = breakdown.cookingEnergyByPokemonByDay || [];
+        const berryEnergyByPokemonByDay = breakdown.berryEnergyByPokemonByDay || [];
 
         const datasets = [
             { id: "base", label: "ベース(10%/30%)大成功エナジー", data: base, type: "bar", stack: "energy" },
-            { id: "carry-over", label: "料理チャンス（週またぎ発動）", data: carryOver, type: "bar", stack: "energy" },
+            { id: "carry-over", label: "料理チャンス（週またぎ発動）", data: carryOverByDay, type: "bar", stack: "energy" },
         ];
 
         for (let i = 0; i < pokemons.length; i++) {
             const p = pokemons[i];
-            const cook = cookPerPoke[i] || new Array(7).fill(0);
-            const berry = berryPerPoke[i] || new Array(7).fill(0);
+            const cook = cookingEnergyByPokemonByDay[i] || new Array(7).fill(0);
+            const berry = berryEnergyByPokemonByDay[i] || new Array(7).fill(0);
 
-            datasets.push({ id: `poke-${p.index}-cook`, label: `ポケモン${p.index}（${p.name}）料理チャンス`, data: cook, type: "bar", stack: "energy" });
             datasets.push({ id: `poke-${p.index}-berry`, label: `ポケモン${p.index}（${p.name}）きのみ`, data: berry, type: "bar", stack: "energy" });
+            datasets.push({ id: `poke-${p.index}-cook`, label: `ポケモン${p.index}（${p.name}）料理チャンス`, data: cook, type: "bar", stack: "energy" });
         }
 
         const totalLabelPlugin = {
@@ -806,17 +806,17 @@
         });
     }
 
+    const sum = (byDay) => byDay.reduce((s, v) => s + (Number(v) || 0), 0);
+    const sum2D = (byPokeByDay) => byPokeByDay.reduce((s1, byDay) => s1 + sum(byDay), 0);
+    const avg = (byDay) => sum(byDay) / byDay.length;
+
     // ===== Result HTML =====
     function buildResultHtml(result) {
         const { summary, pokemons, settings } = result;
-        const dayLabels = ["月曜日", "火曜日", "水曜日", "木曜日", "金曜日", "土曜日", "日曜日"];
-
-        const dayRows = summary.perDayValues
-            .map((v, idx) => `<tr><td>${dayLabels[idx]}</td><td>${v.toFixed(3)}</td></tr>`)
-            .join("");
+        const breakdown = summary.energyBreakdown;
 
         const pokemonCards = pokemons
-            .map((p) => {
+            .map((p, i) => {
                 const fieldTags = [];
                 if (p.matchesFieldType) fieldTags.push('<span class="tag tag-field-match">好きなきのみ</span>');
                 if (p.exEffectLabel && p.isMainType) fieldTags.push('<span class="tag tag-main-type">メインタイプ</span>');
@@ -824,30 +824,34 @@
 
                 const natureEffectText = PS.describeNatureEffect(p.natureUp, p.natureDown);
 
-                const perDayBerry = p.perDayBerryEnergy ?? 0;
-                const perDaySkillEnergy = p.perDaySkillEnergy ?? 0;
-                const perDaySkillCount = p.perDaySkillCount ?? 0;
+                const berryByDay = breakdown.berryEnergyByPokemonByDay[i] || new Array(7).fill(0);
+                const cookByDay = breakdown.cookingEnergyByPokemonByDay[i] || new Array(7).fill(0);
+                const skillCntByDay = breakdown.skillCountByPokemonByDay[i] || new Array(7).fill(0);
+
+                const berryEnergyPerDayAvg = avg(berryByDay);
+                const skillEnergyPerDayAvg = avg(cookByDay);
+                const skillCountPerDayAvg = avg(skillCntByDay);
 
                 const mainChipsHtml = `
           <div class="pokemon-main-stats">
             <div class="stat-chip-main">
               <span class="chip-label">合計</span>
-              <span class="chip-value">${(perDayBerry + perDaySkillEnergy).toFixed(0)}</span>
+              <span class="chip-value">${(berryEnergyPerDayAvg + skillEnergyPerDayAvg).toFixed(0)}</span>
               <span class="chip-sub-label">エナジー/日</span>
             </div>
             <div class="stat-chip">
               <span class="chip-label">きのみ</span>
-              <span class="chip-value">${perDayBerry.toFixed(0)}</span>
+              <span class="chip-value">${berryEnergyPerDayAvg.toFixed(0)}</span>
               <span class="chip-sub-label">エナジー/日</span>
             </div>
             <div class="stat-chip">
               <span class="chip-label">料理チャンス</span>
-              <span class="chip-value">${perDaySkillEnergy.toFixed(0)}</span>
+              <span class="chip-value">${skillEnergyPerDayAvg.toFixed(0)}</span>
               <span class="chip-sub-label">エナジー/日</span>
             </div>
             <div class="stat-chip">
               <span class="chip-label">スキル</span>
-              <span class="chip-value">${perDaySkillCount.toFixed(2)}</span>
+              <span class="chip-value">${skillCountPerDayAvg.toFixed(2)}</span>
               <span class="chip-sub-label">回/日</span>
             </div>
           </div>
@@ -883,9 +887,9 @@
               </div>
               <div>
                 <div class="pokemon-body-block-title">1日あたりの寄与</div>
-                <div class="pokemon-body-block-row">きのみエナジー: ${p.perDayBerryEnergy.toFixed(3)}</div>
-                <div class="pokemon-body-block-row">スキル発動回数: ${p.perDaySkillCount.toFixed(3)} 回</div>
-                <div class="pokemon-body-block-row">スキルエナジー: ${p.perDaySkillEnergy.toFixed(3)}</div>
+                <div class="pokemon-body-block-row">きのみエナジー: ${berryEnergyPerDayAvg.toFixed(3)}</div>
+                <div class="pokemon-body-block-row">スキル発動回数: ${skillCountPerDayAvg.toFixed(3)} 回</div>
+                <div class="pokemon-body-block-row">スキルエナジー: ${skillEnergyPerDayAvg.toFixed(3)}</div>
               </div>
             </div>
 
@@ -920,6 +924,32 @@
             })
             .join("");
 
+        const extraByDay = summary.extraEnergyByDay;
+        const successByDay = summary.successCountByDay;
+
+        const baseByDay = breakdown.baseByDay;
+        const carryByDay = breakdown.carryOverByDay;
+
+        const extraPerDayAvg = avg(extraByDay);
+        const successPerDayAvg = avg(successByDay);
+
+        const basePerDayAvg = avg(baseByDay);
+        const carryPerDayAvg = avg(carryByDay);
+
+        const skillCount = sum2D(breakdown.skillCountByPokemonByDay) / 7;
+        const skillCountPerPokemonAvg =
+            pokemons.length > 0 ? skillCount / pokemons.length : 0;
+
+        const sundayExtraPerPokemonAvg =
+            pokemons.length > 0
+                ? Math.max(0, (extraByDay[6] - baseByDay[6] - carryByDay[6]) / pokemons.length)
+                : 0;
+
+        const withoutSundayExtraPerPokemonDayAvg =
+            pokemons.length > 0
+                ? Math.max(0, (sum(extraByDay.slice(0, 6)) - sum(baseByDay.slice(0, 6)) - sum(carryByDay.slice(0, 6))) / pokemons.length / 6)
+                : 0;
+
         const field = settings.field;
         const ev = settings.events;
         const sched = settings.schedule;
@@ -932,9 +962,6 @@
                 : field.fieldEnergyMultiplier != null
                     ? (field.fieldEnergyMultiplier * 100).toFixed(1)
                     : "100.0";
-
-        const withoutSundayPerPokemonExtraPerDay = summary.withoutSundayPerPokemonExtraPerDay ?? 0;
-        const sundayPerPokemonExtra = summary.sundayPerPokemonExtra ?? 0;
 
         const line1Chips = [];
         const line2Chips = [];
@@ -1002,33 +1029,33 @@
           <div class="stat-grid">
             <div class="stat-card">
               <div class="stat-label">料理大成功</div>
-              <div class="stat-value">${summary.avgSuccess.toFixed(2)}<span class="stat-unit">回/日</span></div>
+              <div class="stat-value">${successPerDayAvg.toFixed(2)}<span class="stat-unit">回/日</span></div>
             </div>
             <div class="stat-card">
               <div class="stat-label">料理大成功による増加</div>
-              <div class="stat-value">${summary.avgExtraPerDay.toFixed(0)}<span class="stat-unit">エナジー/日</span></div>
+              <div class="stat-value">${extraPerDayAvg.toFixed(0)}<span class="stat-unit">エナジー/日</span></div>
             </div>
           </div>
 
           <div class="stat-grid" style="margin-top:0.5rem;">
             <div class="stat-card">
               <div class="stat-label">料理チャンス（全体）</div>
-              <div class="stat-value">${summary.avgSkill.toFixed(2)}<span class="stat-unit">回/日</span></div>
+              <div class="stat-value">${skillCount.toFixed(2)}<span class="stat-unit">回/日</span></div>
             </div>
             <div class="stat-card">
               <div class="stat-label">料理チャンス(1匹あたり)</div>
-              <div class="stat-value">${summary.perPokemonExtraPerDay.toFixed(0)}<span class="stat-unit">エナジー/日</span></div>
+              <div class="stat-value">${skillCountPerPokemonAvg.toFixed(2)}<span class="stat-unit">回/日</span></div>
             </div>
           </div>
 
           <div class="stat-grid" style="margin-top:0.5rem;">
             <div class="stat-card">
               <div class="stat-label">料理チャンス（月~土）</div>
-              <div class="stat-value">${withoutSundayPerPokemonExtraPerDay.toFixed(0)}<span class="stat-unit">エナジー/日</span></div>
+              <div class="stat-value">${withoutSundayExtraPerPokemonDayAvg.toFixed(0)}<span class="stat-unit">エナジー/日</span></div>
             </div>
             <div class="stat-card">
               <div class="stat-label">料理チャンス(日曜)</div>
-              <div class="stat-value">${sundayPerPokemonExtra.toFixed(0)}<span class="stat-unit">エナジー/日</span></div>
+              <div class="stat-value">${sundayExtraPerPokemonAvg.toFixed(0)}<span class="stat-unit">エナジー/日</span></div>
             </div>
           </div>
 
