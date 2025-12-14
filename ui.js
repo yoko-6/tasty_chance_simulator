@@ -724,6 +724,9 @@
         const EVENING = 18 * 3600;
         const NEXTFOUR = 28 * 3600;
 
+        const dinnerNorm = normalizeTimeForSchedule(dinnerSec);
+        const sleepNorm = normalizeTimeForSchedule(sleepSec);
+
         if (wakeSec < FOUR) {
             showError("起床時刻は 4:00 以降にしてください。");
             return false;
@@ -736,23 +739,15 @@
             showError("昼食時刻は 12:00〜18:00 未満の範囲で指定してください。");
             return false;
         }
-        if (sleepSec >= NEXTFOUR) {
+        if (dinnerNorm < EVENING || dinnerNorm >= NEXTFOUR) {
+            showError("夕食時刻は 18:00〜翌日 4:00 未満の範囲で指定してください。");
+            return false;
+        }
+        if (sleepNorm >= NEXTFOUR) {
             showError("就寝時刻は翌日 4:00 より前にしてください。");
             return false;
         }
 
-        const lunchNorm = normalizeTimeForSchedule(lunchSec);
-        const dinnerNorm = normalizeTimeForSchedule(dinnerSec);
-        const sleepNorm = normalizeTimeForSchedule(sleepSec);
-
-        if (dinnerNorm < EVENING) {
-            showError("夕食時刻は 18:00 以降にしてください。");
-            return false;
-        }
-        if (dinnerNorm < lunchNorm) {
-            showError("夕食時刻は昼食以降にしてください。");
-            return false;
-        }
         if (dinnerNorm > sleepNorm) {
             showError("夕食時刻は就寝時刻以前（同じでも可）にしてください。");
             return false;
