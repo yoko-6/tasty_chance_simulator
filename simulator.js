@@ -48,7 +48,9 @@
             ex_skill_multiplier,
             ex_effect_label,
             field_energy_multiplier,
-            energy_decay
+            energy_decay,
+            active_chance_limit_weekday,
+            active_chance_limit_sunday
         ) {
             this.pokemon_data = pokemon_data;
             this.name = name;
@@ -80,6 +82,9 @@
 
             this.field_energy_multiplier = numOr(field_energy_multiplier, 1.0);
             this.energy_decay = numOr(energy_decay, 0.0);
+
+            this.active_chance_limit_weekday = numOr(active_chance_limit_weekday, 1.0);
+            this.active_chance_limit_sunday = numOr(active_chance_limit_sunday, 1.0);
 
             this.initStats();
         }
@@ -135,10 +140,24 @@
             this.skill_stock = 0;
             this.health = 100;
             this.phase = "sleeping";
+            this.is_active = true;
 
             this.total_berry_energy = 0;
             this.total_skill_energy = 0;
             this.total_skill_count = 0;
+            this.total_active_seconds = 0;
+        }
+
+        activate() {
+            if (this.is_active) return;
+            this.is_active = true;
+            this.inventory = 0;
+            this.skill_stock = 0;
+        }
+
+        deactivate() {
+            if (!this.is_active) return;
+            this.is_active = false;
         }
 
         get_health_speed_bonus() {
@@ -175,6 +194,12 @@
         }
 
         do_help() {
+            if (!this.is_active) return 0.0;
+
+            this.total_active_seconds += this.get_help_interval();
+            this.health -= this.energy_decay * this.get_help_interval();
+            this.health = Math.max(this.health, 0);
+            
             if (this.inventory >= this.inventory_limit) {
                 this.get_berries();
                 return 0.0;
@@ -182,9 +207,6 @@
 
             if (Math.random() < this.ingredient_probability) this.get_ingredients();
             else this.get_berries();
-
-            this.health -= this.energy_decay * this.get_help_interval();
-            this.health = Math.max(this.health, 0);
 
             return this.trigger_skill();
         }
@@ -295,6 +317,7 @@
             const cookingEnergyByPokemonByDay = this._make2D(n, 0); // 料理チャンス由来エナジー
             const berryEnergyByPokemonByDay = this._make2D(n, 0);   // きのみエナジー
             const skillCountByPokemonByDay = this._make2D(n, 0);    // スキル発動回数（=料理チャンス回数）
+            const activeSecondsByPokemonByDay = this._make2D(n, 0); // 稼働時間
 
             // 料理チャンス蓄積
             let cooking_chance_probability = 0.0;
@@ -316,7 +339,7 @@
             for (let i = 0; i < n; i++) {
                 const p = pokemons[i];
                 p.resetStats();
-                pokemon_event_queue.push(new PokemonEvent(i, p, p.get_next_helping_time(this.wake_up_time)));
+                pokemon_event_queue.push(new PokemonEvent(i, p, p.get_next_helping_time(FOUR)));
             }
 
             const pickNextPokemonEventBefore = (limitTs) => {
@@ -346,10 +369,21 @@
                 const user_event = user_event_queue.shift();
                 user_event_queue.push(user_event.nextDay());
 
+                const d = dayIndexOf(user_event.timestamp);
+                const is_sunday = (d === 6);
+
                 // user_event.timestamp より前のポケモンイベントを処理
                 while (true) {
                     const nextEvent = pickNextPokemonEventBefore(user_event.timestamp);
                     if (!nextEvent) break;
+
+                    if (!user_event.event !== PS.UserEventType.wake_up) {
+                        pokemons.map((p) => {
+                            const active_chance_limit = (is_sunday ? p.active_chance_limit_sunday : p.active_chance_limit_weekday);
+                            if (cooking_chance_probability + carry_over_cooking_chance >= active_chance_limit) p.deactivate();
+                            else p.activate();
+                        });
+                    }
 
                     const p = nextEvent.pokemon;
                     const d = dayIndexOf(nextEvent.timestamp);
@@ -357,6 +391,7 @@
                     // ★差分で日別配列へ積む（Pokemonクラスは触らない）
                     const beforeBerry = p.total_berry_energy;
                     const beforeSkillCount = p.total_skill_count;
+                    const beforeActiveSeconds = p.total_active_seconds;
 
                     let ret = 0.0;
                     if (user_event.event !== PS.UserEventType.wake_up) ret = p.help_in_daytime();
@@ -368,6 +403,9 @@
                     const deltaSkillCount = p.total_skill_count - beforeSkillCount;
                     if (deltaSkillCount) skillCountByPokemonByDay[nextEvent.idx][d] += deltaSkillCount;
 
+                    const deltaActiveSeconds = p.total_active_seconds - beforeActiveSeconds;
+                    if (deltaActiveSeconds) activeSecondsByPokemonByDay[nextEvent.idx][d] += deltaActiveSeconds;
+
                     // 料理チャンス確率へ反映（従来通り）
                     ret = Math.min(ret, this.chance_limit - cooking_chance_probability - carry_over_cooking_chance);
                     cooking_chance_probability += ret;
@@ -375,18 +413,15 @@
 
                     pokemon_event_queue.push(nextEvent.next());
                 }
-
-                // 食事イベント：成功判定とエナジー配分
-                const d = dayIndexOf(user_event.timestamp);
                 
+                // 食事イベント：成功判定とエナジー配分
                 if (user_event.event === PS.UserEventType.wake_up) {
-                    const dayNum = d + 1; // 1..7
-                    base_cooking_chance = this.base_cooking_chance + (dayNum === 7 ? this.sunday_chance_bonus : 0.0);
+                    base_cooking_chance = this.base_cooking_chance + (is_sunday ? this.sunday_chance_bonus : 0.0);
 
                     base_cooking_energy =
                         recipe_energy *
                         this.cooking_energy_event_multiplier *
-                        (dayNum === 7 ? this.sunday_success_energy_bonus : 1.0) *
+                        (is_sunday ? this.sunday_success_energy_bonus : 1.0) *
                         this.field_energy_multiplier;
                 }
 
@@ -429,6 +464,7 @@
                 cookingEnergyByPokemonByDay,
                 berryEnergyByPokemonByDay,
                 skillCountByPokemonByDay,
+                activeSecondsByPokemonByDay
             };
         }
 
@@ -444,6 +480,7 @@
                 cookingEnergyByPokemonByDay: this._make2D(n, 0),
                 berryEnergyByPokemonByDay: this._make2D(n, 0),
                 skillCountByPokemonByDay: this._make2D(n, 0),
+                activeSecondsByPokemonByDay: this._make2D(n, 0),
             };
 
             const addArr7 = (a, b) => { for (let i = 0; i < 7; i++) a[i] += b[i]; };
@@ -458,6 +495,7 @@
                 add2D(acc.cookingEnergyByPokemonByDay, r.cookingEnergyByPokemonByDay);
                 add2D(acc.berryEnergyByPokemonByDay, r.berryEnergyByPokemonByDay);
                 add2D(acc.skillCountByPokemonByDay, r.skillCountByPokemonByDay);
+                add2D(acc.activeSecondsByPokemonByDay, r.activeSecondsByPokemonByDay);
             }
 
             const divArr7 = (a) => { for (let i = 0; i < 7; i++) a[i] /= trials; };
@@ -470,6 +508,7 @@
             div2D(acc.cookingEnergyByPokemonByDay);
             div2D(acc.berryEnergyByPokemonByDay);
             div2D(acc.skillCountByPokemonByDay);
+            div2D(acc.activeSecondsByPokemonByDay);
 
             this.avg = acc;
             return acc;

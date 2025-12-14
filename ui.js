@@ -116,6 +116,22 @@
     // ====== Slot UI ======
     let visibleSlots = 1;
 
+    function attachBenchModeHandlers(i) {
+        const keys = ["weekday", "sunday"];
+        for (const key of keys) {
+            const radios = document.querySelectorAll(`input[name="slot-${i}-active-${key}"]`);
+            const th = document.getElementById(`slot-${i}-active-${key}`);
+
+            const update = () => {
+                const mode = [...radios].find(r => r.checked)?.value || "always";
+                if (th) th.disabled = (mode !== "threshold");
+            };
+
+            radios.forEach(r => r.addEventListener("change", update));
+            update();
+        }
+    }
+
     function clearPokemonSlotSettings(slotIndex) {
         const pokemonSelect = $(`slot-${slotIndex}-pokemon`);
         const levelInput = $(`slot-${slotIndex}-level`);
@@ -146,6 +162,16 @@
         if (helpMultInput) helpMultInput.value = "1.0";
         if (ingBonusInput) ingBonusInput.value = "0";
         if (skillMultInput) skillMultInput.value = "1.0";
+
+        const weekdayRadio = $(`slot-${slotIndex}-active-always-weekday`);
+        const sundayRadio = $(`slot-${slotIndex}-active-always-sunday`);
+        if (weekdayRadio) weekdayRadio.checked = true;
+        if (sundayRadio) sundayRadio.checked = true;
+
+        const chanceLimitWeekday = $(`slot-${slotIndex}-limit-chance-weekday`);
+        const chanceLimitSunday = $(`slot-${slotIndex}-limit-chance-sunday`);
+        if (chanceLimitWeekday) chanceLimitWeekday.value = "70";
+        if (chanceLimitSunday) chanceLimitSunday.value = "70";
     }
 
     // ===== Preset (Pokemon Box) =====
@@ -460,6 +486,52 @@
             </div>
           </div>
         </div>
+
+        <details class="advanced-settings">
+          <summary>パーティから外す条件を設定</summary>
+          <div class="advanced-body" style="padding:0.5rem;">
+            <div class="slot-modifiers">
+              <div class="row">
+                <label>月曜~土曜</label>
+                <div class="modifier-field">
+                  <label class="inline">
+                    <input id="slot-${i}-active-always-weekday" type="radio" name="slot-${i}-active-weekday" value="always" checked>
+                    常にパーティに入れる
+                  </label>
+                  <label class="inline">
+                    <input id="slot-${i}-active-threshold-weekday" type="radio" name="slot-${i}-active-weekday" value="threshold">
+                    この値以上になったら
+                  </label>
+                </div>
+                <div class="modifier-field">
+                  <input id="slot-${i}-limit-chance-weekday" type="number" min="0" max="70" step="10" value="70">
+                </div>
+              </div>
+              <div class="row">
+                <label>日曜</label>
+                <div class="modifier-field">
+                  <label class="inline">
+                    <input id="slot-${i}-active-always-sunday" type="radio" name="slot-${i}-active-sunday" value="always" checked>
+                    常にパーティに入れる
+                  </label>
+                </div>
+                <div class="modifier-field">
+                  <label class="inline">
+                    <input id="slot-${i}-active-threshold-sunday" type="radio" name="slot-${i}-active-sunday" value="threshold">
+                    この値以上になったら
+                  </label>
+                </div>
+                <div class="modifier-field">
+                  <input id="slot-${i}-limit-chance-sunday" type="number" min="0" max="70" step="10" value="70">
+                </div>
+              </div>
+            </div>
+            <div class="muted">
+                料理チャンスによる大成功確率上昇分がこの値以上になったら，パーティから外す（0〜70%）
+            </div>
+            </div>
+          </div>
+        </details>
 
         <details class="advanced-settings">
           <summary>個別補正</summary>
@@ -827,10 +899,19 @@
                 const berryByDay = breakdown.berryEnergyByPokemonByDay[i] || new Array(7).fill(0);
                 const cookByDay = breakdown.cookingEnergyByPokemonByDay[i] || new Array(7).fill(0);
                 const skillCntByDay = breakdown.skillCountByPokemonByDay[i] || new Array(7).fill(0);
+                const activeSecondsByDay = breakdown.activeSecondsByPokemonByDay[i] || new Array(7).fill(0);
 
                 const berryEnergyPerDayAvg = avg(berryByDay);
                 const skillEnergyPerDayAvg = avg(cookByDay);
                 const skillCountPerDayAvg = avg(skillCntByDay);
+
+                const activeSecondsPerWeekDayAvg = avg(activeSecondsByDay.slice(0, 6));
+                const activeSecondsSunday = activeSecondsByDay[6] || 0;
+                const activeTimePerWeekDayText = `${Math.floor(activeSecondsPerWeekDayAvg / 3600)}時間${Math.floor((activeSecondsPerWeekDayAvg % 3600) / 60)}分`;
+                const activeTimeSundayText = `${Math.floor(activeSecondsSunday / 3600)}時間${Math.floor((activeSecondsSunday % 3600) / 60)}分`;
+                
+                const activeLimitWeekdayText = p.activeLimitChanceWeekday.toFixed(0) > 70 ? "常時アクティブ" : `${p.activeLimitChanceWeekday.toFixed(0)} %未満でアクティブ`;
+                const activeLimitSundayText = p.activeLimitChanceSunday.toFixed(0) > 70 ? "常時アクティブ" : `${p.activeLimitChanceSunday.toFixed(0)} %未満でアクティブ`;
 
                 const mainChipsHtml = `
           <div class="pokemon-main-stats">
@@ -873,7 +954,7 @@
                 <div class="pokemon-body-block-row">食材確率: ${(p.ingredientProb * 100).toFixed(2)} %</div>
                 <div class="pokemon-body-block-row">食材ボーナス合計: +${p.ingredientBonusTotal} 個</div>
                 <div class="pokemon-body-block-row">きのみの数: ${p.berryNum}</div>
-                <div class="pokemon-body-block-row">きのみエナジー倍率: ${p.berryEnergyMultiplier.toFixed(2)} 倍</div>
+                <div class="pokemon-body-block-row">きのみエナジー: ${p.berryEnergyMultiplier.toFixed(2)} 倍</div>
               </div>
             </div>
 
@@ -886,10 +967,11 @@
                 <div class="pokemon-body-block-row">メインスキル効果: ${p.skillEffectPercent.toFixed(1)} %</div>
               </div>
               <div>
-                <div class="pokemon-body-block-title">1日あたりの寄与</div>
-                <div class="pokemon-body-block-row">きのみエナジー: ${berryEnergyPerDayAvg.toFixed(3)}</div>
-                <div class="pokemon-body-block-row">スキル発動回数: ${skillCountPerDayAvg.toFixed(3)} 回</div>
-                <div class="pokemon-body-block-row">スキルエナジー: ${skillEnergyPerDayAvg.toFixed(3)}</div>
+                <div class="pokemon-body-block-title">アクティブ時間</div>
+                <div class="pokemon-body-block-row">月曜~土曜: ${activeTimePerWeekDayText}</div>
+                <div class="pokemon-body-block-row">　${activeLimitWeekdayText}</div>
+                <div class="pokemon-body-block-row">日曜: ${activeTimeSundayText}</div>
+                <div class="pokemon-body-block-row">　${activeLimitSundayText}</div>
               </div>
             </div>
 
@@ -933,9 +1015,6 @@
         const extraPerDayAvg = avg(extraByDay);
         const successPerDayAvg = avg(successByDay);
 
-        const basePerDayAvg = avg(baseByDay);
-        const carryPerDayAvg = avg(carryByDay);
-
         const skillCount = sum2D(breakdown.skillCountByPokemonByDay) / 7;
         const skillCountPerPokemonAvg =
             pokemons.length > 0 ? skillCount / pokemons.length : 0;
@@ -945,7 +1024,7 @@
                 ? Math.max(0, (extraByDay[6] - baseByDay[6] - carryByDay[6]) / pokemons.length)
                 : 0;
 
-        const withoutSundayExtraPerPokemonDayAvg =
+        const weekdayExtraPerPokemonDayAvg =
             pokemons.length > 0
                 ? Math.max(0, (sum(extraByDay.slice(0, 6)) - sum(baseByDay.slice(0, 6)) - sum(carryByDay.slice(0, 6))) / pokemons.length / 6)
                 : 0;
@@ -1051,7 +1130,7 @@
           <div class="stat-grid" style="margin-top:0.5rem;">
             <div class="stat-card">
               <div class="stat-label">料理チャンス（月~土）</div>
-              <div class="stat-value">${withoutSundayExtraPerPokemonDayAvg.toFixed(0)}<span class="stat-unit">エナジー/日</span></div>
+              <div class="stat-value">${weekdayExtraPerPokemonDayAvg.toFixed(0)}<span class="stat-unit">エナジー/日</span></div>
             </div>
             <div class="stat-card">
               <div class="stat-label">料理チャンス(日曜)</div>

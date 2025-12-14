@@ -145,6 +145,11 @@
                 const personalSkillMult = Math.max(0, readNumber(`slot-${i}-skill-mult`, "1"));
                 const personalIngredientBonus = Math.max(0, Math.floor(readNumber(`slot-${i}-ing-bonus`, "0")));
 
+                const activeWeekdayCb = $(`slot-${i}-active-always-weekday`);
+                const activeSundayCb = $(`slot-${i}-active-always-sunday`);
+
+                const activeLimitChanceWeekday = Math.max(0, Math.min(70, readNumber(`slot-${i}-limit-chance-weekday`, "70"))) + (activeWeekdayCb && activeWeekdayCb.checked ? 100 : 0);
+                const activeLimitChanceSunday = Math.max(0, Math.min(70, readNumber(`slot-${i}-limit-chance-sunday`, "70"))) + (activeSundayCb && activeSundayCb.checked ? 100 : 0);
                 slotConfigs.push({
                     slotIndex: i,
                     subSkills,
@@ -157,6 +162,8 @@
                     personalHelpMult,
                     personalSkillMult,
                     personalIngredientBonus,
+                    activeLimitChanceWeekday,
+                    activeLimitChanceSunday,
                 });
             }
 
@@ -182,6 +189,9 @@
                 const extraHelpingBonus = Math.max(0, teamHelpingBonusCount - selfHelpingBonusCount);
                 const teamSubSkills = Array.from({ length: extraHelpingBonus }, () => SubSkills.HelpingBonus);
 
+                const activeLimitChanceWeekday = cfg.activeLimitChanceWeekday / 100.0;
+                const activeLimitChanceSunday = cfg.activeLimitChanceSunday / 100.0;
+
                 return new Pokemon(
                     pokemonData,
                     pokemonName,
@@ -204,7 +214,9 @@
                     f.skillMult,
                     f.effectLabel,
                     fieldEnergyMultiplier,
-                    energyDecay
+                    energyDecay,
+                    activeLimitChanceWeekday,
+                    activeLimitChanceSunday
                 );
             });
 
@@ -253,6 +265,7 @@
                             cookingEnergyByPokemonByDay: avg.cookingEnergyByPokemonByDay,
                             berryEnergyByPokemonByDay: avg.berryEnergyByPokemonByDay,
                             skillCountByPokemonByDay: avg.skillCountByPokemonByDay,
+                            activeSecondsByPokemonByDay: avg.activeSecondsByPokemonByDay,
                         },
                     },
                     pokemons: pokemons.map((pkm, idx) => {
@@ -307,6 +320,8 @@
                             },
                             matchesFieldType: fInfo.matchesFieldType,
                             isMainType: fInfo.isMainType && fieldKey === "wakakusa_ex",
+                            activeLimitChanceWeekday: pkm.active_chance_limit_weekday * 100,
+                            activeLimitChanceSunday: pkm.active_chance_limit_sunday * 100,
                         };
                     }),
                     settings: {
