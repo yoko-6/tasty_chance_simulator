@@ -216,49 +216,175 @@
             nextResultBtn.addEventListener("click", () => moveResult(+1));
 
             // ===== Swipe / Drag (Pointer Events: touch + mouse) =====
-            const SWIPE_MIN_X = 80;
-            const SWIPE_MAX_Y = 70;
-            const SWIPE_MAX_MS = 700;
+            const ensureSwipeWrap = () => {
+                let wrap = document.getElementById("resultSwipeWrap");
+                let under = document.getElementById("resultSwipeUnderlay");
+                if (wrap && under) return { wrap, under };
 
-            let startX = 0, startY = 0, startT = 0, tracking = false, pointerId = null;
+                wrap = document.createElement("div");
+                wrap.id = "resultSwipeWrap";
 
-            outputEl.addEventListener("pointerdown", (e) => {
+                under = document.createElement("div");
+                under.id = "resultSwipeUnderlay";
+
+                // outputEl(#output) をラップして underlay を背面に置く
+                const parent = outputEl.parentNode;
+                parent.insertBefore(wrap, outputEl);
+                wrap.appendChild(under);
+                wrap.appendChild(outputEl);
+
+                return { wrap, under };
+            };
+
+            const { wrap: swipeWrap, under: underlayEl } = ensureSwipeWrap();
+
+            // 追従の「速さ」：指より少し速く（ドラッグが大きいほど少し増える）
+            const followFactor = (absDx) => 1.05 + 0.25 * Math.min(1, absDx / 260); // 1.05〜1.30
+
+            let tracking = false;
+            let dragging = false;
+            let pointerId = null;
+
+            let startX = 0, startY = 0;
+            let lastX = 0, lastTime = 0;
+            let lastDx = 0;
+
+            const resetSwipeVisual = (animate = true) => {
+                swipeWrap.classList.remove("swiping", "swipe-ready");
+                swipeWrap.removeAttribute("data-dir");
+                underlayEl.style.opacity = "0";
+                underlayEl.textContent = "";
+
+                if (animate) {
+                    outputEl.style.transition = "transform 180ms ease";
+                    outputEl.style.transform = "translateX(0px)";
+                } else {
+                    outputEl.style.transition = "none";
+                    outputEl.style.transform = "translateX(0px)";
+                }
+            };
+
+            const canMove = (dir) => {
+                if (dir === "prev") return resultIndex > 0;
+                if (dir === "next") return resultIndex < resultHistory.length - 1;
+                return false;
+            };
+
+            swipeWrap.addEventListener("pointerdown", (e) => {
                 // 左クリック以外は無視
                 if (e.pointerType === "mouse" && e.button !== 0) return;
                 if (isInteractive(e.target)) return;
                 if (resultIndex < 0) return;
 
                 tracking = true;
+                dragging = false;
                 pointerId = e.pointerId;
-                startX = e.clientX;
-                startY = e.clientY;
-                startT = Date.now();
 
-                // ドラッグ中にポインタが外れても追えるように
-                try { outputEl.setPointerCapture(pointerId); } catch { }
+                startX = lastX = e.clientX;
+                startY = e.clientY;
+                lastTime = performance.now();
+                lastDx = 0;
+
+                try { swipeWrap.setPointerCapture(pointerId); } catch { }
             });
 
-            outputEl.addEventListener("pointerup", (e) => {
+            swipeWrap.addEventListener("pointermove", (e) => {
                 if (!tracking || e.pointerId !== pointerId) return;
-                tracking = false;
-                pointerId = null;
 
                 const dx = e.clientX - startX;
                 const dy = e.clientY - startY;
-                const dt = Date.now() - startT;
 
-                if (dt > SWIPE_MAX_MS) return;
-                if (Math.abs(dx) < SWIPE_MIN_X) return;
-                if (Math.abs(dy) > SWIPE_MAX_Y) return;
+                // まだ「横ドラッグ」と確定していないなら、縦スクロールを邪魔しない
+                if (!dragging) {
+                    if (Math.abs(dx) < 10) return;
+                    if (Math.abs(dx) < Math.abs(dy) * 1.2) return; // 縦が強いなら無視
+                    dragging = true;
+                    swipeWrap.classList.add("swiping");
+                    outputEl.style.transition = "none";
+                }
 
-                // 右ドラッグ/右スワイプ=前へ、左=次へ
-                if (dx > 0) moveResult(-1);
-                else moveResult(+1);
+                const wrapWidth = swipeWrap.getBoundingClientRect().width || 1;
+                const dir = dx > 0 ? "prev" : "next";
+                const ok = canMove(dir);
+
+                // 指よりちょい速く追従（ただし画面幅の85%で頭打ち）
+                const absDx = Math.abs(dx);
+                let effDx = dx * followFactor(absDx);
+                const maxMove = wrapWidth * 0.85;
+                effDx = Math.max(-maxMove, Math.min(maxMove, effDx));
+
+                // 端（移動不可）なら抵抗感
+                if (!ok) effDx *= 0.35;
+
+                // “切り替え可能位置”の判定（pxでも割合でもOK）
+                const THRESH = Math.max(90, wrapWidth * 0.22); // だいたい 22% or 90px
+                const ready = ok && Math.abs(effDx) >= THRESH;
+
+                swipeWrap.dataset.dir = dir;
+                swipeWrap.classList.toggle("swipe-ready", ready);
+
+                // 視覚的ヒント（下地テキスト）
+                underlayEl.textContent = !ok
+                    ? "これ以上移動できません"
+                    : ready
+                        ? (dir === "next" ? "離すと次の結果へ" : "離すと前の結果へ")
+                        : (dir === "next" ? "次へスワイプ…" : "前へスワイプ…");
+
+                // 下地の出し方（進捗に応じて濃く）
+                const p = Math.min(1, Math.abs(effDx) / THRESH);
+                underlayEl.style.opacity = String(0.25 + 0.75 * p);
+
+                // 実際に追従させる
+                outputEl.style.transform = `translateX(${effDx}px)`;
+
+                // 速度判定用
+                lastDx = dx;
+                lastX = e.clientX;
+                lastTime = performance.now();
             });
 
-            outputEl.addEventListener("pointercancel", () => {
+            swipeWrap.addEventListener("pointerup", (e) => {
+                if (!tracking || e.pointerId !== pointerId) return;
+
                 tracking = false;
+                try { swipeWrap.releasePointerCapture(pointerId); } catch { }
                 pointerId = null;
+
+                if (!dragging) return; // 横ドラッグに確定してないなら何もしない
+
+                const dx = e.clientX - startX;
+                const wrapWidth = swipeWrap.getBoundingClientRect().width || 1;
+
+                const dir = dx > 0 ? "prev" : "next";
+                const ok = canMove(dir);
+
+                const absDx = Math.abs(dx);
+                const effDx = dx * followFactor(absDx);
+
+                const THRESH = Math.max(90, wrapWidth * 0.22);
+
+                // 速度（フリック）も許可
+                const dt = Math.max(1, performance.now() - lastTime);
+                const vx = (e.clientX - lastX) / dt; // px/ms
+                const fast = Math.abs(vx) > 0.75;
+
+                const ready = ok && (Math.abs(effDx) >= THRESH || fast);
+
+                // 見た目を元に戻してから moveResult（moveResult側のアニメを活かす）
+                resetSwipeVisual(false);
+
+                if (ready) {
+                    moveResult(dir === "prev" ? -1 : +1, { viaSwipe: true, dir });
+                } else {
+                    resetSwipeVisual(true);
+                }
+            });
+
+            swipeWrap.addEventListener("pointercancel", () => {
+                tracking = false;
+                dragging = false;
+                pointerId = null;
+                resetSwipeVisual(true);
             });
 
             // ===== Keyboard (PC) =====
