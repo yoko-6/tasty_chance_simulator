@@ -910,8 +910,8 @@
                 const activeTimePerWeekDayText = `${Math.floor(activeSecondsPerWeekDayAvg / 3600)}時間${Math.floor((activeSecondsPerWeekDayAvg % 3600) / 60)}分`;
                 const activeTimeSundayText = `${Math.floor(activeSecondsSunday / 3600)}時間${Math.floor((activeSecondsSunday % 3600) / 60)}分`;
                 
-                const activeLimitWeekdayText = p.activeLimitChanceWeekday.toFixed(0) > 70 ? "常時アクティブ" : `${p.activeLimitChanceWeekday.toFixed(0)} %未満でアクティブ`;
-                const activeLimitSundayText = p.activeLimitChanceSunday.toFixed(0) > 70 ? "常時アクティブ" : `${p.activeLimitChanceSunday.toFixed(0)} %未満でアクティブ`;
+                const activeLimitWeekdayText = p.activeLimitChanceWeekday.toFixed(0) > 70 ? "常時アクティブ" : `${p.activeLimitChanceWeekday.toFixed(0)}%未満でアクティブ`;
+                const activeLimitSundayText = p.activeLimitChanceSunday.toFixed(0) > 70 ? "常時アクティブ" : `${p.activeLimitChanceSunday.toFixed(0)}%未満でアクティブ`;
 
                 const mainChipsHtml = `
           <div class="pokemon-main-stats">
