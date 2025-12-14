@@ -140,7 +140,7 @@
         const downSelect = $(`slot-${slotIndex}-nature-down`);
         const natureSelect = $(`slot-${slotIndex}-nature`);
 
-        if (pokemonSelect && pokemonSelect.options.length > 0) pokemonSelect.selectedIndex = 0;
+        // if (pokemonSelect && pokemonSelect.options.length > 0) pokemonSelect.selectedIndex = 0;
         if (levelInput) levelInput.value = 60;
         if (skillLevelInput) skillLevelInput.value = 6;
 
