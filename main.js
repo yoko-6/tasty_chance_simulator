@@ -155,67 +155,7 @@
                 return true;
             };
 
-            const animateToIndex = (newIndex, delta /* -1 prev, +1 next */) => {
-                if (!canMoveTo(newIndex)) return;
-
-                isAnimating = true;
-
-                const OUT_MS = 160;
-                const IN_MS = 180;
-                const DIST = 90; // px
-
-                // 次へ(+1)なら左へ抜ける / 前へ(-1)なら右へ抜ける
-                const outX = delta > 0 ? -DIST : DIST;
-                const inFromX = delta > 0 ? DIST : -DIST;
-
-                // OUT
-                outputEl.style.transition = `transform ${OUT_MS}ms ease, opacity ${OUT_MS}ms ease`;
-                outputEl.style.transform = `translateX(${outX}px)`;
-                outputEl.style.opacity = "0";
-
-                const onOutEnd = () => {
-                    outputEl.removeEventListener("transitionend", onOutEnd);
-
-                    // いったん反対側に瞬間移動して中身だけ差し替える（DOM重複でid衝突しない）
-                    outputEl.style.transition = "none";
-                    outputEl.style.transform = `translateX(${inFromX}px)`;
-                    outputEl.style.opacity = "0";
-
-                    // ここで index を変えて通常の描画ロジックを使う
-                    resultIndex = newIndex;
-                    renderCurrentResult();
-
-                    // reflow
-                    outputEl.getBoundingClientRect();
-
-                    // IN
-                    requestAnimationFrame(() => {
-                        outputEl.style.transition = `transform ${IN_MS}ms ease, opacity ${IN_MS}ms ease`;
-                        outputEl.style.transform = "translateX(0px)";
-                        outputEl.style.opacity = "1";
-                    });
-
-                    const onInEnd = () => {
-                        outputEl.removeEventListener("transitionend", onInEnd);
-                        outputEl.style.transition = "";
-                        isAnimating = false;
-                    };
-                    outputEl.addEventListener("transitionend", onInEnd);
-                };
-
-                outputEl.addEventListener("transitionend", onOutEnd);
-            };
-
-            const moveResult = (delta) => {
-                if (resultIndex < 0) return;
-                animateToIndex(resultIndex + delta, delta);
-            };
-
-            // 既存の prev/next の click を「アニメ付き」に置き換え
-            prevResultBtn.addEventListener("click", () => moveResult(-1));
-            nextResultBtn.addEventListener("click", () => moveResult(+1));
-
-            // ===== Swipe / Drag (Pointer Events: touch + mouse) =====
+            // ===== Swipe Wrap (先に確保して、animate側から幅を参照できるようにする) =====
             const ensureSwipeWrap = () => {
                 let wrap = document.getElementById("resultSwipeWrap");
                 let under = document.getElementById("resultSwipeUnderlay");
@@ -236,24 +176,22 @@
                 return { wrap, under };
             };
 
-            const { wrap: swipeWrap, under: underlayEl } = ensureSwipeWrap();
+            let swipeWrap, underlayEl;
+            ({ wrap: swipeWrap, under: underlayEl } = ensureSwipeWrap());
 
             // 追従の「速さ」：指より少し速く（ドラッグが大きいほど少し増える）
             const followFactor = (absDx) => 1.05 + 0.25 * Math.min(1, absDx / 260); // 1.05〜1.30
 
-            let tracking = false;
-            let dragging = false;
-            let pointerId = null;
-
-            let startX = 0, startY = 0;
-            let lastX = 0, lastTime = 0;
-            let lastDx = 0;
-
-            const resetSwipeVisual = (animate = true) => {
+            // ★「戻さずにヒントだけ消す」：遷移時に使う
+            const clearSwipeHintOnly = () => {
                 swipeWrap.classList.remove("swiping", "swipe-ready");
                 swipeWrap.removeAttribute("data-dir");
                 underlayEl.style.opacity = "0";
                 underlayEl.textContent = "";
+            };
+
+            const resetSwipeVisual = (animate = true) => {
+                clearSwipeHintOnly();
 
                 if (animate) {
                     outputEl.style.transition = "transform 180ms ease";
@@ -270,8 +208,133 @@
                 return false;
             };
 
+            const animateToIndex = (newIndex, delta /* -1 prev, +1 next */, opt = {}) => {
+                if (!canMoveTo(newIndex)) return;
+
+                isAnimating = true;
+
+                const OUT_MS = 160;
+                const IN_MS = 180;
+
+                // click時は小さめ、swipe遷移時は画面外まで抜ける
+                const wrapWidth = swipeWrap?.getBoundingClientRect().width || outputEl.getBoundingClientRect().width || 320;
+                const DIST_CLICK = 90;
+                const DIST_SWIPE = Math.round(wrapWidth * 1.02);
+
+                const viaSwipe = !!opt.viaSwipe;
+                const startOffsetPx = Number.isFinite(opt.startOffsetPx) ? opt.startOffsetPx : 0;
+
+                const outDist = viaSwipe ? DIST_SWIPE : DIST_CLICK;
+
+                // 次へ(+1)なら左へ抜ける / 前へ(-1)なら右へ抜ける
+                const outX = delta > 0 ? -outDist : outDist;
+                const inFromX = delta > 0 ? outDist : -outDist;
+
+                // ★SWIPE遷移：今の位置(startOffsetPx)からそのまま外へ（0に戻さない）
+                if (viaSwipe) {
+                    // ヒントは消すが transform は触らない
+                    clearSwipeHintOnly();
+
+                    outputEl.style.opacity = "1";
+                    outputEl.style.transition = "none";
+                    outputEl.style.transform = `translateX(${startOffsetPx}px)`;
+
+                    // OUT（transformのみ：戻る/フェードに見えにくい）
+                    requestAnimationFrame(() => {
+                        outputEl.style.transition = `transform ${OUT_MS}ms ease`;
+                        outputEl.style.transform = `translateX(${outX}px)`;
+                    });
+
+                    const onOutEnd = (ev) => {
+                        // transform以外のtransitionendを拾ってしまう可能性を避ける
+                        if (ev.propertyName && ev.propertyName !== "transform") return;
+                        outputEl.removeEventListener("transitionend", onOutEnd);
+
+                        // 反対側に瞬間移動して中身を差し替え
+                        outputEl.style.transition = "none";
+                        outputEl.style.transform = `translateX(${inFromX}px)`;
+                        outputEl.style.opacity = "1";
+
+                        resultIndex = newIndex;
+                        renderCurrentResult();
+
+                        outputEl.getBoundingClientRect(); // reflow
+
+                        // IN
+                        requestAnimationFrame(() => {
+                            outputEl.style.transition = `transform ${IN_MS}ms ease`;
+                            outputEl.style.transform = "translateX(0px)";
+                        });
+
+                        const onInEnd = (ev2) => {
+                            if (ev2.propertyName && ev2.propertyName !== "transform") return;
+                            outputEl.removeEventListener("transitionend", onInEnd);
+                            outputEl.style.transition = "";
+                            isAnimating = false;
+                        };
+                        outputEl.addEventListener("transitionend", onInEnd);
+                    };
+
+                    outputEl.addEventListener("transitionend", onOutEnd);
+                    return;
+                }
+
+                // ===== click/キー：従来どおり（0からOUT→IN） =====
+                outputEl.style.transition = `transform ${OUT_MS}ms ease, opacity ${OUT_MS}ms ease`;
+                outputEl.style.transform = `translateX(${outX}px)`;
+                outputEl.style.opacity = "0";
+
+                const onOutEnd = () => {
+                    outputEl.removeEventListener("transitionend", onOutEnd);
+
+                    outputEl.style.transition = "none";
+                    outputEl.style.transform = `translateX(${inFromX}px)`;
+                    outputEl.style.opacity = "0";
+
+                    resultIndex = newIndex;
+                    renderCurrentResult();
+
+                    outputEl.getBoundingClientRect();
+
+                    requestAnimationFrame(() => {
+                        outputEl.style.transition = `transform ${IN_MS}ms ease, opacity ${IN_MS}ms ease`;
+                        outputEl.style.transform = "translateX(0px)";
+                        outputEl.style.opacity = "1";
+                    });
+
+                    const onInEnd = () => {
+                        outputEl.removeEventListener("transitionend", onInEnd);
+                        outputEl.style.transition = "";
+                        isAnimating = false;
+                    };
+                    outputEl.addEventListener("transitionend", onInEnd);
+                };
+
+                outputEl.addEventListener("transitionend", onOutEnd);
+            };
+
+            const moveResult = (delta, opt = {}) => {
+                if (resultIndex < 0) return;
+                animateToIndex(resultIndex + delta, delta, opt);
+            };
+
+            // 既存の prev/next の click を「アニメ付き」に置き換え
+            prevResultBtn.addEventListener("click", () => moveResult(-1));
+            nextResultBtn.addEventListener("click", () => moveResult(+1));
+
+            // ===== Swipe / Drag (Pointer Events: touch + mouse) =====
+            let tracking = false;
+            let dragging = false;
+            let pointerId = null;
+
+            let startX = 0, startY = 0;
+            let lastX = 0, lastTime = 0;
+            let lastDx = 0;
+
+            // ★現在の見た目のdx（effDx）を保持して、pointerupでその位置から遷移できるようにする
+            let currentEffDx = 0;
+
             swipeWrap.addEventListener("pointerdown", (e) => {
-                // 左クリック以外は無視
                 if (e.pointerType === "mouse" && e.button !== 0) return;
                 if (isInteractive(e.target)) return;
                 if (resultIndex < 0) return;
@@ -284,6 +347,7 @@
                 startY = e.clientY;
                 lastTime = performance.now();
                 lastDx = 0;
+                currentEffDx = 0;
 
                 try { swipeWrap.setPointerCapture(pointerId); } catch { }
             });
@@ -294,10 +358,9 @@
                 const dx = e.clientX - startX;
                 const dy = e.clientY - startY;
 
-                // まだ「横ドラッグ」と確定していないなら、縦スクロールを邪魔しない
                 if (!dragging) {
                     if (Math.abs(dx) < 10) return;
-                    if (Math.abs(dx) < Math.abs(dy) * 1.2) return; // 縦が強いなら無視
+                    if (Math.abs(dx) < Math.abs(dy) * 1.2) return;
                     dragging = true;
                     swipeWrap.classList.add("swiping");
                     outputEl.style.transition = "none";
@@ -307,37 +370,33 @@
                 const dir = dx > 0 ? "prev" : "next";
                 const ok = canMove(dir);
 
-                // 指よりちょい速く追従（ただし画面幅の85%で頭打ち）
                 const absDx = Math.abs(dx);
                 let effDx = dx * followFactor(absDx);
                 const maxMove = wrapWidth * 0.85;
                 effDx = Math.max(-maxMove, Math.min(maxMove, effDx));
 
-                // 端（移動不可）なら抵抗感
                 if (!ok) effDx *= 0.35;
 
-                // “切り替え可能位置”の判定（pxでも割合でもOK）
-                const THRESH = Math.max(90, wrapWidth * 0.22); // だいたい 22% or 90px
+                const THRESH = Math.max(90, wrapWidth * 0.22);
                 const ready = ok && Math.abs(effDx) >= THRESH;
 
                 swipeWrap.dataset.dir = dir;
                 swipeWrap.classList.toggle("swipe-ready", ready);
 
-                // 視覚的ヒント（下地テキスト）
                 underlayEl.textContent = !ok
                     ? "これ以上移動できません"
                     : ready
                         ? (dir === "next" ? "離すと次の結果へ" : "離すと前の結果へ")
                         : (dir === "next" ? "次へスワイプ…" : "前へスワイプ…");
 
-                // 下地の出し方（進捗に応じて濃く）
                 const p = Math.min(1, Math.abs(effDx) / THRESH);
                 underlayEl.style.opacity = String(0.25 + 0.75 * p);
 
-                // 実際に追従させる
                 outputEl.style.transform = `translateX(${effDx}px)`;
 
-                // 速度判定用
+                // ★ここを保持
+                currentEffDx = effDx;
+
                 lastDx = dx;
                 lastX = e.clientX;
                 lastTime = performance.now();
@@ -350,7 +409,9 @@
                 try { swipeWrap.releasePointerCapture(pointerId); } catch { }
                 pointerId = null;
 
-                if (!dragging) return; // 横ドラッグに確定してないなら何もしない
+                if (!dragging) return;
+
+                dragging = false;
 
                 const dx = e.clientX - startX;
                 const wrapWidth = swipeWrap.getBoundingClientRect().width || 1;
@@ -358,23 +419,23 @@
                 const dir = dx > 0 ? "prev" : "next";
                 const ok = canMove(dir);
 
-                const absDx = Math.abs(dx);
-                const effDx = dx * followFactor(absDx);
-
                 const THRESH = Math.max(90, wrapWidth * 0.22);
 
-                // 速度（フリック）も許可
+                // 速度（フリック）
                 const dt = Math.max(1, performance.now() - lastTime);
                 const vx = (e.clientX - lastX) / dt; // px/ms
                 const fast = Math.abs(vx) > 0.75;
 
-                const ready = ok && (Math.abs(effDx) >= THRESH || fast);
+                // ★判定は「今の見た目(currentEffDx)」で
+                const ready = ok && (Math.abs(currentEffDx) >= THRESH || fast);
 
-                // 見た目を元に戻してから moveResult（moveResult側のアニメを活かす）
-                resetSwipeVisual(false);
-
+                // ★遷移するなら絶対に戻さない（resetSwipeVisualしない）
                 if (ready) {
-                    moveResult(dir === "prev" ? -1 : +1, { viaSwipe: true, dir });
+                    moveResult(dir === "prev" ? -1 : +1, {
+                        viaSwipe: true,
+                        dir,
+                        startOffsetPx: currentEffDx, // ★この位置からOUTへ
+                    });
                 } else {
                     resetSwipeVisual(true);
                 }
@@ -385,21 +446,6 @@
                 dragging = false;
                 pointerId = null;
                 resetSwipeVisual(true);
-            });
-
-            // ===== Keyboard (PC) =====
-            document.addEventListener("keydown", (e) => {
-                if (isTypingTarget()) return;
-                if (e.altKey || e.ctrlKey || e.metaKey) return;
-                if (resultIndex < 0) return;
-
-                if (e.key === "ArrowLeft") {
-                    e.preventDefault();
-                    moveResult(-1);
-                } else if (e.key === "ArrowRight") {
-                    e.preventDefault();
-                    moveResult(+1);
-                }
             });
         })();
 
