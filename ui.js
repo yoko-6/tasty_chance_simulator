@@ -1108,7 +1108,7 @@
 
           <div class="stat-grid">
             <div class="stat-card">
-              <div class="stat-label">全体（ベース･持ち越し･スキル）</div>
+              <div class="stat-label">全体(ベース･持越･スキル)</div>
               <div class="stat-value"><span class="stat-unit">平均　</span> ${extraPerDayAvg.toFixed(0)}<span class="stat-unit">エナジー/日</span></div>
               <div class="stat-value"><span class="stat-unit">月〜土</span> ${weekdayExtraEnergyAvg.toFixed(0)}<span class="stat-unit">エナジー/日</span></div>
               <div class="stat-value"><span class="stat-unit">日　　</span> ${sundayExtraEnergy.toFixed(0)}<span class="stat-unit">エナジー/日</span></div>
