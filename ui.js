@@ -1109,13 +1109,13 @@
           <div class="stat-grid">
             <div class="stat-card">
               <div class="stat-label">全体(ベース･持越･スキル)</div>
-              <div class="stat-value"><span class="stat-unit">平均　</span> ${extraPerDayAvg.toFixed(0)}<span class="stat-unit">エナジー/日</span></div>
+              <div class="stat-value" style="font-size: 1.2rem;">${extraPerDayAvg.toFixed(0)}<span class="stat-unit">エナジー/日</span></div>
               <div class="stat-value"><span class="stat-unit">月〜土</span> ${weekdayExtraEnergyAvg.toFixed(0)}<span class="stat-unit">エナジー/日</span></div>
               <div class="stat-value"><span class="stat-unit">日曜　</span> ${sundayExtraEnergy.toFixed(0)}<span class="stat-unit">エナジー/日</span></div>
             </div>
             <div class="stat-card">
               <div class="stat-label">料理チャンスのみ</div>
-                <div class="stat-value"><span class="stat-unit">平均　</span> ${skillEnergyPerDayAvg.toFixed(0)}<span class="stat-unit">エナジー/日</span></div>
+                <div class="stat-value" style="font-size: 1.2rem;">${skillEnergyPerDayAvg.toFixed(0)}<span class="stat-unit">エナジー/日</span></div>
               <div class="stat-value"><span class="stat-unit">月〜土</span> ${weekdaySkillEnergyAvg.toFixed(0)}<span class="stat-unit">エナジー/日</span></div>
               <div class="stat-value"><span class="stat-unit">日曜　</span> ${sundaySkillEnergy.toFixed(0)}<span class="stat-unit">エナジー/日</span></div>
             </div>
