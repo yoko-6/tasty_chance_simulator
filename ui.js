@@ -1012,22 +1012,23 @@
         const baseByDay = breakdown.baseByDay;
         const carryByDay = breakdown.carryOverByDay;
 
+        const skillEnergyByDay = new Array(7).fill(0).map((_, d) => {
+            return Math.max(0, (extraByDay[d] - baseByDay[d] - carryByDay[d]));
+        });
+
         const extraPerDayAvg = avg(extraByDay);
         const successPerDayAvg = avg(successByDay);
+        const skillEnergyPerDayAvg = avg(skillEnergyByDay);
 
         const skillCount = sum2D(breakdown.skillCountByPokemonByDay) / 7;
         const skillCountPerPokemonAvg =
             pokemons.length > 0 ? skillCount / pokemons.length : 0;
 
-        const sundayExtraPerPokemonAvg =
-            pokemons.length > 0
-                ? Math.max(0, (extraByDay[6] - baseByDay[6] - carryByDay[6]) / pokemons.length)
-                : 0;
+        const sundaySkillEnergy = skillEnergyByDay[6];
+        const weekdaySkillEnergyAvg = avg(skillEnergyByDay.slice(0, 6));
 
-        const weekdayExtraPerPokemonDayAvg =
-            pokemons.length > 0
-                ? Math.max(0, (sum(extraByDay.slice(0, 6)) - sum(baseByDay.slice(0, 6)) - sum(carryByDay.slice(0, 6))) / pokemons.length / 6)
-                : 0;
+        const sundayExtraEnergy = extraByDay[6];
+        const weekdayExtraEnergyAvg = avg(extraByDay.slice(0, 6));
 
         const field = settings.field;
         const ev = settings.events;
@@ -1107,34 +1108,16 @@
 
           <div class="stat-grid">
             <div class="stat-card">
-              <div class="stat-label">料理大成功</div>
-              <div class="stat-value">${successPerDayAvg.toFixed(2)}<span class="stat-unit">回/日</span></div>
+              <div class="stat-label">全体（ベース･持ち越し･スキル）</div>
+              <div class="stat-value"><span class="stat-unit">　平均</span> ${extraPerDayAvg.toFixed(0)}<span class="stat-unit">エナジー/日</span></div>
+              <div class="stat-value"><span class="stat-unit">月〜土</span> ${weekdayExtraEnergyAvg.toFixed(0)}<span class="stat-unit">エナジー/日</span></div>
+              <div class="stat-value"><span class="stat-unit">　　日</span> ${sundayExtraEnergy.toFixed(0)}<span class="stat-unit">エナジー/日</span></div>
             </div>
             <div class="stat-card">
-              <div class="stat-label">料理大成功による増加</div>
-              <div class="stat-value">${extraPerDayAvg.toFixed(0)}<span class="stat-unit">エナジー/日</span></div>
-            </div>
-          </div>
-
-          <div class="stat-grid" style="margin-top:0.5rem;">
-            <div class="stat-card">
-              <div class="stat-label">料理チャンス（全体）</div>
-              <div class="stat-value">${skillCount.toFixed(2)}<span class="stat-unit">回/日</span></div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">料理チャンス(1匹あたり)</div>
-              <div class="stat-value">${skillCountPerPokemonAvg.toFixed(2)}<span class="stat-unit">回/日</span></div>
-            </div>
-          </div>
-
-          <div class="stat-grid" style="margin-top:0.5rem;">
-            <div class="stat-card">
-              <div class="stat-label">料理チャンス（月~土）</div>
-              <div class="stat-value">${weekdayExtraPerPokemonDayAvg.toFixed(0)}<span class="stat-unit">エナジー/日</span></div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">料理チャンス(日曜)</div>
-              <div class="stat-value">${sundayExtraPerPokemonAvg.toFixed(0)}<span class="stat-unit">エナジー/日</span></div>
+              <div class="stat-label">料理チャンスのみ</div>
+                <div class="stat-value"><span class="stat-unit">　平均</span> ${skillEnergyPerDayAvg.toFixed(0)}<span class="stat-unit">エナジー/日</span></div>
+              <div class="stat-value"><span class="stat-unit">月〜土</span> ${weekdaySkillEnergyAvg.toFixed(0)}<span class="stat-unit">エナジー/日</span></div>
+              <div class="stat-value"><span class="stat-unit">　　日</span> ${sundaySkillEnergy.toFixed(0)}<span class="stat-unit">エナジー/日</span></div>
             </div>
           </div>
 
