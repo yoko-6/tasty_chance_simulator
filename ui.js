@@ -939,7 +939,7 @@
         `;
 
                 const detailsHtml = `
-          <details class="pokemon-details">
+          <details class="pokemon-details" data-pokemon-index="${p.index}">
             <summary>詳細ステータスを見る</summary>
             <div class="pokemon-body-grid">
               <div>

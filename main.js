@@ -30,6 +30,49 @@
         const nextResultBtn = $("#nextResultBtn");
         const resultPageInfo = $("#resultPageInfo");
         const clearHistoryBtn = $("#clearHistoryBtn");
+        const deleteCurrentBtn = $("#deleteCurrentResultBtn");
+
+        // ===== Persist view state across result navigation =====
+        let persistedViewState = {
+            seriesChecked: {},       // { [seriesId]: boolean }
+            pokemonDetailsOpen: {},  // { [pokemonIndex]: boolean }
+        };
+
+        const captureViewState = () => {
+            const state = { seriesChecked: {}, pokemonDetailsOpen: {} };
+
+            // 棒グラフのON/OFF
+            outputEl.querySelectorAll(".energy-series-toggle").forEach((cb) => {
+                const id = cb.dataset.seriesId;
+                if (id) state.seriesChecked[id] = !!cb.checked;
+            });
+
+            // ポケモン詳細の開閉
+            outputEl.querySelectorAll("details.pokemon-details").forEach((d) => {
+                const k = d.dataset.pokemonIndex;
+                if (k) state.pokemonDetailsOpen[k] = !!d.open;
+            });
+
+            return state;
+        };
+
+        const applyViewState = (state) => {
+            if (!state) return;
+
+            outputEl.querySelectorAll(".energy-series-toggle").forEach((cb) => {
+                const id = cb.dataset.seriesId;
+                if (id && Object.prototype.hasOwnProperty.call(state.seriesChecked, id)) {
+                    cb.checked = !!state.seriesChecked[id];
+                }
+            });
+
+            outputEl.querySelectorAll("details.pokemon-details").forEach((d) => {
+                const k = d.dataset.pokemonIndex;
+                if (k && Object.prototype.hasOwnProperty.call(state.pokemonDetailsOpen, k)) {
+                    d.open = !!state.pokemonDetailsOpen[k];
+                }
+            });
+        };
 
         // ===== History =====
         let resultHistory = storage.loadResultHistory();
@@ -45,12 +88,19 @@
                 resultPageInfo.textContent = "結果はまだありません";
                 prevResultBtn.disabled = true;
                 nextResultBtn.disabled = true;
+                deleteCurrentBtn.disabled = true;
                 clearHistoryBtn.disabled = true;
                 return;
             }
 
+            if (outputEl.querySelector(".result-container")) {
+                persistedViewState = captureViewState();
+            }
+
             const current = resultHistory[resultIndex];
             outputEl.innerHTML = ui.buildResultHtml(current);
+
+            applyViewState(persistedViewState);
             ui.attachResultPresetSaveHandlers(current);
             ui.renderEnergyChart(current);
 
@@ -58,20 +108,186 @@
             prevResultBtn.disabled = resultIndex <= 0;
             nextResultBtn.disabled = resultIndex >= totalPages - 1;
             clearHistoryBtn.disabled = totalPages === 0;
+            deleteCurrentBtn.disabled = totalPages === 0;
         };
 
-        prevResultBtn.addEventListener("click", () => {
-            if (resultIndex > 0) {
-                resultIndex -= 1;
-                renderCurrentResult();
-            }
-        });
+        // ===== Animated navigation helpers =====
+        (function setupAnimatedResultNavigation() {
+            // CSS（main.jsだけで完結させる）
+            const style = document.createElement("style");
+            style.textContent = `
+    .ps-result-swipe-target {
+      will-change: transform, opacity;
+      touch-action: pan-y; /* 縦スクロールは殺さない（横だけ検知） */
+    }
+  `;
+            document.head.appendChild(style);
+            outputEl.classList.add("ps-result-swipe-target");
 
-        nextResultBtn.addEventListener("click", () => {
-            if (resultIndex < resultHistory.length - 1) {
-                resultIndex += 1;
-                renderCurrentResult();
+            let isAnimating = false;
+
+            const isTypingTarget = () => {
+                const el = document.activeElement;
+                if (!el) return false;
+                const tag = el.tagName;
+                return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || el.isContentEditable;
+            };
+
+            const isInteractive = (el) => {
+                if (!el || el.nodeType !== 1) return false;
+                return !!el.closest("button, a, input, select, textarea, label, details, summary");
+            };
+
+            const canMoveTo = (newIndex) => {
+                if (isAnimating) return false;
+                if (!resultHistory.length) return false;
+                if (newIndex < 0 || newIndex >= resultHistory.length) return false;
+                return true;
+            };
+
+            const animateToIndex = (newIndex, delta /* -1 prev, +1 next */) => {
+                if (!canMoveTo(newIndex)) return;
+
+                isAnimating = true;
+
+                const OUT_MS = 160;
+                const IN_MS = 180;
+                const DIST = 90; // px
+
+                // 次へ(+1)なら左へ抜ける / 前へ(-1)なら右へ抜ける
+                const outX = delta > 0 ? -DIST : DIST;
+                const inFromX = delta > 0 ? DIST : -DIST;
+
+                // OUT
+                outputEl.style.transition = `transform ${OUT_MS}ms ease, opacity ${OUT_MS}ms ease`;
+                outputEl.style.transform = `translateX(${outX}px)`;
+                outputEl.style.opacity = "0";
+
+                const onOutEnd = () => {
+                    outputEl.removeEventListener("transitionend", onOutEnd);
+
+                    // いったん反対側に瞬間移動して中身だけ差し替える（DOM重複でid衝突しない）
+                    outputEl.style.transition = "none";
+                    outputEl.style.transform = `translateX(${inFromX}px)`;
+                    outputEl.style.opacity = "0";
+
+                    // ここで index を変えて通常の描画ロジックを使う
+                    resultIndex = newIndex;
+                    renderCurrentResult();
+
+                    // reflow
+                    outputEl.getBoundingClientRect();
+
+                    // IN
+                    requestAnimationFrame(() => {
+                        outputEl.style.transition = `transform ${IN_MS}ms ease, opacity ${IN_MS}ms ease`;
+                        outputEl.style.transform = "translateX(0px)";
+                        outputEl.style.opacity = "1";
+                    });
+
+                    const onInEnd = () => {
+                        outputEl.removeEventListener("transitionend", onInEnd);
+                        outputEl.style.transition = "";
+                        isAnimating = false;
+                    };
+                    outputEl.addEventListener("transitionend", onInEnd);
+                };
+
+                outputEl.addEventListener("transitionend", onOutEnd);
+            };
+
+            const moveResult = (delta) => {
+                if (resultIndex < 0) return;
+                animateToIndex(resultIndex + delta, delta);
+            };
+
+            // 既存の prev/next の click を「アニメ付き」に置き換え
+            prevResultBtn.addEventListener("click", () => moveResult(-1));
+            nextResultBtn.addEventListener("click", () => moveResult(+1));
+
+            // ===== Swipe / Drag (Pointer Events: touch + mouse) =====
+            const SWIPE_MIN_X = 80;
+            const SWIPE_MAX_Y = 70;
+            const SWIPE_MAX_MS = 700;
+
+            let startX = 0, startY = 0, startT = 0, tracking = false, pointerId = null;
+
+            outputEl.addEventListener("pointerdown", (e) => {
+                // 左クリック以外は無視
+                if (e.pointerType === "mouse" && e.button !== 0) return;
+                if (isInteractive(e.target)) return;
+                if (resultIndex < 0) return;
+
+                tracking = true;
+                pointerId = e.pointerId;
+                startX = e.clientX;
+                startY = e.clientY;
+                startT = Date.now();
+
+                // ドラッグ中にポインタが外れても追えるように
+                try { outputEl.setPointerCapture(pointerId); } catch { }
+            });
+
+            outputEl.addEventListener("pointerup", (e) => {
+                if (!tracking || e.pointerId !== pointerId) return;
+                tracking = false;
+                pointerId = null;
+
+                const dx = e.clientX - startX;
+                const dy = e.clientY - startY;
+                const dt = Date.now() - startT;
+
+                if (dt > SWIPE_MAX_MS) return;
+                if (Math.abs(dx) < SWIPE_MIN_X) return;
+                if (Math.abs(dy) > SWIPE_MAX_Y) return;
+
+                // 右ドラッグ/右スワイプ=前へ、左=次へ
+                if (dx > 0) moveResult(-1);
+                else moveResult(+1);
+            });
+
+            outputEl.addEventListener("pointercancel", () => {
+                tracking = false;
+                pointerId = null;
+            });
+
+            // ===== Keyboard (PC) =====
+            document.addEventListener("keydown", (e) => {
+                if (isTypingTarget()) return;
+                if (e.altKey || e.ctrlKey || e.metaKey) return;
+                if (resultIndex < 0) return;
+
+                if (e.key === "ArrowLeft") {
+                    e.preventDefault();
+                    moveResult(-1);
+                } else if (e.key === "ArrowRight") {
+                    e.preventDefault();
+                    moveResult(+1);
+                }
+            });
+        })();
+
+        deleteCurrentBtn.addEventListener("click", () => {
+            if (resultIndex < 0 || resultIndex >= resultHistory.length) return;
+
+            // 現UI状態をいったん退避（削除後に次の結果へ適用したいので）
+            if (outputEl.querySelector(".result-container")) {
+                persistedViewState = captureViewState();
             }
+
+            const currentNo = resultIndex + 1;
+            if (!confirm(`結果 ${currentNo} を削除しますか？`)) return;
+
+            resultHistory.splice(resultIndex, 1);
+            saveHistory();
+
+            if (resultHistory.length === 0) {
+                resultIndex = -1;
+            } else if (resultIndex >= resultHistory.length) {
+                resultIndex = resultHistory.length - 1; // 最後を表示
+            }
+            statusEl.textContent = "この結果を削除しました";
+            renderCurrentResult();
         });
 
         clearHistoryBtn.addEventListener("click", () => {
