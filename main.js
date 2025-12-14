@@ -56,6 +56,16 @@
             return state;
         };
 
+        const mergeViewState = (base, patch) => {
+            const next = {
+                seriesChecked: { ...(base?.seriesChecked || {}) },
+                pokemonDetailsOpen: { ...(base?.pokemonDetailsOpen || {}) },
+            };
+            if (patch?.seriesChecked) Object.assign(next.seriesChecked, patch.seriesChecked);
+            if (patch?.pokemonDetailsOpen) Object.assign(next.pokemonDetailsOpen, patch.pokemonDetailsOpen);
+            return next;
+        };
+
         const applyViewState = (state) => {
             if (!state) return;
 
@@ -94,7 +104,7 @@
             }
 
             if (outputEl.querySelector(".result-container")) {
-                persistedViewState = captureViewState();
+                persistedViewState = mergeViewState(persistedViewState, captureViewState());
             }
 
             const current = resultHistory[resultIndex];
@@ -272,7 +282,7 @@
 
             // 現UI状態をいったん退避（削除後に次の結果へ適用したいので）
             if (outputEl.querySelector(".result-container")) {
-                persistedViewState = captureViewState();
+                persistedViewState = mergeViewState(persistedViewState, captureViewState());
             }
 
             const currentNo = resultIndex + 1;
