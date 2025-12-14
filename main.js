@@ -137,8 +137,9 @@
                 const level = Number($(`slot-${i}-level`).value || "1");
                 const skillLevel = Number($(`slot-${i}-skillLevel`).value || "1");
 
-                let natureKey = $(`slot-${i}-nature`).value;
-                if (!natureKey || !Natures[natureKey]) natureKey = "Hardy";
+                const natureUp = $(`slot-${i}-nature-up`).value || "none";
+                const natureDown = $(`slot-${i}-nature-down`).value || "none";
+                const natureKey = $(`slot-${i}-nature`).value || "";
 
                 const personalHelpMult = Math.max(0.1, readNumber(`slot-${i}-help-mult`, "1"));
                 const personalSkillMult = Math.max(0, readNumber(`slot-${i}-skill-mult`, "1"));
@@ -150,14 +151,14 @@
                     selectedPokemonKey,
                     level,
                     skillLevel,
+                    natureUp,
+                    natureDown,
                     natureKey,
                     personalHelpMult,
                     personalSkillMult,
                     personalIngredientBonus,
                 });
             }
-
-            console.log("Slot Configs:", slotConfigs);
 
             if (!slotConfigs.length) {
                 statusEl.textContent = "少なくとも 1 匹は表示されたポケモンを使ってください。";
@@ -172,7 +173,7 @@
 
             const pokemons = slotConfigs.map((cfg) => {
                 const pokemonData = PokemonList[cfg.selectedPokemonKey];
-                const nature = Natures[cfg.natureKey];
+                const nature = PS.createNatureFromUpDown(cfg.natureUp, cfg.natureDown, cfg.natureKey);
                 const pokemonName = `${pokemonData.name}${cfg.slotIndex}`;
 
                 const f = ui.getFieldEffectForType(pokemonData.type, fieldConfig);
@@ -314,14 +315,16 @@
                         return {
                             index: idx + 1,
                             pokemonKey: pkm.pokemon_data.key,
+                            natureUp: pkm.nature.up,
+                            natureDown: pkm.nature.down,
                             natureKey: pkm.nature.key,
+                            natureName: pkm.nature.name,
                             subSkillKeys: pkm.sub_skills.map((s) => s.key),
                             teamSubSkillKeys: pkm.team_sub_skills.map((s) => s.key),
                             name: pkm.pokemon_data.name,
                             type: pkm.pokemon_data.type,
                             level: pkm.level,
                             skillLevel: pkm.skill_level,
-                            natureName: pkm.nature.name,
                             berryName: pkm.pokemon_data.berry.name,
                             berryNum: pkm.berry_num,
                             berryEnergyMultiplier: pkm.berry_energy_multiplier,
