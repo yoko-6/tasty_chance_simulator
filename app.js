@@ -1825,13 +1825,13 @@ function buildResultHtml(result) {
       ? `
         <div class="header-chips">
           ${line1Chips.length
-            ? `<div class="header-chip-row header-chip-row-1">${line1Chips.join("")}</div>`
-            : ""
-          }
+        ? `<div class="header-chip-row header-chip-row-1">${line1Chips.join("")}</div>`
+        : ""
+      }
           ${line2Chips.length
-            ? `<div class="header-chip-row header-chip-row-2">${line2Chips.join("")}</div>`
-            : ""
-          }
+        ? `<div class="header-chip-row header-chip-row-2">${line2Chips.join("")}</div>`
+        : ""
+      }
         </div>
       `
       : "";
@@ -2135,24 +2135,53 @@ function applyNatureFromKey(slotIndex, natureKey) {
 // ポケモンプリセット 保存用
 // =========================
 
-const POKEMON_PRESET_STORAGE_KEY = "sleepSim_pokemonPresets_v1";
+const POKEMON_BOX_SCHEMA_VERSION = 2;
+const POKEMON_BOX_STORAGE_KEY = "psleep_sim_pokemon_box";
 
 function loadPokemonPresets() {
   try {
-    const raw = localStorage.getItem(POKEMON_PRESET_STORAGE_KEY);
+    const raw = localStorage.getItem(POKEMON_BOX_STORAGE_KEY);
     if (!raw) return [];
-    const data = JSON.parse(raw);
-    if (!Array.isArray(data)) return [];
-    return data;
+
+    const parsed = JSON.parse(raw);
+
+    // ▼ 旧形式（配列だけ保存されている）なら削除
+    if (Array.isArray(parsed)) {
+      console.warn("Old pokemon box format detected (array only). Clearing cache.");
+      localStorage.removeItem(POKEMON_BOX_STORAGE_KEY);
+      return [];
+    }
+
+    // ▼ 期待する形式：{ schemaVersion: number, presets: [...] }
+    if (
+      !parsed ||
+      typeof parsed !== "object" ||
+      parsed.schemaVersion !== POKEMON_BOX_SCHEMA_VERSION ||
+      !Array.isArray(parsed.presets)
+    ) {
+      console.warn("Pokemon preset schema mismatch. Clearing cache.");
+      localStorage.removeItem(POKEMON_BOX_STORAGE_KEY);
+      return [];
+    }
+
+    return parsed.presets;
   } catch (e) {
     console.warn("failed to load pokemon presets", e);
+    // 壊れている場合も消しておく
+    try {
+      localStorage.removeItem(POKEMON_BOX_STORAGE_KEY);
+    } catch (_) {}
     return [];
   }
 }
 
 function savePokemonPresets(presets) {
   try {
-    localStorage.setItem(POKEMON_PRESET_STORAGE_KEY, JSON.stringify(presets));
+    const payload = {
+      schemaVersion: POKEMON_BOX_SCHEMA_VERSION,
+      presets: presets
+    };
+    localStorage.setItem(POKEMON_BOX_STORAGE_KEY, JSON.stringify(payload));
   } catch (e) {
     console.warn("failed to save pokemon presets", e);
   }
@@ -2495,7 +2524,8 @@ window.addEventListener("DOMContentLoaded", () => {
   const nextResultBtn = document.getElementById("nextResultBtn");
   const resultPageInfo = document.getElementById("resultPageInfo");
 
-  const STORAGE_KEY_RESULTS = "sleepSimResults_v1";
+  const HISTORY_SCHEMA_VERSION = 2;
+  const HISTORY_STORAGE_KEY = "psleep_sim_result_history";
 
   // 古い順に 0,1,2,...  最新が末尾になる
   let resultHistory = [];
@@ -2503,21 +2533,54 @@ window.addEventListener("DOMContentLoaded", () => {
 
   function loadResultsFromStorage() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY_RESULTS);
-      if (!raw) return [];
+      const raw = localStorage.getItem(HISTORY_STORAGE_KEY);
+      if (!raw) {
+        return; // 何も保存されていない
+      }
+
       const parsed = JSON.parse(raw);
-      if (!Array.isArray(parsed)) return [];
-      return parsed;
+
+      // ▼ 旧フォーマットの可能性（配列だけ保存してあるなど）
+      if (Array.isArray(parsed)) {
+        console.warn("Old history format detected (array only). Clearing cache.");
+        localStorage.removeItem(HISTORY_STORAGE_KEY);
+        return;
+      }
+
+      // ▼ 期待するフォーマットかチェック
+      if (
+        !parsed ||
+        typeof parsed !== "object" ||
+        parsed.schemaVersion !== HISTORY_SCHEMA_VERSION ||
+        !Array.isArray(parsed.history)
+      ) {
+        console.warn("History schema mismatch. Clearing cache.");
+        localStorage.removeItem(HISTORY_STORAGE_KEY);
+        return;
+      }
+
+      // ▼ ここまで来たら現行フォーマットとして採用
+      resultHistory.splice(0, resultHistory.length, ...parsed.history);
+
+      if (resultHistory.length > 0) {
+        // 最新を選択（番号が大きいほど新しい前提）
+        resultIndex = resultHistory.length - 1;
+      } else {
+        resultIndex = -1;
+      }
     } catch (e) {
-      console.warn("結果履歴の復元に失敗しました:", e);
-      return [];
+      console.error("Failed to load result history. Clearing cache.", e);
+      localStorage.removeItem(HISTORY_STORAGE_KEY);
     }
   }
 
   function saveResultsToStorage() {
     try {
-      // 必要であれば「最新◯件だけ残す」などのロジックもここに書けます
-      localStorage.setItem(STORAGE_KEY_RESULTS, JSON.stringify(resultHistory));
+      const payload = {
+        schemaVersion: HISTORY_SCHEMA_VERSION,
+        history: resultHistory,
+      };
+      localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(payload));
     } catch (e) {
       console.warn("結果履歴の保存に失敗しました:", e);
     }
@@ -2527,7 +2590,7 @@ window.addEventListener("DOMContentLoaded", () => {
     resultHistory = [];
     resultIndex = -1;
     try {
-      localStorage.removeItem(STORAGE_KEY_RESULTS);
+      localStorage.removeItem(HISTORY_STORAGE_KEY);
     } catch (e) {
       console.warn("結果履歴の削除に失敗しました:", e);
     }
@@ -2599,16 +2662,7 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ページ読み込み時に履歴を復元
-  const stored = loadResultsFromStorage();
-  if (stored.length > 0) {
-    resultHistory = stored;
-    resultIndex = resultHistory.length - 1;  // 一番新しい結果を表示
-  } else {
-    resultHistory = [];
-    resultIndex = -1;
-  }
-
+  loadResultsFromStorage();
   renderCurrentResult();
 
   runBtn.addEventListener("click", () => {
