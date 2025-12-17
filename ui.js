@@ -485,11 +485,20 @@
 
         let draggingEl = null, placeholder = null, listRect = null, grabOffsetY = 0, pointerId = null;
 
+        // 追加：浮き量（お好みで調整）
+        const LIFT_PX = 8;          // “浮かせる”見た目の量（小さめ）
+        const LIFT_SCALE = 1.01;    // 少しだけ拡大（不要なら 1.0）
+        const LIFT_SHADOW = "0 8px 18px rgba(0,0,0,.14)";
+
+        // listEl が absolute の基準になるように（どこか初期化時に1回）
+        if (getComputedStyle(listEl).position === "static") {
+            listEl.style.position = "relative";
+        }
+
         listEl.addEventListener("pointerdown", (e) => {
-            if (!presetReorderMode) return;                // ★モードOFFなら何もしない
+            if (!presetReorderMode) return;
             const handle = e.target.closest(".preset-drag-handle");
             if (!handle) return;
-
             if (e.pointerType === "mouse" && e.button !== 0) return;
 
             const row = handle.closest(".preset-row");
@@ -498,6 +507,7 @@
             e.preventDefault();
 
             pointerId = e.pointerId;
+
             listRect = listEl.getBoundingClientRect();
             const r = row.getBoundingClientRect();
             grabOffsetY = e.clientY - r.top;
@@ -509,11 +519,21 @@
 
             draggingEl = row;
             draggingEl.classList.add("dragging");
+
+            // ★ listEl 座標系で absolute 配置
+            const leftInList = (r.left - listRect.left) + listEl.scrollLeft;
+            const topInList = (r.top - listRect.top) + listEl.scrollTop;
+
             draggingEl.style.position = "absolute";
             draggingEl.style.width = `${r.width}px`;
-            draggingEl.style.left = `${r.left - listRect.left}px`;
-            draggingEl.style.top = `${r.top - listRect.top + listEl.scrollTop}px`;
+            draggingEl.style.left = `${leftInList}px`;
+            draggingEl.style.top = `${topInList}px`;
             draggingEl.style.pointerEvents = "none";
+            draggingEl.style.zIndex = "10";
+
+            // ★ “定数分浮かせる”見た目（位置はtopで管理し、見た目だけtransformで持ち上げる）
+            draggingEl.style.transform = `translate3d(0, ${-LIFT_PX}px, 0) scale(${LIFT_SCALE})`;
+            draggingEl.style.boxShadow = LIFT_SHADOW;
 
             listEl.classList.add("dragging");
             try { listEl.setPointerCapture(pointerId); } catch { }
@@ -523,6 +543,7 @@
             if (!draggingEl || e.pointerId !== pointerId) return;
             e.preventDefault();
 
+            // topはlistEl座標で追従（見た目の“浮き”は transform が担当）
             const top = e.clientY - listRect.top - grabOffsetY + listEl.scrollTop;
             draggingEl.style.top = `${top}px`;
 
@@ -550,6 +571,10 @@
             draggingEl.style.top = "";
             draggingEl.style.width = "";
             draggingEl.style.pointerEvents = "";
+            draggingEl.style.zIndex = "";
+            draggingEl.style.transform = "";   // ★戻す
+            draggingEl.style.boxShadow = "";   // ★戻す
+
             listEl.classList.remove("dragging");
 
             placeholder.replaceWith(draggingEl);
@@ -567,7 +592,7 @@
                 for (const p of presets) if (!used.has(p.id)) reordered.push(p);
 
                 savePokemonPresets(reordered);
-                renderPokemonPresetList(slotIndex); // 再描画でボタン状態も整える
+                renderPokemonPresetList(slotIndex);
             }
 
             draggingEl = null;
