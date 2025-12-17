@@ -273,35 +273,12 @@
     // ===== Modal =====
     let presetReorderMode = false;
 
-    function ensurePresetReorderHint() {
-        const modal = $("pokemonPresetModal");
-        if (!modal) return;
-
-        // すでに存在するならOK
-        if ($("pokemonPresetReorderHint")) return;
-
-        // 例：モーダル内のヘッダ要素（実際のクラス名に合わせて調整）
-        const header = modal.querySelector(".preset-modal-header") || modal;
-        const hint = document.createElement("div");
-        hint.id = "pokemonPresetReorderHint";
-        hint.className = "preset-reorder-hint";
-        hint.textContent = "上下にドラッグして並べ替え";
-        hint.style.display = "none";
-
-        const btn = document.getElementById("pokemonPresetReorderBtn");
-
-        // ヘッダの直下に入れる（好みで header 内でもOK）
-        // header.appendChild(hint);
-        btn?.insertAdjacentElement("beforebegin", hint);
-    }
-
     function togglePresetReorderMode() {
         presetReorderMode = !presetReorderMode;
 
         const btn = document.getElementById("pokemonPresetReorderBtn");
         if (btn) btn.textContent = presetReorderMode ? "完了" : "並べ替え";
 
-        ensurePresetReorderHint();
         const hint = document.getElementById("pokemonPresetReorderHint");
         if (hint) hint.style.display = presetReorderMode ? "block" : "none";
 
