@@ -503,9 +503,11 @@
         // ===== Modal close =====
         const presetModal = $("#pokemonPresetModal");
         const presetCloseBtn = $("#pokemonPresetCloseBtn");
+        const presetReorderBtn = $("#pokemonPresetReorderBtn");
         const presetBackdrop = presetModal ? presetModal.querySelector(".preset-modal-backdrop") : null;
 
         presetCloseBtn?.addEventListener("click", () => ui.closePokemonPresetModal());
+        presetReorderBtn?.addEventListener("click", () => ui.togglePresetReorderMode());
         presetBackdrop?.addEventListener("click", () => ui.closePokemonPresetModal());
 
         // ===== Run simulation =====

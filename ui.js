@@ -271,6 +271,48 @@
     }
 
     // ===== Modal =====
+    let presetReorderMode = false;
+
+    function ensurePresetReorderHint() {
+        const modal = $("pokemonPresetModal");
+        if (!modal) return;
+
+        // すでに存在するならOK
+        if ($("pokemonPresetReorderHint")) return;
+
+        // 例：モーダル内のヘッダ要素（実際のクラス名に合わせて調整）
+        const header = modal.querySelector(".preset-modal-header") || modal;
+        const hint = document.createElement("div");
+        hint.id = "pokemonPresetReorderHint";
+        hint.className = "preset-reorder-hint";
+        hint.textContent = "上下にドラッグして並べ替え";
+        hint.style.display = "none";
+
+        const btn = document.getElementById("pokemonPresetReorderBtn");
+
+        // ヘッダの直下に入れる（好みで header 内でもOK）
+        // header.appendChild(hint);
+        btn?.insertAdjacentElement("beforebegin", hint);
+    }
+
+    function togglePresetReorderMode() {
+        presetReorderMode = !presetReorderMode;
+
+        const btn = document.getElementById("pokemonPresetReorderBtn");
+        if (btn) btn.textContent = presetReorderMode ? "完了" : "並べ替え";
+
+        ensurePresetReorderHint();
+        const hint = document.getElementById("pokemonPresetReorderHint");
+        if (hint) hint.style.display = presetReorderMode ? "block" : "none";
+
+        // 開いていれば再描画
+        const modal = document.getElementById("pokemonPresetModal");
+        if (modal?.classList.contains("open")) {
+            const slotIndex = Number(modal.dataset.targetSlot || "1");
+            renderPokemonPresetList(slotIndex);
+        }
+    }
+
     function renderPokemonPresetList(slotIndex) {
         const presets = loadPokemonPresets();
         const listEl = $("pokemonPresetList");
@@ -287,6 +329,7 @@
         presets.forEach((p, idx) => {
             const row = document.createElement("div");
             row.className = "preset-row";
+            row.dataset.presetId = String(p.id);
 
             const main = document.createElement("div");
             main.className = "preset-main";
@@ -342,7 +385,8 @@
                 e.stopPropagation();
                 if (!confirm(`「${p.name}」を削除しますか？`)) return;
                 const newList = loadPokemonPresets();
-                newList.splice(idx, 1);
+                const j = newList.findIndex(x => x.id === p.id);
+                if (j >= 0) newList.splice(j, 1);
                 savePokemonPresets(newList);
                 renderPokemonPresetList(slotIndex);
             });
@@ -352,8 +396,19 @@
 
             row.appendChild(main);
             row.appendChild(actions);
+
+            const handle = document.createElement("button");
+            handle.type = "button";
+            handle.className = "preset-drag-handle";
+            handle.textContent = "≡";
+            handle.style.display = presetReorderMode ? "" : "none";
+            row.appendChild(handle);
+
             listEl.appendChild(row);
         });
+
+        listEl.classList.toggle("reorder-mode", presetReorderMode);
+        attachPresetReorderHandlers(listEl, slotIndex); // イベントは一度だけ仕込む
     }
 
     function openPokemonPresetModal(slotIndex) {
@@ -368,6 +423,20 @@
     function closePokemonPresetModal() {
         const modal = $("pokemonPresetModal");
         if (!modal) return;
+
+        // ★モーダルが閉じたら並べ替えモードをOFFにする
+        presetReorderMode = false;
+
+        // UIも戻す（残骸防止）
+        const listEl = $("pokemonPresetList");
+        if (listEl) listEl.classList.remove("reorder-mode");
+
+        const hint = $("pokemonPresetReorderHint");
+        if (hint) hint.style.display = "none";
+
+        const btn = $("pokemonPresetReorderBtn");
+        if (btn) btn.textContent = "並べ替え";
+
         modal.classList.remove("open");
         modal.setAttribute("aria-hidden", "true");
         delete modal.dataset.targetSlot;
@@ -413,6 +482,134 @@
                 if (Number.isNaN(idx) || !result.pokemons[idx]) return;
                 savePokemonPresetFromResult(result.pokemons[idx]);
             });
+        });
+    }
+
+    function ensurePresetDnDStyle() {
+        if (document.getElementById("presetDnDStyle")) return;
+        const style = document.createElement("style");
+        style.id = "presetDnDStyle";
+        style.textContent = `
+    .preset-drag-handle { touch-action:none; cursor:grab; user-select:none; }
+    .preset-list.dragging { user-select:none; }
+    .preset-row.dragging { position:absolute; z-index:50; background:#fff; }
+    .preset-row.placeholder { border:2px dashed #bbb; }
+    /* ★並べ替え中はアクションを完全に消す */
+    .preset-list.reorder-mode .preset-actions { display: none !important; }
+  `;
+        document.head.appendChild(style);
+    }
+
+    function attachPresetReorderHandlers(listEl, slotIndex) {
+        if (!listEl || listEl.dataset.reorderBound === "1") return;
+        listEl.dataset.reorderBound = "1";
+        listEl.classList.add("preset-list");
+        ensurePresetDnDStyle();
+
+        let draggingEl = null, placeholder = null, listRect = null, grabOffsetY = 0, pointerId = null;
+
+        listEl.addEventListener("pointerdown", (e) => {
+            if (!presetReorderMode) return;                // ★モードOFFなら何もしない
+            const handle = e.target.closest(".preset-drag-handle");
+            if (!handle) return;
+
+            if (e.pointerType === "mouse" && e.button !== 0) return;
+
+            const row = handle.closest(".preset-row");
+            if (!row) return;
+
+            e.preventDefault();
+
+            pointerId = e.pointerId;
+            listRect = listEl.getBoundingClientRect();
+            const r = row.getBoundingClientRect();
+            grabOffsetY = e.clientY - r.top;
+
+            placeholder = document.createElement("div");
+            placeholder.className = "preset-row placeholder";
+            placeholder.style.height = `${r.height}px`;
+            row.after(placeholder);
+
+            draggingEl = row;
+            draggingEl.classList.add("dragging");
+            draggingEl.style.position = "absolute";
+            draggingEl.style.width = `${r.width}px`;
+            draggingEl.style.left = `${r.left - listRect.left}px`;
+            draggingEl.style.top = `${r.top - listRect.top + listEl.scrollTop}px`;
+            draggingEl.style.pointerEvents = "none";
+
+            listEl.classList.add("dragging");
+            try { listEl.setPointerCapture(pointerId); } catch { }
+        });
+
+        listEl.addEventListener("pointermove", (e) => {
+            if (!draggingEl || e.pointerId !== pointerId) return;
+            e.preventDefault();
+
+            const top = e.clientY - listRect.top - grabOffsetY + listEl.scrollTop;
+            draggingEl.style.top = `${top}px`;
+
+            const y = e.clientY;
+            const rows = [...listEl.querySelectorAll(".preset-row:not(.dragging):not(.placeholder)")];
+
+            let inserted = false;
+            for (const r of rows) {
+                const rr = r.getBoundingClientRect();
+                if (y < rr.top + rr.height / 2) {
+                    listEl.insertBefore(placeholder, r);
+                    inserted = true;
+                    break;
+                }
+            }
+            if (!inserted) listEl.appendChild(placeholder);
+        });
+
+        const finish = (save) => {
+            if (!draggingEl) return;
+
+            draggingEl.classList.remove("dragging");
+            draggingEl.style.position = "";
+            draggingEl.style.left = "";
+            draggingEl.style.top = "";
+            draggingEl.style.width = "";
+            draggingEl.style.pointerEvents = "";
+            listEl.classList.remove("dragging");
+
+            placeholder.replaceWith(draggingEl);
+
+            if (save) {
+                const ids = [...listEl.querySelectorAll(".preset-row")]
+                    .map(el => Number(el.dataset.presetId))
+                    .filter(Number.isFinite);
+
+                const presets = loadPokemonPresets();
+                const map = new Map(presets.map(p => [p.id, p]));
+                const reordered = ids.map(id => map.get(id)).filter(Boolean);
+
+                const used = new Set(reordered.map(p => p.id));
+                for (const p of presets) if (!used.has(p.id)) reordered.push(p);
+
+                savePokemonPresets(reordered);
+                renderPokemonPresetList(slotIndex); // 再描画でボタン状態も整える
+            }
+
+            draggingEl = null;
+            placeholder = null;
+            listRect = null;
+            grabOffsetY = 0;
+            pointerId = null;
+        };
+
+        listEl.addEventListener("pointerup", (e) => {
+            if (!draggingEl || e.pointerId !== pointerId) return;
+            try { listEl.releasePointerCapture(pointerId); } catch { }
+            finish(true);
+        });
+
+        listEl.addEventListener("pointercancel", (e) => {
+            if (!draggingEl || e.pointerId !== pointerId) return;
+            try { listEl.releasePointerCapture(pointerId); } catch { }
+            finish(false);
         });
     }
 
@@ -1325,4 +1522,5 @@
 
     PS.ui.openPokemonPresetModal = openPokemonPresetModal;
     PS.ui.closePokemonPresetModal = closePokemonPresetModal;
+    PS.ui.togglePresetReorderMode = togglePresetReorderMode;
 })();

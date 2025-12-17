@@ -1184,6 +1184,12 @@
       filter: drop-shadow(0 14px 30px rgba(0, 0, 0, 0.20));
     }
 
+    .preset-reorder-hint {
+      margin-top: 0.4rem;
+      font-size: 0.9rem;
+      opacity: 0.75;
+    }
+
     html {
       font-size: 26px;
     }
@@ -1434,7 +1440,8 @@
     <div class="preset-modal-dialog">
       <div class="preset-modal-header">
         <div class="preset-modal-title">ポケモンボックス</div>
-        <button type="button" class="preset-modal-close" id="pokemonPresetCloseBtn">×</button>
+        <button type="button" id="pokemonPresetReorderBtn">並べ替え</button>
+        <button type="button" class="secondary-delete-btn" id="pokemonPresetCloseBtn">閉じる</button>
       </div>
       <div class="preset-modal-body">
         <div id="pokemonPresetEmpty" class="preset-empty-message" style="display:none;">
