@@ -447,6 +447,21 @@
                 pointerId = null;
                 resetSwipeVisual(true);
             });
+
+            // ===== Keyboard (PC) =====
+            document.addEventListener("keydown", (e) => {
+                if (isTypingTarget()) return;
+                if (e.altKey || e.ctrlKey || e.metaKey) return;
+                if (resultIndex < 0) return;
+
+                if (e.key === "ArrowLeft") {
+                    e.preventDefault();
+                    moveResult(-1);
+                } else if (e.key === "ArrowRight") {
+                    e.preventDefault();
+                    moveResult(+1);
+                }
+            });
         })();
 
         deleteCurrentBtn.addEventListener("click", () => {
