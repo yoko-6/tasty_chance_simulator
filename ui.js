@@ -861,6 +861,24 @@
             },
         });
 
+        // ★追加：チェックボックスの状態を初期表示に反映
+        (function applyInitialHiddenFromToggles() {
+            const checkedById = {};
+            $$(".energy-series-toggle").forEach((cb) => {
+                const id = cb.dataset.seriesId;
+                if (id) checkedById[id] = !!cb.checked;
+            });
+
+            energyChartInstance.data.datasets.forEach((ds) => {
+                if (!ds.id) return;
+                if (Object.prototype.hasOwnProperty.call(checkedById, ds.id)) {
+                    ds.hidden = !checkedById[ds.id];
+                }
+            });
+
+            energyChartInstance.update();
+        })();
+
         $$(".energy-series-toggle").forEach((cb) => {
             const id = cb.dataset.seriesId;
             cb.addEventListener("change", () => {
