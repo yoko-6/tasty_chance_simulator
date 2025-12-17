@@ -1178,6 +1178,13 @@
     const sum2D = (byPokeByDay) => byPokeByDay.reduce((s1, byDay) => s1 + sum(byDay), 0);
     const avg = (byDay) => sum(byDay) / byDay.length;
 
+    const SEC_PER_DAY = 24 * 3600;
+
+    const to24hEqEnergy = (energy, activeSec) => {
+        if (!Number.isFinite(energy) || !Number.isFinite(activeSec) || activeSec <= 0) return null; // 0除算回避
+        return energy * (SEC_PER_DAY / activeSec);
+    };
+
     // ===== Result HTML =====
     function buildResultHtml(result) {
         const { summary, pokemons, settings } = result;
@@ -1203,11 +1210,20 @@
 
                 const activeSecondsPerWeekDayAvg = avg(activeSecondsByDay.slice(0, 6));
                 const activeSecondsSunday = activeSecondsByDay[6] || 0;
-                const activeTimePerWeekDayText = `${Math.floor(activeSecondsPerWeekDayAvg / 3600)}時間${Math.floor((activeSecondsPerWeekDayAvg % 3600) / 60)}分`;
-                const activeTimeSundayText = `${Math.floor(activeSecondsSunday / 3600)}時間${Math.floor((activeSecondsSunday % 3600) / 60)}分`;
+                const activeTimePerWeekDayText = `${Math.floor(activeSecondsPerWeekDayAvg / 3600)}時間${String(Math.floor((activeSecondsPerWeekDayAvg % 3600) / 60)).padStart(2, '0')}分`;
+                const activeTimeSundayText = `${Math.floor(activeSecondsSunday / 3600)}時間${String(Math.floor((activeSecondsSunday % 3600) / 60)).padStart(2, '0')}分`;
 
-                const activeLimitWeekdayText = p.activeLimitChanceWeekday.toFixed(0) > 70 ? "常時アクティブ" : `${p.activeLimitChanceWeekday.toFixed(0)}%未満でアクティブ`;
-                const activeLimitSundayText = p.activeLimitChanceSunday.toFixed(0) > 70 ? "常時アクティブ" : `${p.activeLimitChanceSunday.toFixed(0)}%未満でアクティブ`;
+                const activeLimitWeekdayText = p.activeLimitChanceWeekday.toFixed(0) > 70 ? "常時" : `<${p.activeLimitChanceWeekday.toFixed(0)}%`;
+                const activeLimitSundayText = p.activeLimitChanceSunday.toFixed(0) > 70 ? "常時" : `<${p.activeLimitChanceSunday.toFixed(0)}%`;
+
+                const weekdayEnergyAvg = avg(berryByDay.slice(0, 6)) + avg(cookByDay.slice(0, 6));
+                const sundayEnergy = berryByDay[6] + cookByDay[6];
+
+                const weekdayEnergy24hEq = to24hEqEnergy(weekdayEnergyAvg, activeSecondsPerWeekDayAvg);
+                const sundayEnergy24hEq = to24hEqEnergy(sundayEnergy, activeSecondsSunday);
+
+                const weekdayEnergy24hEqText = weekdayEnergy24hEq == null ? "-" : weekdayEnergy24hEq.toFixed(0);
+                const sundayEnergy24hEqText  = sundayEnergy24hEq  == null ? "-" : sundayEnergy24hEq.toFixed(0);
 
                 const mainChipsHtml = `
           <div class="pokemon-main-stats">
@@ -1263,11 +1279,11 @@
                 <div class="pokemon-body-block-row">メインスキル効果: ${p.skillEffectPercent.toFixed(1)} %</div>
               </div>
               <div>
-                <div class="pokemon-body-block-title">アクティブ時間</div>
-                <div class="pokemon-body-block-row">月曜~土曜: ${activeTimePerWeekDayText}</div>
-                <div class="pokemon-body-block-row">　${activeLimitWeekdayText}</div>
-                <div class="pokemon-body-block-row">日曜: ${activeTimeSundayText}</div>
-                <div class="pokemon-body-block-row">　${activeLimitSundayText}</div>
+                <div class="pokemon-body-block-title">アクティブ時間・エナジー</div>
+                <div class="pokemon-body-block-row">月~土: ${activeTimePerWeekDayText} (${activeLimitWeekdayText})</div>
+                <div class="pokemon-body-block-row">　24時間換算: ${weekdayEnergy24hEqText} エナジー</div>
+                <div class="pokemon-body-block-row">日: ${activeTimeSundayText} (${activeLimitSundayText})</div>
+                <div class="pokemon-body-block-row">　24時間換算: ${sundayEnergy24hEqText} エナジー</div>
               </div>
             </div>
 
