@@ -275,7 +275,6 @@
 
     function togglePresetReorderMode() {
         presetReorderMode = !presetReorderMode;
-        alert(`ポケモンボックスの並べ替えモードを${presetReorderMode ? "ON" : "OFF"}にしました。`);
 
         const btn = document.getElementById("pokemonPresetReorderBtn");
         if (btn) btn.textContent = presetReorderMode ? "完了" : "並べ替え";
