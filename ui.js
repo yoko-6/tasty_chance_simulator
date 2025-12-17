@@ -275,6 +275,7 @@
 
     function togglePresetReorderMode() {
         presetReorderMode = !presetReorderMode;
+        alert(`ポケモンボックスの並べ替えモードを${presetReorderMode ? "ON" : "OFF"}にしました。`);
 
         const btn = document.getElementById("pokemonPresetReorderBtn");
         if (btn) btn.textContent = presetReorderMode ? "完了" : "並べ替え";
@@ -284,7 +285,7 @@
 
         // 開いていれば再描画
         const modal = document.getElementById("pokemonPresetModal");
-        if (modal?.classList.contains("open")) {
+        if (modal) {
             const slotIndex = Number(modal.dataset.targetSlot || "1");
             renderPokemonPresetList(slotIndex);
         }
