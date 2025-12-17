@@ -555,6 +555,7 @@
 
         <div class="subskill-actions">
           <button type="button" id="slot-${i}-clear-slot">このポケモンの設定をクリア</button>
+          <button type="button" id="slot-${i}-delete-slot" disabled>このポケモンを削除</button>
         </div>
       `;
 
@@ -611,7 +612,88 @@
 
             $(`slot-${i}-clear-subskills`)?.addEventListener("click", () => clearSubskillsForSlot(i));
             $(`slot-${i}-clear-slot`)?.addEventListener("click", () => clearPokemonSlotSettings(i));
+            $(`slot-${i}-delete-slot`)?.addEventListener("click", () => deleteSlot(i));
         }
+
+        // --- スロット丸ごと削除（最後の1匹は不可）用 ---
+
+        const collectSlotFullConfig = (slotIndex) => {
+            const base = collectSlotPokemonConfig(slotIndex);
+
+            const weekdayMode =
+                document.querySelector(`input[name="slot-${slotIndex}-active-weekday"]:checked`)?.value || "always";
+            const sundayMode =
+                document.querySelector(`input[name="slot-${slotIndex}-active-sunday"]:checked`)?.value || "always";
+
+            const limitWeekdayEl = $(`slot-${slotIndex}-limit-chance-weekday`);
+            const limitSundayEl = $(`slot-${slotIndex}-limit-chance-sunday`);
+
+            const limitWeekday = limitWeekdayEl ? Number(limitWeekdayEl.value || "70") : 70;
+            const limitSunday = limitSundayEl ? Number(limitSundayEl.value || "70") : 70;
+
+            return { ...base, weekdayMode, sundayMode, limitWeekday, limitSunday };
+        };
+
+        const applySlotFullConfig = (slotIndex, cfg) => {
+            applyPresetToSlot(slotIndex, cfg);
+
+            const wAlways = $(`slot-${slotIndex}-active-always-weekday`);
+            const wThresh = $(`slot-${slotIndex}-active-threshold-weekday`);
+            const sAlways = $(`slot-${slotIndex}-active-always-sunday`);
+            const sThresh = $(`slot-${slotIndex}-active-threshold-sunday`);
+
+            if (cfg.weekdayMode === "threshold") {
+                if (wThresh) wThresh.checked = true;
+            } else {
+                if (wAlways) wAlways.checked = true;
+            }
+
+            if (cfg.sundayMode === "threshold") {
+                if (sThresh) sThresh.checked = true;
+            } else {
+                if (sAlways) sAlways.checked = true;
+            }
+
+            const limitWeekdayEl = $(`slot-${slotIndex}-limit-chance-weekday`);
+            const limitSundayEl = $(`slot-${slotIndex}-limit-chance-sunday`);
+            if (limitWeekdayEl) limitWeekdayEl.value = String(cfg.limitWeekday ?? 70);
+            if (limitSundayEl) limitSundayEl.value = String(cfg.limitSunday ?? 70);
+
+            // もし attachBenchModeHandlers を使っているならここで反映（未使用ならOK）
+            // attachBenchModeHandlers(slotIndex);
+        };
+
+        const updateDeleteButtons = () => {
+            for (let i = 1; i <= MAX_SLOTS; i++) {
+                const btn = $(`slot-${i}-delete-slot`);
+                if (!btn) continue;
+                // 表示中のスロットだけ有効化（最後の1匹なら全部無効）
+                const isVisible = i <= visibleSlots;
+                btn.disabled = !isVisible || visibleSlots <= 1;
+            }
+        };
+
+        const deleteSlot = (slotIndex) => {
+            if (visibleSlots <= 1) return;               // ★最後の1匹は削除しない
+            if (slotIndex < 1 || slotIndex > visibleSlots) return;
+
+            const last = visibleSlots;
+
+            // 途中を消すなら、最後のスロット内容を詰める
+            if (slotIndex !== last) {
+                const lastCfg = collectSlotFullConfig(last);
+                applySlotFullConfig(slotIndex, lastCfg);
+            }
+
+            // 最後を非表示にして中身は初期化（次に追加したとき汚れを残さない）
+            const lastCard = $(`slot-${last}-card`);
+            if (lastCard) lastCard.style.display = "none";
+            clearPokemonSlotSettings(last);
+
+            visibleSlots -= 1;
+            updateAddRemoveButtons();
+            updateDeleteButtons();
+        };
 
         const addBtn = $("addPokemonBtn");
         const removeBtn = $("removePokemonBtn");
@@ -628,6 +710,7 @@
             const card = $(`slot-${visibleSlots}-card`);
             if (card) card.style.display = "block";
             updateAddRemoveButtons();
+            updateDeleteButtons();
         });
 
         removeBtn.addEventListener("click", () => {
@@ -636,6 +719,7 @@
             if (card) card.style.display = "none";
             visibleSlots -= 1;
             updateAddRemoveButtons();
+            updateDeleteButtons();
         });
     }
 
@@ -922,7 +1006,7 @@
                 const activeSecondsSunday = activeSecondsByDay[6] || 0;
                 const activeTimePerWeekDayText = `${Math.floor(activeSecondsPerWeekDayAvg / 3600)}時間${Math.floor((activeSecondsPerWeekDayAvg % 3600) / 60)}分`;
                 const activeTimeSundayText = `${Math.floor(activeSecondsSunday / 3600)}時間${Math.floor((activeSecondsSunday % 3600) / 60)}分`;
-                
+
                 const activeLimitWeekdayText = p.activeLimitChanceWeekday.toFixed(0) > 70 ? "常時アクティブ" : `${p.activeLimitChanceWeekday.toFixed(0)}%未満でアクティブ`;
                 const activeLimitSundayText = p.activeLimitChanceSunday.toFixed(0) > 70 ? "常時アクティブ" : `${p.activeLimitChanceSunday.toFixed(0)}%未満でアクティブ`;
 
