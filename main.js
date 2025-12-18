@@ -128,7 +128,10 @@
             style.textContent = `
     .ps-result-swipe-target {
       will-change: transform, opacity;
-      touch-action: pan-y; /* 縦スクロールは殺さない（横だけ検知） */
+      touch-action: pan-y pinch-zoom;
+        #resultSwipeWrap{
+            touch-action: pan-y pinch-zoom;
+        }
     }
   `;
             document.head.appendChild(style);
