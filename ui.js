@@ -1210,8 +1210,8 @@
 
                 const activeSecondsPerWeekDayAvg = avg(activeSecondsByDay.slice(0, 6));
                 const activeSecondsSunday = activeSecondsByDay[6] || 0;
-                const activeTimePerWeekDayText = `${Math.floor(activeSecondsPerWeekDayAvg / 3600)}時間${String(Math.floor((activeSecondsPerWeekDayAvg % 3600) / 60)).padStart(2, '0')}分`;
-                const activeTimeSundayText = `${Math.floor(activeSecondsSunday / 3600)}時間${String(Math.floor((activeSecondsSunday % 3600) / 60)).padStart(2, '0')}分`;
+                const activeTimePerWeekDayText = `${Math.floor(activeSecondsPerWeekDayAvg / 3600)}:${String(Math.floor((activeSecondsPerWeekDayAvg % 3600) / 60)).padStart(2, '0')}`;
+                const activeTimeSundayText = `${Math.floor(activeSecondsSunday / 3600)}:${String(Math.floor((activeSecondsSunday % 3600) / 60)).padStart(2, '0')}`;
 
                 const activeLimitWeekdayText = p.activeLimitChanceWeekday.toFixed(0) > 70 ? "常時" : `<${p.activeLimitChanceWeekday.toFixed(0)}%`;
                 const activeLimitSundayText = p.activeLimitChanceSunday.toFixed(0) > 70 ? "常時" : `<${p.activeLimitChanceSunday.toFixed(0)}%`;
@@ -1279,15 +1279,16 @@
                 <div class="pokemon-body-block-row">メインスキル効果: ${p.skillEffectPercent.toFixed(1)} %</div>
               </div>
               <div>
-                <div class="pokemon-body-block-title">アクティブ時間・エナジー</div>
+                <div class="pokemon-body-block-title">活動時間・エナジー</div>
                 <div class="pokemon-body-block-row">月~土: ${activeTimePerWeekDayText} (${activeLimitWeekdayText})</div>
-                <div class="pokemon-body-block-row">　24時間換算: ${weekdayEnergy24hEqText} エナジー</div>
+                <div class="pokemon-body-block-row">　1日換算: ${weekdayEnergy24hEqText} エナジー</div>
                 <div class="pokemon-body-block-row">日: ${activeTimeSundayText} (${activeLimitSundayText})</div>
-                <div class="pokemon-body-block-row">　24時間換算: ${sundayEnergy24hEqText} エナジー</div>
+                <div class="pokemon-body-block-row">　1日換算: ${sundayEnergy24hEqText} エナジー</div>
               </div>
             </div>
 
-            <div class="pokemon-body-block-row" style="margin-top:1rem;">サブスキル: ${p.subSkillsLabel}</div>
+            <hr />
+
             <div class="pokemon-body-block-row">他ポケモンの効果: ${p.teamSubSkillsLabel}</div>
             <div class="pokemon-body-block-row">
               個別補正: おてつだい×${p.personal.helpMult.toFixed(2)} ／ 食材+${p.personal.ingBonus} ／ スキル×${p.personal.skillMult.toFixed(2)}
