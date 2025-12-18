@@ -327,6 +327,10 @@
             let pinchZooming = false;
 
             const cancelSwipeForPinch = () => {
+                if (pointerId != null) {
+                    try { swipeWrap.releasePointerCapture(pointerId); } catch { }
+                }
+                
                 // 変な判定・遷移を絶対に起こさない
                 tracking = false;
                 dragging = false;
@@ -476,7 +480,7 @@
                 }
             });
 
-            swipeWrap.addEventListener("pointercancel", () => {
+            swipeWrap.addEventListener("pointercancel", (e) => {
                 if (e.pointerType === "touch") {
                     activeTouchIds.delete(e.pointerId);
                     if (activeTouchIds.size < 2) pinchZooming = false;
@@ -485,7 +489,7 @@
                     cancelSwipeForPinch();
                     return;
                 }
-                
+
                 tracking = false;
                 dragging = false;
                 pointerId = null;
