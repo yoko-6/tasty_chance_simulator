@@ -132,6 +132,8 @@
         #resultSwipeWrap{
             touch-action: pan-y pinch-zoom;
         }
+        #resultSwipeWrap.swipe-lock { touch-action: none; }
+        .ps-no-select, .ps-no-select * { user-select: none; -webkit-user-select: none; }
     }
   `;
             document.head.appendChild(style);
@@ -341,7 +343,38 @@
             // ★現在の見た目のdx（effDx）を保持して、pointerupでその位置から遷移できるようにする
             let currentEffDx = 0;
 
+            const activeTouchIds = new Set();
+            let pinchZooming = false;
+
+            const lockDuringSwipe = () => {
+                swipeWrap.classList.add("swipe-lock");
+                document.documentElement.classList.add("ps-no-select");
+            };
+            const unlockAfterSwipe = () => {
+                swipeWrap.classList.remove("swipe-lock");
+                document.documentElement.classList.remove("ps-no-select");
+            };
+
+            const cancelSwipeHard = (animateBack = true) => {
+                tracking = false;
+                dragging = false;
+                pointerId = null;
+                currentEffDx = 0;
+                unlockAfterSwipe();
+                resetSwipeVisual(animateBack);
+            };
+
             swipeWrap.addEventListener("pointerdown", (e) => {
+                if (e.pointerType === "touch") {
+                    activeTouchIds.add(e.pointerId);
+                    if (activeTouchIds.size >= 2) {
+                        pinchZooming = true;
+                        cancelSwipeHard(false);
+                        return;
+                    }
+                }
+                if (pinchZooming) return;
+
                 if (e.pointerType === "mouse" && e.button !== 0) return;
                 if (isInteractive(e.target)) return;
                 if (resultIndex < 0) return;
@@ -376,7 +409,12 @@
                     dragging = true;
                     swipeWrap.classList.add("swiping");
                     outputEl.style.transition = "none";
+
+                    lockDuringSwipe();
                 }
+
+                // dragging中は選択などを防ぐ（途切れ防止）
+                e.preventDefault();
 
                 const wrapWidth = swipeWrap.getBoundingClientRect().width || 1;
                 const dir = dx > 0 ? "prev" : "next";
@@ -425,7 +463,13 @@
             });
 
             swipeWrap.addEventListener("pointerup", (e) => {
+                if (e.pointerType === "touch") activeTouchIds.delete(e.pointerId);
+                if (activeTouchIds.size < 2) pinchZooming = false;
+
                 if (!tracking || e.pointerId !== pointerId) return;
+
+                // 終了時は必ず解除
+                unlockAfterSwipe();
 
                 tracking = false;
                 try { swipeWrap.releasePointerCapture(pointerId); } catch { }
@@ -469,11 +513,16 @@
             }, { capture: true });
 
             swipeWrap.addEventListener("pointercancel", (e) => {
-                tracking = false;
-                dragging = false;
-                pointerId = null;
-                resetSwipeVisual(true);
+                if (e.pointerType === "touch") activeTouchIds.delete(e.pointerId);
+                if (activeTouchIds.size < 2) pinchZooming = false;
+
+                cancelSwipeHard(true);
             }, { capture: true });
+
+            // ★これもあると「途中で突然切れる」系が安定する
+            swipeWrap.addEventListener("lostpointercapture", () => {
+                cancelSwipeHard(true);
+            });
 
             // ===== Keyboard (PC) =====
             document.addEventListener("keydown", (e) => {
