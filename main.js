@@ -14,6 +14,116 @@
         ui.initPokemonSlots();
         ui.initFieldUI();
 
+        // ===== UI Cache (Common settings / advanced settings) =====
+        const UI_CACHE_IDS = [
+            "recipeEnergy",
+            "trials",
+            "day1SuccessChance",
+            "campTicket",
+            "disableEnergyDecay",
+
+            "energyEventMultiplier",
+            "skillEventMultiplier",
+            "helpingSpeedMultiplier",
+            "ingredientBonus",
+
+            "wakeTime",
+            "breakfastTime",
+            "lunchTime",
+            "dinnerTime",
+            "sleepTime",
+
+            "fieldSelect",
+            "fieldBonus",
+            "fieldMainType",
+            "fieldSub1Type",
+            "fieldSub2Type",
+            "exEffect",
+        ];
+
+        const TYPE_OVERRIDE_IDS = ["fieldMainType", "fieldSub1Type", "fieldSub2Type", "exEffect"];
+
+        // id -> value を読み取る（checkboxも含む）
+        const readValueById = (id) => {
+            const el = document.getElementById(id);
+            if (!el) return undefined;
+            if (el.type === "checkbox") return !!el.checked;
+            return el.value;
+        };
+
+        // value を UI に書き戻す
+        const writeValueById = (id, value) => {
+            const el = document.getElementById(id);
+            if (!el) return false;
+
+            if (el.type === "checkbox") {
+                el.checked = !!value;
+                return true;
+            }
+
+            // value が無いなら触らない（初期値を活かす）
+            if (value === undefined || value === null || value === "") return false;
+
+            el.value = String(value);
+            return true;
+        };
+
+        // 起動時に復元
+        const applyUICache = () => {
+            const st = storage.loadUICache();
+            if (!st || typeof st !== "object") return;
+
+            // 1) まず「タイプ以外」を復元
+            for (const id of UI_CACHE_IDS) {
+                if (TYPE_OVERRIDE_IDS.includes(id)) continue;
+                if (Object.prototype.hasOwnProperty.call(st, id)) {
+                    writeValueById(id, st[id]);
+                }
+            }
+
+            // 2) fieldSelect の change を先に発火して「自動設定」を適用
+            const fieldSelect = document.getElementById("fieldSelect");
+            if (fieldSelect) fieldSelect.dispatchEvent(new Event("change"));
+
+            // 3) 最後にキャッシュで type / exEffect を上書き
+            for (const id of TYPE_OVERRIDE_IDS) {
+                if (Object.prototype.hasOwnProperty.call(st, id)) {
+                    writeValueById(id, st[id]);
+                }
+            }
+        };
+
+        // 変更を保存（軽く debounce）
+        let uiCacheTimer = null;
+        const saveUICacheDebounced = () => {
+            clearTimeout(uiCacheTimer);
+            uiCacheTimer = setTimeout(() => {
+                const next = {};
+                for (const id of UI_CACHE_IDS) {
+                    const v = readValueById(id);
+                    if (v !== undefined) next[id] = v;
+                }
+                storage.saveUICache(next);
+            }, 120);
+        };
+
+        // 監視（input + change）
+        const attachUICacheAutoSave = () => {
+            const onAny = (e) => {
+                const t = e.target;
+                if (!t || !t.id) return;
+                if (!UI_CACHE_IDS.includes(t.id)) return;
+                saveUICacheDebounced();
+            };
+
+            document.addEventListener("input", onAny, { passive: true });
+            document.addEventListener("change", onAny, { passive: true });
+        };
+
+        // --- 呼び出し（initの後） ---
+        applyUICache();
+        attachUICacheAutoSave();
+
         // howto open/close
         const howtoCard = $("#howtoCard");
         const howtoHeader = $("#howtoHeader");
