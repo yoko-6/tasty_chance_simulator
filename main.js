@@ -442,14 +442,14 @@
                 } else {
                     resetSwipeVisual(true);
                 }
-            });
+            }, { capture: true });
 
             swipeWrap.addEventListener("pointercancel", (e) => {
                 tracking = false;
                 dragging = false;
                 pointerId = null;
                 resetSwipeVisual(true);
-            });
+            }, { capture: true });
 
             // ===== Keyboard (PC) =====
             document.addEventListener("keydown", (e) => {
