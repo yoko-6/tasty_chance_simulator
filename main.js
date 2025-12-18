@@ -128,12 +128,7 @@
             style.textContent = `
     .ps-result-swipe-target {
       will-change: transform, opacity;
-      touch-action: pan-y pinch-zoom;
-        #resultSwipeWrap{
-            touch-action: pan-y pinch-zoom;
-        }
-        #resultSwipeWrap.swipe-lock { touch-action: none; }
-        .ps-no-select, .ps-no-select * { user-select: none; -webkit-user-select: none; }
+      touch-action: pan-y; /* 縦スクロールは殺さない（横だけ検知） */
     }
   `;
             document.head.appendChild(style);
@@ -327,69 +322,78 @@
             prevResultBtn.addEventListener("click", () => moveResult(-1));
             nextResultBtn.addEventListener("click", () => moveResult(+1));
 
+            // ★ ピンチ中はスワイプを止める
+            const activeTouchIds = new Set();
+            let pinchZooming = false;
+
+            const cancelSwipeForPinch = () => {
+                // 変な判定・遷移を絶対に起こさない
+                tracking = false;
+                dragging = false;
+                pointerId = null;
+                currentEffDx = 0;
+
+                // ヒントだけ消す（見た目をガチャガチャ戻さない）
+                clearSwipeHintOnly();
+                outputEl.style.transition = "none";
+                outputEl.style.transform = "translateX(0px)";
+            };
+
             // ===== Swipe / Drag (Pointer Events: touch + mouse) =====
             let tracking = false;
             let dragging = false;
             let pointerId = null;
-            let captured = false;
 
             let startX = 0, startY = 0;
             let lastX = 0, lastTime = 0;
+            let lastDx = 0;
+
+            // ★現在の見た目のdx（effDx）を保持して、pointerupでその位置から遷移できるようにする
             let currentEffDx = 0;
 
-            const DRAG_START_X = 6;       // ← 10→6 くらいに（確定を早く）
-            const DIR_RATIO = 1.0;        // ← 1.2→1.0 くらいに（縦に厳しすぎない）
-
-            const cleanup = (animateBack) => {
-                tracking = false;
-                dragging = false;
-                pointerId = null;
-                captured = false;
-                currentEffDx = 0;
-                resetSwipeVisual(animateBack);
-            };
-
             swipeWrap.addEventListener("pointerdown", (e) => {
+                // ★ 2本指以上ならピンチ扱いでスワイプ開始しない
+                if (e.pointerType === "touch") {
+                    activeTouchIds.add(e.pointerId);
+                    if (activeTouchIds.size >= 2) {
+                        pinchZooming = true;
+                        cancelSwipeForPinch();
+                        return;
+                    }
+                }
+                if (pinchZooming) return;
+
                 if (e.pointerType === "mouse" && e.button !== 0) return;
                 if (isInteractive(e.target)) return;
                 if (resultIndex < 0) return;
 
                 tracking = true;
                 dragging = false;
-                captured = false;
                 pointerId = e.pointerId;
 
                 startX = lastX = e.clientX;
                 startY = e.clientY;
-                lastX = e.clientX;
-                lastTime = e.timeStamp;
+                lastTime = performance.now();
+                lastDx = 0;
                 currentEffDx = 0;
+
+                try { swipeWrap.setPointerCapture(pointerId); } catch { }
             });
 
             swipeWrap.addEventListener("pointermove", (e) => {
+                if (pinchZooming) return;
                 if (!tracking || e.pointerId !== pointerId) return;
 
                 const dx = e.clientX - startX;
                 const dy = e.clientY - startY;
 
-                // 横ドラッグ確定（早めに）
                 if (!dragging) {
-                    if (Math.abs(dx) < DRAG_START_X) return;
-                    if (Math.abs(dx) < Math.abs(dy) * DIR_RATIO) return;
-
+                    if (Math.abs(dx) < 10) return;
+                    if (Math.abs(dx) < Math.abs(dy) * 1.2) return;
                     dragging = true;
                     swipeWrap.classList.add("swiping");
                     outputEl.style.transition = "none";
-
-                    // ★確定した瞬間に “その指” を捕まえる（touchでも）
-                    try {
-                        swipeWrap.setPointerCapture(pointerId);
-                        captured = true;
-                    } catch { }
                 }
-
-                // dragging中だけはブラウザのジェスチャに奪われないようにする
-                e.preventDefault();
 
                 const wrapWidth = swipeWrap.getBoundingClientRect().width || 1;
                 const dir = dx > 0 ? "prev" : "next";
@@ -399,9 +403,10 @@
                 let effDx = dx * followFactor(absDx);
                 const maxMove = wrapWidth * 0.85;
                 effDx = Math.max(-maxMove, Math.min(maxMove, effDx));
+
                 if (!ok) effDx *= 0.35;
 
-                const THRESH = Math.max(70, wrapWidth * 0.18); // ← 90/0.22→少し緩め
+                const THRESH = Math.max(90, wrapWidth * 0.22);
                 const ready = ok && Math.abs(effDx) >= THRESH;
 
                 swipeWrap.dataset.dir = dir;
@@ -417,23 +422,30 @@
                 underlayEl.style.opacity = String(0.25 + 0.75 * p);
 
                 outputEl.style.transform = `translateX(${effDx}px)`;
+
+                // ★ここを保持
                 currentEffDx = effDx;
 
+                lastDx = dx;
                 lastX = e.clientX;
-                lastTime = e.timeStamp;
+                lastTime = performance.now();
             });
 
             swipeWrap.addEventListener("pointerup", (e) => {
+                if (e.pointerType === "touch") {
+                    activeTouchIds.delete(e.pointerId);
+                    if (activeTouchIds.size < 2) pinchZooming = false;
+                }
+                if (pinchZooming) return;
+
                 if (!tracking || e.pointerId !== pointerId) return;
 
                 tracking = false;
+                try { swipeWrap.releasePointerCapture(pointerId); } catch { }
+                pointerId = null;
 
-                // 捕まえてたら解放
-                if (captured) {
-                    try { swipeWrap.releasePointerCapture(pointerId); } catch { }
-                }
+                if (!dragging) return;
 
-                if (!dragging) { cleanup(true); return; }
                 dragging = false;
 
                 const dx = e.clientX - startX;
@@ -442,41 +454,42 @@
                 const dir = dx > 0 ? "prev" : "next";
                 const ok = canMove(dir);
 
-                const THRESH = Math.max(70, wrapWidth * 0.18);
+                const THRESH = Math.max(90, wrapWidth * 0.22);
 
-                // フリック判定も少し緩め
-                const dt = Math.max(1, e.timeStamp - lastTime);
+                // 速度（フリック）
+                const dt = Math.max(1, performance.now() - lastTime);
                 const vx = (e.clientX - lastX) / dt; // px/ms
-                const fast = Math.abs(vx) > 0.55;
+                const fast = Math.abs(vx) > 0.75;
 
+                // ★判定は「今の見た目(currentEffDx)」で
                 const ready = ok && (Math.abs(currentEffDx) >= THRESH || fast);
 
+                // ★遷移するなら絶対に戻さない（resetSwipeVisualしない）
                 if (ready) {
                     moveResult(dir === "prev" ? -1 : +1, {
                         viaSwipe: true,
                         dir,
-                        startOffsetPx: currentEffDx,
+                        startOffsetPx: currentEffDx, // ★この位置からOUTへ
                     });
                 } else {
                     resetSwipeVisual(true);
                 }
+            });
 
-                pointerId = null;
-                captured = false;
-            }, { capture: true });
-
-            swipeWrap.addEventListener("pointercancel", (e) => {
-                // ★ここが “押しっぱなしなのに戻る” の犯人になりやすいので、
-                // 捕まえて途切れにくくした上で、cancel時は素直に戻す
-                if (captured) {
-                    try { swipeWrap.releasePointerCapture(pointerId); } catch { }
+            swipeWrap.addEventListener("pointercancel", () => {
+                if (e.pointerType === "touch") {
+                    activeTouchIds.delete(e.pointerId);
+                    if (activeTouchIds.size < 2) pinchZooming = false;
                 }
-                cleanup(true);
-            }, { capture: true });
-
-            // ★これもあると「途中で突然切れる」系が安定する
-            swipeWrap.addEventListener("lostpointercapture", () => {
-                cleanup(true);
+                if (pinchZooming) {
+                    cancelSwipeForPinch();
+                    return;
+                }
+                
+                tracking = false;
+                dragging = false;
+                pointerId = null;
+                resetSwipeVisual(true);
             });
 
             // ===== Keyboard (PC) =====
