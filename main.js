@@ -325,27 +325,6 @@
             prevResultBtn.addEventListener("click", () => moveResult(-1));
             nextResultBtn.addEventListener("click", () => moveResult(+1));
 
-            // ★ ピンチ中はスワイプを止める
-            const activeTouchIds = new Set();
-            let pinchZooming = false;
-
-            const cancelSwipeForPinch = () => {
-                if (pointerId != null) {
-                    try { swipeWrap.releasePointerCapture(pointerId); } catch { }
-                }
-
-                // 変な判定・遷移を絶対に起こさない
-                tracking = false;
-                dragging = false;
-                pointerId = null;
-                currentEffDx = 0;
-
-                // ヒントだけ消す（見た目をガチャガチャ戻さない）
-                clearSwipeHintOnly();
-                outputEl.style.transition = "none";
-                outputEl.style.transform = "translateX(0px)";
-            };
-
             // ===== Swipe / Drag (Pointer Events: touch + mouse) =====
             let tracking = false;
             let dragging = false;
@@ -359,17 +338,6 @@
             let currentEffDx = 0;
 
             swipeWrap.addEventListener("pointerdown", (e) => {
-                // ★ 2本指以上ならピンチ扱いでスワイプ開始しない
-                if (e.pointerType === "touch") {
-                    activeTouchIds.add(e.pointerId);
-                    if (activeTouchIds.size >= 2) {
-                        pinchZooming = true;
-                        cancelSwipeForPinch();
-                        return;
-                    }
-                }
-                if (pinchZooming) return;
-
                 if (e.pointerType === "mouse" && e.button !== 0) return;
                 if (isInteractive(e.target)) return;
                 if (resultIndex < 0) return;
@@ -388,7 +356,6 @@
             });
 
             swipeWrap.addEventListener("pointermove", (e) => {
-                if (pinchZooming) return;
                 if (!tracking || e.pointerId !== pointerId) return;
 
                 const dx = e.clientX - startX;
@@ -439,12 +406,6 @@
             });
 
             swipeWrap.addEventListener("pointerup", (e) => {
-                if (e.pointerType === "touch") {
-                    activeTouchIds.delete(e.pointerId);
-                    if (activeTouchIds.size < 2) pinchZooming = false;
-                }
-                if (pinchZooming) return;
-
                 if (!tracking || e.pointerId !== pointerId) return;
 
                 tracking = false;
@@ -484,15 +445,6 @@
             });
 
             swipeWrap.addEventListener("pointercancel", (e) => {
-                if (e.pointerType === "touch") {
-                    activeTouchIds.delete(e.pointerId);
-                    if (activeTouchIds.size < 2) pinchZooming = false;
-                }
-                if (pinchZooming) {
-                    cancelSwipeForPinch();
-                    return;
-                }
-
                 tracking = false;
                 dragging = false;
                 pointerId = null;
