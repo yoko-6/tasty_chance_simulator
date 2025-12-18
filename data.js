@@ -86,10 +86,10 @@
     PS.SubSkills = {
         SkillTriggerM: new SubSkill("SkillTriggerM", "スキル確率アップM", 0.0, 0.0, 0.36, 0, 0),
         SkillTriggerS: new SubSkill("SkillTriggerS", "スキル確率アップS", 0.0, 0.0, 0.18, 0, 0),
+        BerryFindingS: new SubSkill("BerryFindingS", "きのみの数S", 0.0, 0.0, 0.0, 0, 1),
         HelpingSpeedM: new SubSkill("HelpingSpeedM", "おてつだいスピードM", 0.14, 0.0, 0.0, 0, 0),
         HelpingSpeedS: new SubSkill("HelpingSpeedS", "おてつだいスピードS", 0.07, 0.0, 0.0, 0, 0),
         HelpingBonus: new SubSkill("HelpingBonus", "おてつだいボーナス", 0.05, 0.0, 0.0, 0, 0),
-        BerryFindingS: new SubSkill("BerryFindingS", "きのみの数S", 0.0, 0.0, 0.0, 0, 1),
         IngredientFinderM: new SubSkill("IngredientFinderM", "食材確率アップM", 0.0, 0.36, 0.0, 0, 0),
         IngredientFinderS: new SubSkill("IngredientFinderS", "食材確率アップS", 0.0, 0.18, 0.0, 0, 0),
         InventoryUpL: new SubSkill("InventoryUpL", "最大所持数アップL", 0.0, 0.0, 0.0, 18, 0),
