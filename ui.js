@@ -635,7 +635,7 @@
 
         <div class="grid">
           <div class="row">
-            <label for="slot-${i}-pokemon">料理チャンスポケモン</label>
+            <label for="slot-${i}-pokemon">ポケモン</label>
             <select id="slot-${i}-pokemon">
               <option value="dedenne">デデンネ</option>
               <option value="uu">ウッウ</option>
@@ -726,7 +726,7 @@
               </div>
             </div>
             <div class="muted">
-                起きている間，料理チャンスによる上昇分がこの値以上になったらパーティから外し，下回ったら戻す（0〜70%）
+                起きている間，料理チャンスによる上昇分がこの値以上になったらパーティから外れる．下回ったら戻る（0〜70%）
             </div>
             </div>
           </div>
@@ -1505,7 +1505,7 @@
           <div class="input-grid">
             <div class="input-block">
               <div class="input-block-title">イベント補正</div>
-              <div class="input-block-row">おてつだいスピード倍率: ${ev.helpingSpeedMultiplier.toFixed(2)} 倍</div>
+              <div class="input-block-row">おてつだいスピード: ${ev.helpingSpeedMultiplier.toFixed(2)} 倍</div>
               <div class="input-block-row">食材数ボーナス: +${ev.ingredientBonus} 個</div>
               <div class="input-block-row">スキル確率倍率: ${ev.skillEventMultiplier.toFixed(2)} 倍</div>
               <div class="input-block-row">料理エナジー倍率: ${ev.energyEventMultiplier.toFixed(2)} 倍</div>
