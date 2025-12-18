@@ -1210,8 +1210,8 @@
 
                 const activeSecondsPerWeekDayAvg = avg(activeSecondsByDay.slice(0, 6));
                 const activeSecondsSunday = activeSecondsByDay[6] || 0;
-                const activeTimePerWeekDayText = `${Math.floor(activeSecondsPerWeekDayAvg / 3600)}:${String(Math.floor((activeSecondsPerWeekDayAvg % 3600) / 60)).padStart(2, '0')}`;
-                const activeTimeSundayText = `${Math.floor(activeSecondsSunday / 3600)}:${String(Math.floor((activeSecondsSunday % 3600) / 60)).padStart(2, '0')}`;
+                const activeTimePerWeekDayText = `${Math.floor(activeSecondsPerWeekDayAvg / 3600)}時間${String(Math.floor((activeSecondsPerWeekDayAvg % 3600) / 60)).padStart(2, '0')}分`;
+                const activeTimeSundayText = `${Math.floor(activeSecondsSunday / 3600)}時間${String(Math.floor((activeSecondsSunday % 3600) / 60)).padStart(2, '0')}分`;
 
                 const activeLimitWeekdayText = p.activeLimitChanceWeekday.toFixed(0) > 70 ? "常時" : `<${p.activeLimitChanceWeekday.toFixed(0)}%`;
                 const activeLimitSundayText = p.activeLimitChanceSunday.toFixed(0) > 70 ? "常時" : `<${p.activeLimitChanceSunday.toFixed(0)}%`;
