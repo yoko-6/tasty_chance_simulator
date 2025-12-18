@@ -512,22 +512,6 @@
             });
         })();
 
-        swipeWrap.addEventListener("touchstart", (ev) => {
-            if (ev.touches.length >= 2) {
-                pinchZooming = true;
-                cancelSwipeForPinch();
-            }
-        }, { passive: true });
-
-        swipeWrap.addEventListener("touchend", (ev) => {
-            pinchZooming = ev.touches.length >= 2;
-        }, { passive: true });
-
-        swipeWrap.addEventListener("touchcancel", () => {
-            pinchZooming = false;
-            cancelSwipeForPinch();
-        }, { passive: true });
-
         deleteCurrentBtn.addEventListener("click", () => {
             if (resultIndex < 0 || resultIndex >= resultHistory.length) return;
 
