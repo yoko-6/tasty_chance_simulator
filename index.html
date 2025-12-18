@@ -42,14 +42,23 @@
     }
 
     /* ▼ 時刻入力も同じ見た目にする */
-    input[type="number"],
+    input[type="number"] {
+      width: 100%;
+      padding: 0.35rem 0.5rem;
+      border-radius: 6px;
+      border: 1px solid #d0d0d7;
+      font-size: 1.25rem;
+      font-weight: 400;
+      box-sizing: border-box;
+    }
+
     input[type="time"],
     select {
       width: 100%;
       padding: 0.35rem 0.5rem;
       border-radius: 6px;
       border: 1px solid #d0d0d7;
-      font-size: 1.25rem;
+      font-size: 1rem;
       font-weight: 400;
       box-sizing: border-box;
     }
@@ -87,6 +96,22 @@
       font-size: 0.8rem;
     }
 
+    .subskills-box label {
+      display: inline-block;
+      font-weight: 450;
+      font-size: 0.75rem;
+      margin: 0.0rem;
+    }
+
+    /* ▼ チェック中のサブスキルを強調表示 */
+    .subskills-box input[type="checkbox"]:checked+label {
+      font-weight: 600;
+      background: #e6f0ff;
+      border-radius: 4px;
+      padding: 0 0;
+    }
+
+
     .slot-header {
       margin-bottom: 0.5rem;
       font-weight: 600;
@@ -109,7 +134,7 @@
     .nature-box {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 0.5rem 0rem;
+      gap: 0.25rem 0.75rem;
       border-radius: 6px;
       border: 1px solid #d0d0d7;
       padding: 0.5rem 0.3rem;
@@ -136,27 +161,12 @@
     .subskills-box {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 0.3rem 0.1rem;
+      gap: 0.6rem 0.0rem;
       border-radius: 6px;
       border: 1px solid #d0d0d7;
       padding: 0.2rem 0.2rem;
       background: #fafafa;
-      font-size: 0.75rem;
-    }
-
-    .subskills-box label {
-      display: inline-block;
-      font-weight: 450;
-      font-size: 0.75rem;
-      margin: 0.0rem;
-    }
-
-    /* ▼ チェック中のサブスキルを強調表示 */
-    .subskills-box input[type="checkbox"]:checked+label {
-      font-weight: 600;
-      background: #e6f0ff;
-      border-radius: 4px;
-      padding: 0 0;
+      font-size: 0.70rem;
     }
 
     .subskill-actions {
