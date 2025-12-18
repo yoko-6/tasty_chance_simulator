@@ -330,7 +330,7 @@
                 if (pointerId != null) {
                     try { swipeWrap.releasePointerCapture(pointerId); } catch { }
                 }
-                
+
                 // 変な判定・遷移を絶対に起こさない
                 tracking = false;
                 dragging = false;
@@ -511,6 +511,22 @@
                 }
             });
         })();
+
+        swipeWrap.addEventListener("touchstart", (ev) => {
+            if (ev.touches.length >= 2) {
+                pinchZooming = true;
+                cancelSwipeForPinch();
+            }
+        }, { passive: true });
+
+        swipeWrap.addEventListener("touchend", (ev) => {
+            pinchZooming = ev.touches.length >= 2;
+        }, { passive: true });
+
+        swipeWrap.addEventListener("touchcancel", () => {
+            pinchZooming = false;
+            cancelSwipeForPinch();
+        }, { passive: true });
 
         deleteCurrentBtn.addEventListener("click", () => {
             if (resultIndex < 0 || resultIndex >= resultHistory.length) return;
