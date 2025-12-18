@@ -1494,9 +1494,7 @@
             <div class="input-block">
               <div class="input-block-title">フィールド設定</div>
               <div class="input-block-row">フィールド: ${field.label}</div>
-              <div class="input-block-row">メインタイプ: ${field.mainType || "-"}</div>
-              <div class="input-block-row">サブタイプ1: ${field.sub1Type || "-"}</div>
-              <div class="input-block-row">サブタイプ2: ${field.sub2Type || "-"}</div>
+              <div class="input-block-row">タイプ: ${field.mainType || "-"} ${field.sub1Type || "-"} ${field.sub2Type || "-"}</div>
               <div class="input-block-row">EX補正: ${fieldExText}</div>
               <div class="input-block-row">フィールドボーナス: ${fieldBonusPercentText} %</div>
             </div>
