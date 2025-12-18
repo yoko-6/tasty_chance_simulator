@@ -1144,13 +1144,13 @@
       font-size: 0.75rem;
     }
 
-    #resultSwipeWrap {
+    #resultSwipeWrap, #resultSwipeWrap * {
       position: relative;
       overflow: hidden;
       touch-action: pan-y pinch-zoom;
       /* 縦スクロール優先、横はJSで */
     }
-
+    
     #resultSwipeWrap.swipe-lock { 
       touch-action: none; 
     }

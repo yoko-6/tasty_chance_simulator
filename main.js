@@ -331,70 +331,39 @@
             let tracking = false;
             let dragging = false;
             let pointerId = null;
+            let captured = false;
 
             let startX = 0, startY = 0;
             let lastX = 0, lastTime = 0;
-            let lastDx = 0;
-
-            let startT = 0;
-            let prevX = 0, prevT = 0;
-            let lastVX = 0; // px/ms（直近の速度）
-
-            // ★現在の見た目のdx（effDx）を保持して、pointerupでその位置から遷移できるようにする
             let currentEffDx = 0;
 
-            const activeTouchIds = new Set();
-            let pinchZooming = false;
+            const DRAG_START_X = 6;       // ← 10→6 くらいに（確定を早く）
+            const DIR_RATIO = 1.0;        // ← 1.2→1.0 くらいに（縦に厳しすぎない）
 
-            const lockDuringSwipe = () => {
-                swipeWrap.classList.add("swipe-lock");
-                document.documentElement.classList.add("ps-no-select");
-            };
-            const unlockAfterSwipe = () => {
-                swipeWrap.classList.remove("swipe-lock");
-                document.documentElement.classList.remove("ps-no-select");
-            };
-
-            const cancelSwipeHard = (animateBack = true) => {
+            const cleanup = (animateBack) => {
                 tracking = false;
                 dragging = false;
                 pointerId = null;
+                captured = false;
                 currentEffDx = 0;
-                unlockAfterSwipe();
                 resetSwipeVisual(animateBack);
             };
 
             swipeWrap.addEventListener("pointerdown", (e) => {
-                if (e.pointerType === "touch") {
-                    activeTouchIds.add(e.pointerId);
-                    if (activeTouchIds.size >= 2) {
-                        pinchZooming = true;
-                        cancelSwipeHard(false);
-                        return;
-                    }
-                }
-                if (pinchZooming) return;
-
                 if (e.pointerType === "mouse" && e.button !== 0) return;
                 if (isInteractive(e.target)) return;
                 if (resultIndex < 0) return;
 
                 tracking = true;
                 dragging = false;
+                captured = false;
                 pointerId = e.pointerId;
 
                 startX = lastX = e.clientX;
                 startY = e.clientY;
-                lastTime = performance.now();
-                lastDx = 0;
+                lastX = e.clientX;
+                lastTime = e.timeStamp;
                 currentEffDx = 0;
-
-                startT = e.timeStamp;
-                prevX = lastX = e.clientX;
-                prevT = lastTime = e.timeStamp;
-                lastVX = 0;
-
-                try { swipeWrap.setPointerCapture(pointerId); } catch { }
             });
 
             swipeWrap.addEventListener("pointermove", (e) => {
@@ -403,17 +372,23 @@
                 const dx = e.clientX - startX;
                 const dy = e.clientY - startY;
 
+                // 横ドラッグ確定（早めに）
                 if (!dragging) {
-                    if (Math.abs(dx) < 10) return;
-                    if (Math.abs(dx) < Math.abs(dy) * 0.9) return;
+                    if (Math.abs(dx) < DRAG_START_X) return;
+                    if (Math.abs(dx) < Math.abs(dy) * DIR_RATIO) return;
+
                     dragging = true;
                     swipeWrap.classList.add("swiping");
                     outputEl.style.transition = "none";
 
-                    lockDuringSwipe();
+                    // ★確定した瞬間に “その指” を捕まえる（touchでも）
+                    try {
+                        swipeWrap.setPointerCapture(pointerId);
+                        captured = true;
+                    } catch { }
                 }
 
-                // dragging中は選択などを防ぐ（途切れ防止）
+                // dragging中だけはブラウザのジェスチャに奪われないようにする
                 e.preventDefault();
 
                 const wrapWidth = swipeWrap.getBoundingClientRect().width || 1;
@@ -424,10 +399,9 @@
                 let effDx = dx * followFactor(absDx);
                 const maxMove = wrapWidth * 0.85;
                 effDx = Math.max(-maxMove, Math.min(maxMove, effDx));
-
                 if (!ok) effDx *= 0.35;
 
-                const THRESH = Math.max(90, wrapWidth * 0.22);
+                const THRESH = Math.max(70, wrapWidth * 0.18); // ← 90/0.22→少し緩め
                 const ready = ok && Math.abs(effDx) >= THRESH;
 
                 swipeWrap.dataset.dir = dir;
@@ -443,40 +417,23 @@
                 underlayEl.style.opacity = String(0.25 + 0.75 * p);
 
                 outputEl.style.transform = `translateX(${effDx}px)`;
-
-                // ★ここを保持
                 currentEffDx = effDx;
-
-                lastDx = dx;
-                lastX = e.clientX;
-                lastTime = performance.now();
-
-                // 速度算出用（pointerup ではなく pointermove の履歴で見る）
-                prevX = lastX;
-                prevT = lastTime;
 
                 lastX = e.clientX;
                 lastTime = e.timeStamp;
-
-                const dt = Math.max(1, lastTime - prevT);
-                lastVX = (lastX - prevX) / dt; // px/ms
             });
 
             swipeWrap.addEventListener("pointerup", (e) => {
-                if (e.pointerType === "touch") activeTouchIds.delete(e.pointerId);
-                if (activeTouchIds.size < 2) pinchZooming = false;
-
                 if (!tracking || e.pointerId !== pointerId) return;
 
-                // 終了時は必ず解除
-                unlockAfterSwipe();
-
                 tracking = false;
-                try { swipeWrap.releasePointerCapture(pointerId); } catch { }
-                pointerId = null;
 
-                if (!dragging) return;
+                // 捕まえてたら解放
+                if (captured) {
+                    try { swipeWrap.releasePointerCapture(pointerId); } catch { }
+                }
 
+                if (!dragging) { cleanup(true); return; }
                 dragging = false;
 
                 const dx = e.clientX - startX;
@@ -485,43 +442,41 @@
                 const dir = dx > 0 ? "prev" : "next";
                 const ok = canMove(dir);
 
-                const THRESH = Math.max(70, wrapWidth * 0.18); // 90/0.22 → 70/0.18 に緩和
+                const THRESH = Math.max(70, wrapWidth * 0.18);
 
-                // 速度（フリック）
-                const totalDt = Math.max(1, e.timeStamp - startT);
-                const vxTotal = (e.clientX - startX) / totalDt;
+                // フリック判定も少し緩め
+                const dt = Math.max(1, e.timeStamp - lastTime);
+                const vx = (e.clientX - lastX) / dt; // px/ms
+                const fast = Math.abs(vx) > 0.55;
 
-                // 直近の速度(lastVX) or 全体速度(vxTotal) のどちらかが速ければフリック扱い
-                const fast = Math.abs(lastVX) > 0.8 || Math.abs(vxTotal) > 0.6;
+                const ready = ok && (Math.abs(currentEffDx) >= THRESH || fast);
 
-                // ★判定は「今の見た目(currentEffDx)」で
-                const ready = ok && (
-                    Math.abs(currentEffDx) >= THRESH ||
-                    (fast && Math.abs(dx) >= 25) // フリックなら距離は短めでも許可
-                );
-
-                // ★遷移するなら絶対に戻さない（resetSwipeVisualしない）
                 if (ready) {
                     moveResult(dir === "prev" ? -1 : +1, {
                         viaSwipe: true,
                         dir,
-                        startOffsetPx: currentEffDx, // ★この位置からOUTへ
+                        startOffsetPx: currentEffDx,
                     });
                 } else {
                     resetSwipeVisual(true);
                 }
+
+                pointerId = null;
+                captured = false;
             }, { capture: true });
 
             swipeWrap.addEventListener("pointercancel", (e) => {
-                if (e.pointerType === "touch") activeTouchIds.delete(e.pointerId);
-                if (activeTouchIds.size < 2) pinchZooming = false;
-
-                cancelSwipeHard(true);
+                // ★ここが “押しっぱなしなのに戻る” の犯人になりやすいので、
+                // 捕まえて途切れにくくした上で、cancel時は素直に戻す
+                if (captured) {
+                    try { swipeWrap.releasePointerCapture(pointerId); } catch { }
+                }
+                cleanup(true);
             }, { capture: true });
 
             // ★これもあると「途中で突然切れる」系が安定する
             swipeWrap.addEventListener("lostpointercapture", () => {
-                cancelSwipeHard(true);
+                cleanup(true);
             });
 
             // ===== Keyboard (PC) =====
