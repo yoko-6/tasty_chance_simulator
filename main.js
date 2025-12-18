@@ -334,6 +334,10 @@
             let lastX = 0, lastTime = 0;
             let lastDx = 0;
 
+            let startT = 0;
+            let prevX = 0, prevT = 0;
+            let lastVX = 0; // px/ms（直近の速度）
+
             // ★現在の見た目のdx（effDx）を保持して、pointerupでその位置から遷移できるようにする
             let currentEffDx = 0;
 
@@ -352,6 +356,11 @@
                 lastDx = 0;
                 currentEffDx = 0;
 
+                startT = e.timeStamp;
+                prevX = lastX = e.clientX;
+                prevT = lastTime = e.timeStamp;
+                lastVX = 0;
+
                 try { swipeWrap.setPointerCapture(pointerId); } catch { }
             });
 
@@ -363,7 +372,7 @@
 
                 if (!dragging) {
                     if (Math.abs(dx) < 10) return;
-                    if (Math.abs(dx) < Math.abs(dy) * 1.2) return;
+                    if (Math.abs(dx) < Math.abs(dy) * 0.9) return;
                     dragging = true;
                     swipeWrap.classList.add("swiping");
                     outputEl.style.transition = "none";
@@ -403,6 +412,16 @@
                 lastDx = dx;
                 lastX = e.clientX;
                 lastTime = performance.now();
+
+                // 速度算出用（pointerup ではなく pointermove の履歴で見る）
+                prevX = lastX;
+                prevT = lastTime;
+
+                lastX = e.clientX;
+                lastTime = e.timeStamp;
+
+                const dt = Math.max(1, lastTime - prevT);
+                lastVX = (lastX - prevX) / dt; // px/ms
             });
 
             swipeWrap.addEventListener("pointerup", (e) => {
@@ -422,15 +441,20 @@
                 const dir = dx > 0 ? "prev" : "next";
                 const ok = canMove(dir);
 
-                const THRESH = Math.max(90, wrapWidth * 0.22);
+                const THRESH = Math.max(70, wrapWidth * 0.18); // 90/0.22 → 70/0.18 に緩和
 
                 // 速度（フリック）
-                const dt = Math.max(1, performance.now() - lastTime);
-                const vx = (e.clientX - lastX) / dt; // px/ms
-                const fast = Math.abs(vx) > 0.75;
+                const totalDt = Math.max(1, e.timeStamp - startT);
+                const vxTotal = (e.clientX - startX) / totalDt;
+
+                // 直近の速度(lastVX) or 全体速度(vxTotal) のどちらかが速ければフリック扱い
+                const fast = Math.abs(lastVX) > 0.8 || Math.abs(vxTotal) > 0.6;
 
                 // ★判定は「今の見た目(currentEffDx)」で
-                const ready = ok && (Math.abs(currentEffDx) >= THRESH || fast);
+                const ready = ok && (
+                    Math.abs(currentEffDx) >= THRESH ||
+                    (fast && Math.abs(dx) >= 25) // フリックなら距離は短めでも許可
+                );
 
                 // ★遷移するなら絶対に戻さない（resetSwipeVisualしない）
                 if (ready) {
