@@ -1058,9 +1058,12 @@
             energyChartInstance = null;
         }
 
-        const { summary, pokemons } = result;
+        const { summary, pokemons, settings } = result;
         const breakdown = summary.energyBreakdown;
         const labels = ["月", "火", "水", "木", "金", "土", "日"];
+
+        console.log(settings.field.fieldBonusPercent, settings.field.fieldEnergyMultiplier);
+        const recipeEnergyByDay = new Array(7).fill(Math.floor(settings.recipeEnergy * settings.field.fieldEnergyMultiplier) * 3);
 
         const base = breakdown.baseByDay || new Array(7).fill(0);
         const carryOverByDay = breakdown.carryOverByDay || new Array(7).fill(0);
@@ -1068,6 +1071,7 @@
         const berryEnergyByPokemonByDay = breakdown.berryEnergyByPokemonByDay || [];
 
         const datasets = [
+            { id: "recipe", label: "料理エナジー", data: recipeEnergyByDay, type: "bar", stack: "energy" },
             { id: "base", label: "ベース(10%/30%)大成功エナジー", data: base, type: "bar", stack: "energy" },
             { id: "carry-over", label: "料理チャンス（週またぎ発動）", data: carryOverByDay, type: "bar", stack: "energy" },
         ];
@@ -1435,11 +1439,17 @@
           </div>
 
           <div class="result-section-sub" style="margin:0.2rem;">表示切り替えボタン</div>
-          <div class="energy-toggle-group" style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.2rem;">
+        <div class="energy-toggle-group" style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.2rem;">
+            <label class="inline">
+              <input type="checkbox" class="energy-series-toggle" data-series-id="recipe" checked />
+                料理エナジー
+            </label>
             <label class="inline">
               <input type="checkbox" class="energy-series-toggle" data-series-id="base" checked />
               ベース大成功(10%/30%)
             </label>
+          </div>
+          <div class="energy-toggle-group" style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.2rem;">
             <label class="inline">
               <input type="checkbox" class="energy-series-toggle" data-series-id="carry-over" checked />
               週またぎ料理チャンス
