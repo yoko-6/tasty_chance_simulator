@@ -615,6 +615,20 @@
         });
     }
 
+    function populatePokemonSelect(selectEl) {
+        if (!selectEl) return;
+
+        selectEl.innerHTML = "";
+
+        for (const [key, p] of Object.entries(PokemonList)) {
+            const opt = document.createElement("option");
+            opt.value = key;
+            opt.textContent = p?.name || key;
+            selectEl.appendChild(opt);
+        }
+    }
+
+
     function initPokemonSlots() {
         const container = $("pokemonSlots");
 
@@ -636,13 +650,7 @@
         <div class="grid">
           <div class="row">
             <label for="slot-${i}-pokemon">ポケモン</label>
-            <select id="slot-${i}-pokemon">
-              <option value="dedenne">デデンネ</option>
-              <option value="uu">ウッウ</option>
-              <option value="laglarge">ラグラージ</option>
-              <option value="manyula">マニューラ</option>
-              <option value="tamazarashi_holiday">タマザラシ(ホリデー)</option>
-            </select>
+            <select id="slot-${i}-pokemon"></select>
           </div>
           <div class="row">
             <label for="slot-${i}-level">レベル</label>
@@ -760,6 +768,9 @@
       `;
 
             container.appendChild(card);
+
+            const pokemonSel = document.getElementById(`slot-${i}-pokemon`);
+            populatePokemonSelect(pokemonSel);
 
             // save/load
             $(`slot-${i}-savePresetBtn`)?.addEventListener("click", () => addPokemonPresetFromSlot(i));
