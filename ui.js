@@ -753,7 +753,7 @@
           </div>
         </details>
 
-        <div class="subskill-actions">
+        <div class="subskill-actions" style="margin-top:1rem;">
           <button type="button" id="slot-${i}-clear-slot">このポケモンの設定をクリア</button>
           <button type="button" id="slot-${i}-delete-slot" disabled>このポケモンを削除</button>
         </div>
