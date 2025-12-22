@@ -661,12 +661,14 @@
             const energyDecay = disableEnergyDecay ? 0.0 : 1.0 / 600.0;
 
             const fieldKey = $("#fieldSelect").value || "wakakusa";
+            const isEx = Fields[fieldKey]?.isEx || fieldKey.endsWith("_ex");
             const fieldConfig = {
                 key: fieldKey,
+                isEx: isEx,
                 mainType: $("#fieldMainType").value || "",
                 sub1Type: $("#fieldSub1Type").value || "",
                 sub2Type: $("#fieldSub2Type").value || "",
-                exEffect: fieldKey === "wakakusa_ex" ? $("#exEffect").value || "" : "",
+                exEffect: isEx ? $("#exEffect").value || "" : "",
             };
 
             // collect slot configs
@@ -863,7 +865,7 @@
                                 skillMult: pkm.personal_skill_multiplier,
                             },
                             matchesFieldType: fInfo.matchesFieldType,
-                            isMainType: fInfo.isMainType && fieldKey === "wakakusa_ex",
+                            isMainType: fInfo.isMainType && isEx,
                             activeLimitChanceWeekday: pkm.active_chance_limit_weekday * 100,
                             activeLimitChanceSunday: pkm.active_chance_limit_sunday * 100,
                         };

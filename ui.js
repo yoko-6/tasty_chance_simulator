@@ -940,6 +940,7 @@
         const isSub1 = pokemonType === fieldConfig.sub1Type;
         const isSub2 = pokemonType === fieldConfig.sub2Type;
         const isSelected = isMain || isSub1 || isSub2;
+        const isEx = !!fieldConfig.isEx || fieldConfig.key.endsWith("_ex");
 
         let helpingMult = 1.0;
         let skillMult = 1.0;
@@ -947,7 +948,7 @@
         let berryEnergyMult = isSelected ? 2.0 : 1.0;
         let effectLabel = "補正なし";
 
-        if (fieldConfig.key === "wakakusa_ex") {
+        if (isEx) {
             if (isMain) helpingMult = 1.1;
             else if (!isSelected) helpingMult = 0.85;
 
@@ -1372,8 +1373,9 @@
         const ev = settings.events;
         const sched = settings.schedule;
         const recipeEnergy = settings.recipeEnergy;
+        const isEx = !!field.isEx || (typeof field?.key === "string" && field.key.endsWith("_ex"));
 
-        const fieldExText = field.key === "wakakusa_ex" ? field.exEffectLabel || "補正なし" : "なし";
+        const fieldExText = isEx ? field.exEffectLabel || "補正なし" : "なし";
         const fieldBonusPercentText =
             field.fieldBonusPercent != null
                 ? field.fieldBonusPercent.toFixed(1)
