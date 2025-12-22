@@ -1218,10 +1218,10 @@
 
                 const fieldTags = [];
                 if (p.matchesFieldType) fieldTags.push('<span class="tag tag-field-match">好きなきのみ</span>');
-                if (isEx && isMain) fieldTags.push('<span class="tag tag-main-type">EXメイン</span>');
-                if (isEx && (isSub1 || isSub2)) fieldTags.push('<span class="tag tag-sub-type">EXサブ</span>');
-                if (isEx && !isSelected) fieldTags.push('<span class="tag tag-ex-berry-miss">EX不一致</span>');
-                if (isEx && p.exEffectLabel !== "補正なし") fieldTags.push(`<span class="tag">${p.exEffectLabel}</span>`);
+                if (isEx && isMain) fieldTags.push('<span class="tag tag-main-type">EX:メイン</span>');
+                if (isEx && (isSub1 || isSub2)) fieldTags.push('<span class="tag tag-sub-type">EX:サブ</span>');
+                if (isEx && !isSelected) fieldTags.push('<span class="tag tag-ex-berry-miss">EX:不一致</span>');
+                if (isEx && p.exEffectLabel !== "補正なし") fieldTags.push(`<span class="tag">EX:${p.exEffectLabel}</span>`);
 
                 const natureEffectText = PS.describeNatureEffect(p.natureUp, p.natureDown);
 
