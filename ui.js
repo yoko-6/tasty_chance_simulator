@@ -641,6 +641,7 @@
               <option value="uu">ウッウ</option>
               <option value="laglarge">ラグラージ</option>
               <option value="manyula">マニューラ</option>
+              <option value="tamazarashi_holiday">タマザラシ(ホリデー)</option>
             </select>
           </div>
           <div class="row">

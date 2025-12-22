@@ -228,6 +228,7 @@
         uu: new PokemonData("uu", "ウッウ", PS.Type.Flying, PS.Berries.Pamtre, PS.Specialty.Ingredients, 2700, 0.165, 0.039, 19, PS.MainSkills.TastyChanceS),
         laglarge: new PokemonData("laglarge", "ラグラージ", PS.Type.Ground, PS.Berries.Figy, PS.Specialty.Berries, 2800, 0.146, 0.034, 30, PS.MainSkills.TastyChanceS),
         manyula: new PokemonData("manyula", "マニューラ", PS.Type.Dark, PS.Berries.Wiki, PS.Specialty.Berries, 2700, 0.251, 0.018, 26, PS.MainSkills.TastyChanceS),
+        tamazarashi_holiday: new PokemonData("tamazarashi_holiday", "タマザラシ(ホリデー)", PS.Type.Ice, PS.Berries.Rawst, PS.Specialty.Skills, 3300, 0.214, 0.05, 20, PS.MainSkills.TastyChanceS),
     };
 
     PS.UserEventType = {
