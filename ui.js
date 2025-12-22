@@ -1461,12 +1461,12 @@
                     (p) => `
                 <div class="energy-toggle-group" style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:0.2rem;">
                   <label class="inline">
-                    <input type="checkbox" class="energy-series-toggle" data-series-id="poke-${p.index}-cook" checked />
-                    ${p.index}.${p.name}料理チャンス
-                  </label>
-                  <label class="inline">
                     <input type="checkbox" class="energy-series-toggle" data-series-id="poke-${p.index}-berry" checked />
                     ${p.index}.${p.name}きのみ
+                  </label>  
+                  <label class="inline">
+                    <input type="checkbox" class="energy-series-toggle" data-series-id="poke-${p.index}-cook" checked />
+                    ${p.index}.${p.name}料理チャンス
                   </label>
                 </div>
               `
