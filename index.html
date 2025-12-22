@@ -670,6 +670,34 @@
       background: #fafafa;
     }
 
+    details.team-settings>summary {
+      cursor: pointer;
+      font-size: 1.0rem;
+      font-weight: 600;
+      color: #007aff;
+      list-style: none;
+    }
+
+    details.team-settings>summary:hover {
+      text-decoration: underline;
+      color: #005fcc;
+    }
+
+    /* デフォルトの三角マーカーを消す（対応ブラウザ向け） */
+    details.team-settings>summary::-webkit-details-marker {
+      display: none;
+    }
+
+    /* 疑似アイコン（▼ / ▲） */
+    details.team-settings>summary::after {
+      content: " ▼";
+      font-size: 0.8rem;
+    }
+
+    details.team-settings[open]>summary::after {
+      content: " ▲";
+    }
+
     .result-nav {
       display: flex;
       align-items: center;
@@ -1421,12 +1449,15 @@
     </div>
 
     <hr />
+    <details id="teamSettingsDetails" class="team-settings">
+      <summary>ポケモン チーム編集</summary>
     <!-- ポケモンスロット（最大 5 匹） -->
     <div id="pokemonSlots"></div>
     <div style="margin-top:0.5rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
       <button id="addPokemonBtn" type="button" class="secondary-btn">ポケモンを追加</button>
       <button id="removePokemonBtn" type="button" class="secondary-delete-btn">最後のポケモンを削除</button>
     </div>
+    </details>
 
     <div style="margin-top:1rem; display:flex; align-items:center; gap:0.75rem;">
       <button id="runBtn">シミュレーション実行</button>
