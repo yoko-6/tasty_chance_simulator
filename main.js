@@ -39,6 +39,9 @@
             "fieldSub1Type",
             "fieldSub2Type",
             "exEffect",
+
+            "teamSettingsDetails",
+            "advancedSettingsDetails",
         ];
 
         const TYPE_OVERRIDE_IDS = ["fieldMainType", "fieldSub1Type", "fieldSub2Type", "exEffect"];
@@ -47,6 +50,10 @@
         const readValueById = (id) => {
             const el = document.getElementById(id);
             if (!el) return undefined;
+
+            // ★ details は open を保存
+            if (el.tagName === "DETAILS") return !!el.open;
+
             if (el.type === "checkbox") return !!el.checked;
             return el.value;
         };
@@ -55,6 +62,13 @@
         const writeValueById = (id, value) => {
             const el = document.getElementById(id);
             if (!el) return false;
+
+            // ★ details は open を復元
+            if (el.tagName === "DETAILS") {
+                if (value === undefined || value === null) return false;
+                el.open = !!value;
+                return true;
+            }
 
             if (el.type === "checkbox") {
                 el.checked = !!value;
@@ -118,6 +132,10 @@
 
             document.addEventListener("input", onAny, { passive: true });
             document.addEventListener("change", onAny, { passive: true });
+
+            // ★ details の開閉
+            // toggle は bubbles=false の挙動差があるので capture:true が無難
+            document.addEventListener("toggle", onAny, { capture: true });
         };
 
         // --- 呼び出し（initの後） ---
