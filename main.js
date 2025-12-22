@@ -796,6 +796,7 @@
                 };
 
                 const fieldLabel = Fields[fieldKey]?.label || fieldKey;
+                const isEx = Fields[fieldKey]?.isEx || false;
 
                 const result = {
                     timestampStr,
@@ -878,6 +879,7 @@
                         field: {
                             key: fieldKey,
                             label: fieldLabel,
+                            isEx: isEx,
                             mainType: fieldConfig.mainType,
                             sub1Type: fieldConfig.sub1Type,
                             sub2Type: fieldConfig.sub2Type,

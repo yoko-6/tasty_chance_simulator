@@ -1207,10 +1207,20 @@
 
         const pokemonCards = pokemons
             .map((p, i) => {
+                const field = settings.field;
+                const isEx = !!field.isEx || (typeof field?.key === "string" && field.key.endsWith("_ex"));
+
+                const isMain = p.type === field.mainType;
+                const isSub1 = p.type === field.sub1Type;
+                const isSub2 = p.type === field.sub2Type;
+                const isSelected = isMain || isSub1 || isSub2;
+
                 const fieldTags = [];
                 if (p.matchesFieldType) fieldTags.push('<span class="tag tag-field-match">好きなきのみ</span>');
-                if (p.exEffectLabel && p.isMainType) fieldTags.push('<span class="tag tag-main-type">メインタイプ</span>');
-                if (p.exEffectLabel && p.exEffectLabel !== "補正なし") fieldTags.push(`<span class="tag">${p.exEffectLabel}</span>`);
+                if (isEx && isMain) fieldTags.push('<span class="tag tag-main-type">EXメイン</span>');
+                if (isEx && (isSub1 || isSub2)) fieldTags.push('<span class="tag tag-sub-type">EXサブ</span>');
+                if (isEx && !isSelected) fieldTags.push('<span class="tag tag-ex-berry-miss">EX不一致</span>');
+                if (isEx && p.exEffectLabel !== "補正なし") fieldTags.push(`<span class="tag">${p.exEffectLabel}</span>`);
 
                 const natureEffectText = PS.describeNatureEffect(p.natureUp, p.natureDown);
 
