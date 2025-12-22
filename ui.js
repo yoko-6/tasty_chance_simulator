@@ -1062,7 +1062,6 @@
         const breakdown = summary.energyBreakdown;
         const labels = ["月", "火", "水", "木", "金", "土", "日"];
 
-        console.log(settings.field.fieldBonusPercent, settings.field.fieldEnergyMultiplier);
         const recipeEnergyByDay = new Array(7).fill(Math.floor(settings.recipeEnergy * settings.field.fieldEnergyMultiplier) * 3);
 
         const base = breakdown.baseByDay || new Array(7).fill(0);
