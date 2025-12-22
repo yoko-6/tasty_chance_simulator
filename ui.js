@@ -688,7 +688,7 @@
         </div>
 
         <details class="advanced-settings">
-          <summary>パーティから外す条件を設定</summary>
+          <summary>チームから外す条件を設定</summary>
           <div class="advanced-body" style="padding:0.5rem;">
             <div class="slot-modifiers">
               <div class="row">
@@ -696,7 +696,7 @@
                 <div class="modifier-field">
                   <label class="inline">
                     <input id="slot-${i}-active-always-weekday" type="radio" name="slot-${i}-active-weekday" value="always" checked>
-                    常にパーティに入れる
+                    常にチームに入れる
                   </label>
                   <label class="inline">
                     <input id="slot-${i}-active-threshold-weekday" type="radio" name="slot-${i}-active-weekday" value="threshold">
@@ -712,7 +712,7 @@
                 <div class="modifier-field">
                   <label class="inline">
                     <input id="slot-${i}-active-always-sunday" type="radio" name="slot-${i}-active-sunday" value="always" checked>
-                    常にパーティに入れる
+                    常にチームに入れる
                   </label>
                 </div>
                 <div class="modifier-field">
@@ -727,7 +727,7 @@
               </div>
             </div>
             <div class="muted">
-                起きている間，料理チャンスによる上昇分がこの値以上になったらパーティから外れる．下回ったら戻る（0〜70%）
+                起きている間，料理チャンスによる上昇分がこの値以上になったらチームから外れる．下回ったら戻る（0〜70%）
             </div>
             </div>
           </div>
