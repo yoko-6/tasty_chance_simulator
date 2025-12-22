@@ -1408,6 +1408,7 @@
             line1Chips.push(`
                 <div class="header-chip" style="background-color:#fcf494; color:#000;">
                     <span class="chip-label">キャンプチケット</span>
+                    <span class="chip-value"></span>
                 </div>
             `);
         }
