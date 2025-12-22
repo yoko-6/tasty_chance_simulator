@@ -1210,6 +1210,7 @@
             .map((p, i) => {
                 const field = settings.field;
                 const isEx = !!field.isEx || (typeof field?.key === "string" && field.key.endsWith("_ex"));
+                const useCampTicket = settings.useCampTicket;
 
                 const isMain = p.type === field.mainType;
                 const isSub1 = p.type === field.sub1Type;
@@ -1217,7 +1218,8 @@
                 const isSelected = isMain || isSub1 || isSub2;
 
                 const fieldTags = [];
-                if (p.matchesFieldType) fieldTags.push('<span class="tag tag-field-match">好きなきのみ</span>');
+                if (useCampTicket) fieldTags.push('<span class="tag tag-camp-ticket">キャンプチケット</span>');
+                if (!isEx && p.matchesFieldType) fieldTags.push('<span class="tag tag-field-match">好きなきのみ</span>');
                 if (isEx && isMain) fieldTags.push('<span class="tag tag-main-type">EX:メイン</span>');
                 if (isEx && (isSub1 || isSub2)) fieldTags.push('<span class="tag tag-sub-type">EX:サブ</span>');
                 if (isEx && !isSelected) fieldTags.push('<span class="tag tag-ex-berry-miss">EX:不一致</span>');
@@ -1375,6 +1377,8 @@
         const recipeEnergy = settings.recipeEnergy;
         const isEx = !!field.isEx || (typeof field?.key === "string" && field.key.endsWith("_ex"));
 
+        const useCampTicket = settings.useCampTicket;
+
         const fieldExText = isEx ? field.exEffectLabel || "補正なし" : "なし";
         const fieldBonusPercentText =
             field.fieldBonusPercent != null
@@ -1390,16 +1394,23 @@
       <div class="header-chip" style="background-color:#f2c09d; color:#000;">
         <span class="chip-label">レシピ</span>
         <span class="chip-value">${recipeEnergy.toFixed(0)}</span>
-        <span class="chip-label">エナジー</span>
       </div>
     `);
 
         line1Chips.push(`
       <div class="header-chip" style="background-color:#b6d7a8; color:#000;">
-        <span class="chip-label">フィールドボーナス</span>
+        <span class="chip-label">フィールド</span>
         <span class="chip-value">+${field.fieldBonusPercent.toFixed(0)}%</span>
       </div>
     `);
+
+        if (useCampTicket) {
+            line1Chips.push(`
+                <div class="header-chip" style="background-color:#fcf494; color:#000;">
+                    <span class="chip-label">キャンプチケット</span>
+                </div>
+            `);
+        }
 
         if (ev.energyEventMultiplier && Math.abs(ev.energyEventMultiplier - 1.0) > 1e-6) {
             line2Chips.push(`
