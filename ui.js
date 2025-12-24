@@ -1216,13 +1216,17 @@
                 const isSub2 = p.type === field.sub2Type;
                 const isSelected = isMain || isSub1 || isSub2;
 
-                const fieldTags = [];
-                if (useCampTicket) fieldTags.push('<span class="tag tag-camp-ticket">キャンプチケット</span>');
-                if (!isEx && p.matchesFieldType) fieldTags.push('<span class="tag tag-field-match">好きなきのみ</span>');
-                if (isEx && isMain) fieldTags.push('<span class="tag tag-main-type">EX:メイン</span>');
-                if (isEx && (isSub1 || isSub2)) fieldTags.push('<span class="tag tag-sub-type">EX:サブ</span>');
-                if (isEx && !isSelected) fieldTags.push('<span class="tag tag-ex-berry-miss">EX:不一致</span>');
-                if (isEx && p.exEffectLabel !== "補正なし") fieldTags.push(`<span class="tag">EX:${p.exEffectLabel}</span>`);
+                const pokemonTags = [];
+                if (useCampTicket) pokemonTags.push('<span class="tag tag-camp-ticket">キャンプチケット</span>');
+                if (!isEx && p.matchesFieldType) pokemonTags.push('<span class="tag tag-field-match">好きなきのみ</span>');
+                if (isEx && isMain) pokemonTags.push('<span class="tag tag-main-type">EX:メイン</span>');
+                if (isEx && (isSub1 || isSub2)) pokemonTags.push('<span class="tag tag-sub-type">EX:サブ</span>');
+                if (isEx && !isSelected) pokemonTags.push('<span class="tag tag-ex-berry-miss">EX:不一致</span>');
+                if (isEx && p.exEffectLabel !== "補正なし") pokemonTags.push(`<span class="tag">EX:${p.exEffectLabel}</span>`);
+                if (p.personal.helpMult && Math.abs(p.personal.helpMult - 1.0) > 1e-6) pokemonTags.push(`<span class="tag tag-speed-bonus">個別:スピード×${p.personal.helpMult.toFixed(2)}</span>`);
+                if (settings.events.helpingSpeedMultiplier && Math.abs(settings.events.helpingSpeedMultiplier - 1.0) > 1e-6) pokemonTags.push(`<span class="tag tag-speed-bonus">全体:スピード×${settings.events.helpingSpeedMultiplier.toFixed(2)}</span>`);
+                if (p.personal.skillMult && Math.abs(p.personal.skillMult - 1.0) > 1e-6) pokemonTags.push(`<span class="tag tag-skill-bonus">個別:スキル確率×${p.personal.skillMult.toFixed(2)}</span>`);
+                if (settings.events.skillEventMultiplier && Math.abs(settings.events.skillEventMultiplier - 1.0) > 1e-6) pokemonTags.push(`<span class="tag tag-skill-bonus">全体:スキル確率×${settings.events.skillEventMultiplier.toFixed(2)}</span>`);
 
                 const natureEffectText = PS.describeNatureEffect(p.natureUp, p.natureDown);
 
@@ -1336,7 +1340,7 @@
               </div>
               <div class="pokemon-side-controls">
                 <button type="button" class="preset-save-from-result-btn" data-pokemon-idx="${p.index - 1}">保存</button>
-                <div class="pokemon-tags pokemon-tags-right">${fieldTags.join("")}</div>
+                <div class="pokemon-tags pokemon-tags-right">${pokemonTags.join("")}</div>
               </div>
             </div>
             ${mainChipsHtml}
