@@ -1333,10 +1333,10 @@
               <div>
                 <div class="pokemon-title">ポケモン${p.index}: ${p.name}</div>
                 <div class="pokemon-sub">
-                  ${p.type || "-"} ／ Lv${p.level} ／ メインLv${p.skillLevel}
+                  ${p.type || "-"}／Lv${p.level}／メイン:${p.skillLevel}
                 </div>
                 <div class="pokemon-sub">${p.natureName} ${natureEffectText && natureEffectText !== "補正なし" ? `（${natureEffectText}）` : ""}</div>
-                <div class="pokemon-sub">${p.subSkillsLabel && p.subSkillsLabel !== "なし" ? p.subSkillsLabel : "サブスキルなし"}</div>
+                <div class="pokemon-sub">サブ:${p.subSkillsLabel}</div>
               </div>
               <div class="pokemon-side-controls">
                 <button type="button" class="preset-save-from-result-btn" data-pokemon-idx="${p.index - 1}">保存</button>
