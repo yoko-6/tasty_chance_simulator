@@ -1330,7 +1330,7 @@
                 return `
           <div class="pokemon-card">
             <div class="pokemon-card-header">
-              <div>
+              <div class="pokemon-main">
                 <div class="pokemon-title">ポケモン${p.index}: ${p.name}</div>
                 <div class="pokemon-sub">
                   ${p.type || "-"}／Lv${p.level}／メイン:${p.skillLevel}
