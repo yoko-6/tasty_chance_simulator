@@ -628,7 +628,6 @@
         }
     }
 
-
     function initPokemonSlots() {
         const container = $("pokemonSlots");
 

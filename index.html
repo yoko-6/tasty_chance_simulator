@@ -691,7 +691,7 @@
 
     details.team-settings>summary {
       cursor: pointer;
-      font-size: 1.0rem;
+      font-size: 1.1rem;
       font-weight: 600;
       color: #007aff;
       list-style: none;
@@ -1259,6 +1259,44 @@
       opacity: 0.75;
     }
 
+    /* 現在のチーム表示（シンプル1行） */
+    .team-lines {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      margin-top: 0.5rem;
+    }
+
+    .team-line {
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+      padding: 0.45rem 0.6rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      background: #fff;
+    }
+
+    .team-line .team-no {
+      font-size: 0.9rem;
+      color: #6b7280;
+      flex: 0 0 auto;
+    }
+
+    .team-line .team-name {
+      font-weight: 700;
+      flex: 0 0 auto;
+    }
+
+    .team-line .team-meta {
+      color: #6b7280;
+      font-size: 0.92rem;
+      line-height: 1.25;
+      flex: 1 1 auto;
+      min-width: 0;
+      word-break: break-word;
+    }
+
     html {
       font-size: 32px;
     }
@@ -1477,8 +1515,9 @@
     </div>
 
     <hr />
+
     <details id="teamSettingsDetails" class="team-settings">
-      <summary>ポケモン チーム編集</summary>
+      <summary>チーム編集</summary>
       <!-- ポケモンスロット（最大 5 匹） -->
       <div id="pokemonSlots"></div>
       <div style="margin-top:0.5rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
@@ -1486,6 +1525,10 @@
         <button id="removePokemonBtn" type="button" class="secondary-delete-btn">最後のポケモンを削除</button>
       </div>
     </details>
+
+    <div id="currentTeamInfo"></div>
+
+    <hr />
 
     <div style="margin-top:1rem; display:flex; align-items:center; gap:0.75rem;">
       <button id="runBtn">シミュレーション実行</button>

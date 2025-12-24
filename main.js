@@ -142,6 +142,92 @@
         applyUICache();
         attachUICacheAutoSave();
 
+        // ===== Current Team Preview (reflect current UI, without running simulation) =====
+        (function setupCurrentTeamPreview() {
+            const teamDetails = document.getElementById("teamSettingsDetails");
+            const infoEl = document.getElementById("currentTeamInfo");
+            if (!teamDetails || !infoEl) return;
+
+            const escapeHtml = (s) =>
+                String(s ?? "").replace(/[&<>"']/g, (c) => ({
+                    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+                }[c]));
+
+            const buildTeamHtmlFromUI = () => {
+                const lines = [];
+
+                for (let i = 1; i <= MAX_SLOTS; i++) {
+                    const card = document.getElementById(`slot-${i}-card`);
+                    if (!card || card.style.display === "none") continue;
+
+                    const pokemonKey = document.getElementById(`slot-${i}-pokemon`)?.value;
+                    const pokemonName = (PokemonList[pokemonKey]?.name) || pokemonKey || `slot-${i}`;
+
+                    const level = document.getElementById(`slot-${i}-level`)?.value || "";
+                    const skillLv = document.getElementById(`slot-${i}-skillLevel`)?.value || "";
+
+                    const subSkills = ui.getSelectedSubSkillsForSlot(i) || [];
+                    const subSkillsText = subSkills.length ? subSkills.map(s => s.name).join(", ") : "なし";
+
+                    const natureUp = document.getElementById(`slot-${i}-nature-up`)?.value || "none";
+                    const natureDown = document.getElementById(`slot-${i}-nature-down`)?.value || "none";
+                    const natureKey = document.getElementById(`slot-${i}-nature`)?.value || "";
+                    const nature = PS.createNatureFromUpDown(natureUp, natureDown, natureKey);
+                    const natureName = nature?.name || "";
+
+                    lines.push(`
+                        <div class="team-line">
+                            <div class="team-no">#${i}</div>
+                            <div class="team-name">${escapeHtml(pokemonName)}</div>
+                            <div class="team-meta">
+                            Lv${escapeHtml(level)} / スキルLv${escapeHtml(skillLv)}
+                            <span> / サブ: ${escapeHtml(subSkillsText)}</span>
+                            <span> / 性格: ${escapeHtml(natureName)}</span>
+                            </div>
+                        </div>
+                    `);
+                }
+
+                if (!lines.length) {
+                    return `
+                        <div class="slot-card">
+                            <div class="muted">ポケモンがいません</div>
+                        </div>
+                        `;
+                }
+
+                return `
+                    <div class="slot-card">
+                        <div class="team-lines">
+                            ${lines.join("")}
+                        </div>
+                    </div>
+                `;
+            };
+
+            const render = () => {
+                // チーム編集が開いてる間は出さない
+                if (teamDetails.open) {
+                    infoEl.style.display = "none";
+                    return;
+                }
+                infoEl.style.display = "";
+                infoEl.innerHTML = buildTeamHtmlFromUI();
+            };
+
+            // 起動時に1回
+            render();
+
+            // チーム編集を閉じたら更新（開いたら隠す）
+            teamDetails.addEventListener("toggle", () => {
+                if (teamDetails.open) {
+                    infoEl.style.display = "none";
+                } else {
+                    render();
+                }
+            });
+        })();
+
         // howto open/close
         const howtoCard = $("#howtoCard");
         const howtoHeader = $("#howtoHeader");
