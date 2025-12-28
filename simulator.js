@@ -339,6 +339,10 @@
             for (let i = 0; i < n; i++) {
                 const p = pokemons[i];
                 p.resetStats();
+
+                if (cooking_chance_probability + carry_over_cooking_chance >= p.active_chance_limit_weekday) p.deactivate();
+                else p.activate();
+
                 pokemon_event_queue.push(new PokemonEvent(i, p, p.get_next_helping_time(FOUR)));
             }
 
@@ -377,7 +381,7 @@
                     const nextEvent = pickNextPokemonEventBefore(user_event.timestamp);
                     if (!nextEvent) break;
 
-                    if (!user_event.event !== PS.UserEventType.wake_up) {
+                    if (user_event.event !== PS.UserEventType.wake_up) {
                         pokemons.map((p) => {
                             const active_chance_limit = (is_sunday ? p.active_chance_limit_sunday : p.active_chance_limit_weekday);
                             if (cooking_chance_probability + carry_over_cooking_chance >= active_chance_limit) p.deactivate();
