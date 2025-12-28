@@ -816,11 +816,13 @@
                 return;
             }
 
+            const helpingBonus = readNumber("helpingBonus", "0");
+
             // team helping bonus count
             const teamHelpingBonusCount = slotConfigs.reduce((cnt, cfg) => {
                 const selfCount = cfg.subSkills.filter((s) => s === SubSkills.HelpingBonus).length;
                 return cnt + selfCount;
-            }, 0);
+            }, 0) + helpingBonus;
 
             const pokemons = slotConfigs.map((cfg) => {
                 const pokemonData = PokemonList[cfg.selectedPokemonKey];
@@ -939,6 +941,23 @@
 
                         const fInfo = ui.getFieldEffectForType(pkm.pokemon_data.type, fieldConfig);
 
+                        const formatSkillsWithCount = (skills) => {
+                            if (!skills || !skills.length) return "なし";
+
+                            const counts = new Map();
+                            for (const s of skills) {
+                                const name = s?.name ?? "";
+                                if (!name) continue;
+                                counts.set(name, (counts.get(name) || 0) + 1);
+                            }
+
+                            if (counts.size === 0) return "なし";
+
+                            return [...counts.entries()]
+                                .map(([name, n]) => (n >= 2 ? `${name}×${n}` : name))
+                                .join(", ");
+                        };
+
                         return {
                             index: idx + 1,
                             pokemonKey: pkm.pokemon_data.key,
@@ -967,7 +986,7 @@
                             inventoryLimit: pkm.inventory_limit,
                             exEffectLabel: pkm.ex_effect_label,
                             subSkillsLabel: pkm.sub_skills.length ? pkm.sub_skills.map((s) => s.name).join(", ") : "なし",
-                            teamSubSkillsLabel: pkm.team_sub_skills.length ? pkm.team_sub_skills.map((s) => s.name).join(", ") : "なし",
+                            teamSubSkillsLabel: formatSkillsWithCount(pkm.team_sub_skills),
                             personal: {
                                 helpMult: pkm.personal_helping_speed_multiplier,
                                 ingBonus: pkm.personal_ingredient_bonus,

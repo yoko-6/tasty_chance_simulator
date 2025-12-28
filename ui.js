@@ -906,11 +906,9 @@
         };
 
         const addBtn = $("addPokemonBtn");
-        const removeBtn = $("removePokemonBtn");
 
         const updateAddRemoveButtons = () => {
             addBtn.disabled = visibleSlots >= MAX_SLOTS;
-            removeBtn.disabled = visibleSlots <= 1;
         };
         updateAddRemoveButtons();
 
@@ -919,15 +917,6 @@
             visibleSlots += 1;
             const card = $(`slot-${visibleSlots}-card`);
             if (card) card.style.display = "block";
-            updateAddRemoveButtons();
-            updateDeleteButtons();
-        });
-
-        removeBtn.addEventListener("click", () => {
-            if (visibleSlots <= 1) return;
-            const card = $(`slot-${visibleSlots}-card`);
-            if (card) card.style.display = "none";
-            visibleSlots -= 1;
             updateAddRemoveButtons();
             updateDeleteButtons();
         });

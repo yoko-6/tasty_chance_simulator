@@ -1312,6 +1312,41 @@
       word-break: break-word;
     }
 
+    .team-actions-row {
+      margin-top: 0.5rem;
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    /* 右側の「2行ラベル + 入力」 */
+    .team-inline-input {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.25rem 0.5rem;
+      /* border: 1px solid #e5e7eb; */
+      /* border-radius: 0.6rem; */
+      background: #fff;
+    }
+
+    .team-inline-input label {
+      font-size: 0.8rem;
+      line-height: 1.1;
+    }
+
+    .team-inline-input label .line {
+      display: block;
+      /* 2行にする */
+    }
+
+    .team-inline-input input {
+      width: 4.5rem;
+      /* 好みで調整 */
+      max-width: 7rem;
+    }
+
     html {
       font-size: 32px;
     }
@@ -1535,10 +1570,18 @@
       <summary>チーム編集</summary>
       <!-- ポケモンスロット（最大 5 匹） -->
       <div id="pokemonSlots"></div>
-      <div style="margin-top:0.5rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+      <div class="team-actions-row">
         <button id="addPokemonBtn" type="button" class="secondary-btn">ポケモンを追加</button>
-        <button id="removePokemonBtn" type="button" class="secondary-delete-btn">最後のポケモンを削除</button>
+
+        <div class="team-inline-input">
+          <label for="helpingBonus">
+            <span class="line">他のおてつだい</span>
+            <span class="line">ボーナスの数</span>
+          </label>
+          <input id="helpingBonus" type="number" min="0" step="1" value="0" />
+        </div>
       </div>
+
     </details>
 
     <div id="currentTeamInfo"></div>
