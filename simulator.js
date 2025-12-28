@@ -199,7 +199,7 @@
             this.total_active_seconds += this.get_help_interval();
             this.health -= this.energy_decay * this.get_help_interval();
             this.health = Math.max(this.health, 0);
-            
+
             if (this.inventory >= this.inventory_limit) {
                 this.get_berries();
                 return 0.0;
@@ -269,22 +269,23 @@
     }
 
     class Simulator {
-        constructor() {
-            this.chance_limit = 0.7;
-            this.base_cooking_chance = 0.1;
-            this.first_day_base_success_chance = 0.0;
-            this.sunday_chance_bonus = 0.2;
-            this.sunday_success_energy_bonus = 1.5;
-            this.cooking_energy_event_multiplier = 1.0;
-            this.field_energy_multiplier = 1.0;
+        constructor(opts = {}) {
+            this.chance_limit = opts.chance_limit ?? 0.7;
+            this.base_cooking_chance = opts.base_cooking_chance ?? 0.1;
+            this.sunday_chance_bonus = opts.sunday_chance_bonus ?? 0.2;
+            this.sunday_success_energy_bonus = opts.sunday_success_energy_bonus ?? 1.5;
 
-            this.wake_up_time = 7 * 3600;
-            this.breakfast_time = 8 * 3600;
-            this.lunch_time = 12 * 3600;
-            this.dinner_time = 18 * 3600;
-            this.sleep_time = 22.5 * 3600;
+            this.first_day_base_success_chance = opts.first_day_base_success_chance ?? 0.0;
+            this.cooking_energy_event_multiplier = opts.cooking_energy_event_multiplier ?? 1.0;
+            this.field_energy_multiplier = opts.field_energy_multiplier ?? 1.0;
 
-            this.avg = null; // ★結果はここに日別配列で入る
+            this.wake_up_time = opts.wake_up_time ?? 7 * 3600;
+            this.breakfast_time = opts.breakfast_time ?? 8 * 3600;
+            this.lunch_time = opts.lunch_time ?? 12 * 3600;
+            this.dinner_time = opts.dinner_time ?? 18 * 3600;
+            this.sleep_time = opts.sleep_time ?? (22 * 3600 + 30 * 60);
+
+            this.avg = null;
         }
 
         _makeArr7(v = 0) {
@@ -417,7 +418,7 @@
 
                     pokemon_event_queue.push(nextEvent.next());
                 }
-                
+
                 // 食事イベント：成功判定とエナジー配分
                 if (user_event.event === PS.UserEventType.wake_up) {
                     base_cooking_chance = this.base_cooking_chance + (is_sunday ? this.sunday_chance_bonus : 0.0);

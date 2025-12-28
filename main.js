@@ -10,6 +10,19 @@
         return Number.isFinite(v) ? v : Number(fallbackStr);
     };
 
+    const parseHHMMToSeconds = (hhmm, fallbackSec) => {
+        if (typeof hhmm !== "string") return fallbackSec;
+        const m = hhmm.match(/^(\d{1,2}):(\d{2})$/);
+        if (!m) return fallbackSec;
+
+        const h = Number(m[1]);
+        const min = Number(m[2]);
+        if (!Number.isFinite(h) || !Number.isFinite(min)) return fallbackSec;
+        if (h < 0 || h > 23 || min < 0 || min > 59) return fallbackSec;
+
+        return h * 3600 + min * 60;
+    };
+
     window.addEventListener("DOMContentLoaded", () => {
         ui.initPokemonSlots();
         ui.initFieldUI();
@@ -857,10 +870,20 @@
             const day1ChancePercentInput = readNumber("day1SuccessChance", "0");
             const day1ChancePercent = Math.max(0, Math.min(day1ChancePercentInput, 70));
 
-            const simulator = new Simulator();
-            simulator.first_day_base_success_chance = day1ChancePercent / 100.0;
-            simulator.cooking_energy_event_multiplier = energyEventMultiplier;
-            simulator.field_energy_multiplier = fieldEnergyMultiplier;
+            const simulatorOpts = {
+                // 例：他のパラメータもここで入れる（必要なものだけ）
+                cooking_energy_event_multiplier: energyEventMultiplier,
+                field_energy_multiplier: fieldEnergyMultiplier,
+                first_day_base_success_chance: day1ChancePercent / 100.0,
+
+                // ★ schedule はUIで秒にして入れる
+                wake_up_time: parseHHMMToSeconds($("#wakeTime").value, 7 * 3600),
+                breakfast_time: parseHHMMToSeconds($("#breakfastTime").value, 8 * 3600),
+                lunch_time: parseHHMMToSeconds($("#lunchTime").value, 12 * 3600),
+                dinner_time: parseHHMMToSeconds($("#dinnerTime").value, 18 * 3600),
+                sleep_time: parseHHMMToSeconds($("#sleepTime").value, 22 * 3600 + 30 * 60),
+            };
+            const simulator = new Simulator(simulatorOpts);
 
             if (!ui.applyScheduleFromUI(simulator)) {
                 statusEl.textContent = "時間設定にエラーがあります。";
